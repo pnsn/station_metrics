@@ -1,9 +1,9 @@
 
 # Files
 
--*MetricsForIgor.py*  This is the main ObsPy based python script for calculating metrics... it's a version I handed off to Igor.  It's pretty similar to what's in production on web4.
--*MetricsForIgor.csh*  This is the shell script that runs the python code, it's set up on an hourly cron.
--*ShakeAlertList.IRISZ, ShakeAlertList.NCEDCZ, ShakeAlertList.SCEDCZ* These are the (outdated) channel lists for the three data centers.
+- *MetricsForIgor.py*  This is the main ObsPy based python script for calculating metrics... it's a version I handed off to Igor.  It's pretty similar to what's in production on web4.
+- *MetricsForIgor.csh*  This is the shell script that runs the python code, it's set up on an hourly cron.
+- *ShakeAlertList.IRISZ, ShakeAlertList.NCEDCZ, ShakeAlertList.SCEDCZ* These are the (outdated) channel lists for the three data centers.
 
 # Station Metrics
 
