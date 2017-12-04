@@ -40,6 +40,6 @@ snr20_0p05cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 0.
 snr20_0p1cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 0.1 cm/s^2 using acceleration data filtered 15 Hz.
 snr15_0p17cm, integer, Number of spikes with SNR > 15 and amplitude exceeding 0.17 cm/s^2 using acceleration data filtered 15 Hz.
 snr20_0p17cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 0.17 cm/s^2 using acceleration data filtered 15 Hz.
-snr20_0p5cm, integer, integer, Number of spikes with SNR > 20 and amplitude exceeding 0.5 cm/s^2 using acceleration data filtered 15 Hz.
+snr20_0p5cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 0.5 cm/s^2 using acceleration data filtered 15 Hz.
 snr20_1cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 1 cm/s^2 using acceleration data filtered 15 Hz.
 snr20_2cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 2 cm/s^2 using acceleration data filtered 15 Hz.
