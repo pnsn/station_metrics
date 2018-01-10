@@ -3,8 +3,13 @@
 
 # Files
 
-- *MetricsForIgor.py*  This is the main ObsPy based python script for calculating metrics... it's a version I handed off to Igor.  It's pretty similar to what's in production on web4.
-- *MetricsForIgor.csh*  This is the shell script that runs the python code, it's set up on an hourly cron.
+- *calculate_metrics.py*    This is the main ObsPy based python script for calculating metrics. 
+- *get_data_metadata.py*    This uses ObsPy bulkrequests to download data.  Also gets metadata/response/gain factors.
+- *noise_metrics.py*        These are functions to calculate metrics such as noise floor, N spikes, duration of RMS > threshold.
+- *plot_station.py*         Makes a simple .png figure of the seismogram being analyzed.
+- *database_read_write.py*  Reads and writes to the postgres database.  NOTE: needs to change INSERT to UPSERT.
+- *TestDownloadingSpeed.py* Simple script to test downloading speed at FDSN data centers. Choose either serial or bulk download.
+- *run_metrics.csh*  This is the shell script that runs the python code, it's set up on an hourly cron.
 - *ShakeAlertList.IRISZ, ShakeAlertList.NCEDCZ, ShakeAlertList.SCEDCZ* These are the (outdated) channel lists for the three data centers.
 
 # Station Metrics
@@ -39,48 +44,31 @@ These are the collection of scripts to calculate near-real time station metrics 
 - *pow20Hz* Power in db at 20 Hertz.
 - *pow50Hz* Power in db at 50 Hertz.
 - *RMS0p01cm* Total duration in seconds of RMS acceleration amplitude exceeding 0.01 cm/s^2 using a 5 sec RMS window.
-- *RMS0p035cm* Total duration in seconds of RMS acceleration amplitude exceeding 0.035 cm/s^2 using a 5 sec RMS window.
-- *RMS0p05cm* Total duration in seconds of RMS acceleration amplitude exceeding 0.05 cm/s^2 using a 5 sec RMS window.
+- *RMS0p035cm* Total duration in seconds of RMS acceleration amplitude exceeding 0.035 cm/s^2 using a 5 sec RMS window. This was the proposed ShakeAlert threshold, but has since been doubled to 0.07 cm/s^2.
 - *RMS0p1cm* Total duration in seconds of RMS acceleration amplitude exceeding 0.1 cm/s^2 using a 5 sec RMS window.
-- *RMS0p5cm* Total duration in seconds of RMS acceleration amplitude exceeding 0.5 cm/s^2 using a 5 sec RMS window.
 - *RMS1cm* Total duration in seconds of RMS acceleration amplitude exceeding 1 cm/s^2 using a 5 sec RMS window.
-- *V2to98* Range in cm/s of the 2nd to 98th percentile of sorted velocity amplitudes, which approximates median envelope amplitude.
-- *A2to98* Range of cm/s^2 the 2nd to 98th percentile of sorted acceleration amplitudes, which approximates median envelope amplitude.
+- *NoiseFloorVel* Range in cm/s of the 2nd to 98th percentile of sorted velocity amplitudes, which approximates median envelope amplitude.
+- *NoiseFloorAcc* Range of cm/s^2 the 2nd to 98th percentile of sorted acceleration amplitudes, which approximates median envelope amplitude.
 
 ## metrics of spikes/triggers
 
 What I've been calculating.  Uses ObsPy z_detect trigger with 1 sec window.
-- *snr5_0p1cm* Number of spikes with SNR > 5 and amplitude exceeding 0.1 cm/s^2 using acceleration data filtered 0.3-15 Hz.
-- *snr5_0p5cm* Number of spikes with SNR > 5 and amplitude exceeding 0.5 cm/s^2 using acceleration data filtered 0.3-15 Hz.
-- *snr10_0p5cm* Number of spikes with SNR > 10 and amplitude exceeding 0.5 cm/s^2 using acceleration data filtered 0.3-15 Hz.
-- *snr20_0p5cm* Number of spikes with SNR > 20 and amplitude exceeding 0.5 cm/s^2 using acceleration data filtered 0.3-15 Hz.
-- *snr5_1cm* Number of spikes with SNR > 5 and amplitude exceeding 1 cm/s^2 using acceleration data filtered 0.3-15 Hz.
-- *snr10_1cm* Number of spikes with SNR > 10 and amplitude exceeding 1 cm/s^2 using acceleration data filtered 0.3-15 Hz.
-- *snr20_1cm* Number of spikes with SNR > 20 and amplitude exceeding 1 cm/s^2 using acceleration data filtered 0.3-15 Hz.
-- *snr5_2cm* Number of spikes with SNR > 5 and amplitude exceeding 2 cm/s^2 using acceleration data filtered 0.3-15 Hz.
-- *snr10_2cm* Number of spikes with SNR > 10 and amplitude exceeding 2 cm/s^2 using acceleration data filtered 0.3-15 Hz.
-- *snr20_2cm* Number of spikes with SNR > 20 and amplitude exceeding 2 cm/s^2 using acceleration data filtered 0.3-15 Hz.
+- *snr10_0p01cm* Number of spikes with SNR > 10 and amplitude exceeding 0.01 cm/s^2 using acceleration data filtered 0.3-15 Hz.  Good for looking for very good stations.
+- *snr20_0p05cm* Number of spikes with SNR > 20 and amplitude exceeding 0.05 cm/s^2 using acceleration data filtered 0.3-15 Hz.
+- *snr20_0p17cm* Number of spikes with SNR > 20 and amplitude exceeding 0.17 cm/s^2 using acceleration data filtered 0.3-15 Hz.  This was the proposed ShakeAlert threshold, but has since been doubled to 0.35 cm/s^2.
+- *snr20_1cm* Number of spikes with SNR > 20 and amplitude exceeding 1 cm/s^2 using acceleration data filtered 0.3-15 Hz.  Good for looking for bad stations.
+- *snr20_3cm* Number of spikes with SNR > 20 and amplitude exceeding 3 cm/s^2 using acceleration data filtered 0.3-15 Hz.
+- *snr20_5cm* Number of spikes with SNR > 20 and amplitude exceeding 5 cm/s^2 using acceleration data filtered 0.3-15 Hz.  Good for looking for terrible stations.
 
-What I'm calculating for Glenn.  Uses ObsPy z_detect trigger with 1 sec window.
-- *snr20_0p05cm* Number of spikes with SNR > 20 and amplitude exceeding 0.05 cm/s^2 using acceleration data filtered 1-5 Hz.
-- *snr20_0p1cm* Number of spikes with SNR > 20 and amplitude exceeding 0.1 cm/s^2 using acceleration data filtered 1-5 Hz.
-- *snr15_0p17cm* Number of spikes with SNR > 15 and amplitude exceeding 0.17 cm/s^2 using acceleration data filtered 1-5 Hz.
-- *snr20_0p17cm* Number of spikes with SNR > 20 and amplitude exceeding 0.17 cm/s^2 using acceleration data filtered 1-5 Hz.
-- *snr20_0p5cm* Number of spikes with SNR > 20 and amplitude exceeding 0.5 cm/s^2 using acceleration data filtered 1-5 Hz.
-- *snr20_1cm* Number of spikes with SNR > 20 and amplitude exceeding 1 cm/s^2 using acceleration data filtered 1-5 Hz.
-- *snr20_2cm* Number of spikes with SNR > 20 and amplitude exceeding 2 cm/s^2 using acceleration data filtered 1-5 Hz.
-
-What should be calculated??
-- *0.75-20Hz* filtering
-- *acceleration* or *acceleration/velocity (native ground motion units)*?
-- *amplitude thresholds* of: 0.05, 0.1, 0.17, 0.5, 1, 2 cm/s^2?
-- *SNR* thresholds of 5 and 15?
-- should use an sta/lta (ObsPy: classic_sta_lta) ratio where sta = 0.5s and lta = 5.0 s?
+## Some outstanding questions
+- *0.75-20 Hz or 0.3-15 Hz* filtering, both have been thrown around.
+- Should metrics use *acceleration* or *acceleration/velocity (native ground motion units)*?
+- Are the suggested thresholds for RMS and Nspikes metrics appropriate/complete? 
+- Should we use an sta/lta (ObsPy: classic_sta_lta) ratio where sta = 0.5s and lta = 5.0 s (0.4 sec/trace), rather than the faster z_detect (0.1sec)?
 
 ## Groups of metrics
 - completness
 - noise
 - ShakeAlert_acceptance = pctavailable, ngaps, rawmean, rawrange, RMS0p035cm, snr20_0p17cm
 - health = pctavailable, ngaps, rawmean
-
 
