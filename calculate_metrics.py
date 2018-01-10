@@ -1,4 +1,4 @@
-#!/home/seis/anaconda2/bin/python
+#!/usr/bin/env python
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
