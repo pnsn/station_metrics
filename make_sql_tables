@@ -1,0 +1,12 @@
+CREATE TABLE sncls (id SERIAL UNIQUE, created_at timestamp NOT NULL, updated_at timestamp NOT NULL, net varchar NOT NULL, sta varchar NOT NULL, loc varchar NOT NULL, chan varchar NOT NULL, sncl varchar NOT NULL, lat float, lon float, elev float, depth float, samp_rate float, PRIMARY KEY (id) );
+
+CREATE TABLE metrics (id SERIAL UNIQUE, metric varchar NOT NULL, unit varchar NOT NULL, description varchar NOT NULL, created_at timestamp NOT NULL, updated_at timestamp NOT NULL, PRIMARY KEY (id) );
+
+CREATE TABLE datasources (id SERIAL UNIQUE, name varchar NOT NULL, description varchar NOT NULL, PRIMARY KEY (id) );
+
+CREATE TABLE metricchannels ( id SERIAL UNIQUE, metric_id integer REFERENCES metrics (id), sncl_id integer REFERENCES sncls (id), datasource_id integer REFERENCES datasources (id) );
+
+CREATE TABLE measurements (id BIGSERIAL UNIQUE, sncl_id integer REFERENCES sncls (id), metric_id integer REFERENCES metrics (id), value float NOT NULL, starttime timestamp NOT NULL, endtime timestamp NOT NULL, datasrc_id integer NOT NULL, created_at timestamp NOT NULL );
+
+CREATE TABLE thresholds (id SERIAL UNIQUE, sncl_id integer REFERENCES sncls (id), metric_id integer REFERENCES metrics (id), thresholdmin float, thresholdmax float, starttime timestamp, endtime timestamp, description varchar );
+

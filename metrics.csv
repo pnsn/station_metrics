@@ -24,8 +24,8 @@ RMS0p05cm, s, Total duration of RMS acceleration amplitude exceeding 0.05 cm/s^2
 RMS0p1cm, s, Total duration of RMS acceleration amplitude exceeding 0.1 cm/s^2 using a 5 sec RMS window.
 RMS0p5cm, s, Total duration of RMS acceleration amplitude exceeding 0.5 cm/s^2 using a 5 sec RMS window.
 RMS1cm, s, Total duration of RMS acceleration amplitude exceeding 1 cm/s^2 using a 5 sec RMS window.
-V2to98, cm/s, Range of the 2nd to 98th percentile of sorted velocity amplitudes, which approximates median envelope amplitude.
-A2to98, cm/s^2, Range the 2nd to 98th percentile of sorted acceleration amplitudes, which approximates median envelope amplitude.
+V2to98, cm/s, Range of the 2nd to 98th percentile of sorted velocity amplitudes which approximates median envelope amplitude.
+A2to98, cm/s^2, Range the 2nd to 98th percentile of sorted acceleration amplitudes which approximates median envelope amplitude.
 snr5_0p1cm, integer, Number of spikes with SNR > 5 and amplitude exceeding 0.1 cm/s^2 using acceleration data filtered 0.315 Hz.
 snr5_0p5cm, integer, Number of spikes with SNR > 5 and amplitude exceeding 0.5 cm/s^2 using acceleration data filtered 0.315 Hz.
 snr10_0p5cm, integer, Number of spikes with SNR > 10 and amplitude exceeding 0.5 cm/s^2 using acceleration data filtered 0.315 Hz.
@@ -40,6 +40,6 @@ snr20_0p05cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 0.
 snr20_0p1cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 0.1 cm/s^2 using acceleration data filtered 15 Hz.
 snr15_0p17cm, integer, Number of spikes with SNR > 15 and amplitude exceeding 0.17 cm/s^2 using acceleration data filtered 15 Hz.
 snr20_0p17cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 0.17 cm/s^2 using acceleration data filtered 15 Hz.
-snr20_0p5cm, integer, integer, Number of spikes with SNR > 20 and amplitude exceeding 0.5 cm/s^2 using acceleration data filtered 15 Hz.
+snr20_0p5cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 0.5 cm/s^2 using acceleration data filtered 15 Hz.
 snr20_1cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 1 cm/s^2 using acceleration data filtered 15 Hz.
 snr20_2cm, integer, Number of spikes with SNR > 20 and amplitude exceeding 2 cm/s^2 using acceleration data filtered 15 Hz.
