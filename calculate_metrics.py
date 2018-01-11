@@ -57,7 +57,7 @@ dbpass = os.environ['POSTGRES_PASSWD']
 
 #----- Set up the FDSN client
 try:
-    client = Client(datacenter)
+    client = Client(datacenter,timeout=300)
 except:
     print "Failed client connection"
     exit()
