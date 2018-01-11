@@ -2,6 +2,7 @@
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
+import os
 import sys
 from obspy import read
 import numpy as np
