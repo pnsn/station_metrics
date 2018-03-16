@@ -49,7 +49,7 @@ The STA/LTA functions are calculated on filtered velocity traces, regardless if 
 
 In the figure below, only one spike is counted in the time series shown.  If the STA/LTA threshold was lowered to 5, for example, there would be a second spike counted (at around 22:01:45).
 
-<img src="https://raw.githubusercontent.com/ahotovec/REDPy/master/img/logo.png" width=800 alt="REDPy Logo" />
+<img src="https://github.com/pnsn/station_metrics/blob/master/station_metrics/img/Metric_Nspikes.png" width=800 alt="Metric: Nspikes" />
 
 What I've been calculating.  Uses ObsPy z_detect trigger with 1 sec window.
 - *snr10_0p01cm* Number of spikes with SNR > 10 and amplitude exceeding 0.01 cm/s^2 using acceleration data filtered 0.3-15 Hz.  Good for looking for very good stations.
