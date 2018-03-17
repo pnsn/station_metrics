@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import os
 import psycopg2
 import datetime
@@ -102,7 +103,7 @@ def write_database4(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,value
     cols = ('id','sncl_id','metric_id','value','starttime','endtime','datasrc_id','created_at')
     iid = last_insert_id(dbconn.cursor(),'measurements','id') + 1 
 
-    print "Last ID is " + str(iid) #+ " " + str(type(iid))
+    print ("Last ID is " + str(iid) ) #+ " " + str(type(iid)) )
 
     for idb in range(0,len(metriclist)):
         if ( metriclist[idb] in metric_list_db ):
@@ -110,9 +111,9 @@ def write_database4(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,value
             metric_id = metric_id_list_db[idmetric]
             iid = iid + 1
             records.append((iid,sncl_id,metric_id,valuelist[idb],starttime,endtime,datasrc_id,now))
-            print str(iid) + " " + str(valuelist[idb]) + " " + str(metric_id) 
-    print "IID2 : " + str(iid)
-    print "RECORED: " + str(records)
+            print (str(iid) + " " + str(valuelist[idb]) + " " + str(metric_id) ) 
+    print ("IID2 : " + str(iid) )
+    print ("RECORED: " + str(records) )
     mgr = CopyManager(dbconn, 'measurements', cols)
     mgr.copy(records)
 

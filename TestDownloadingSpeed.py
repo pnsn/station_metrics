@@ -4,6 +4,7 @@
 # This is a simple script to test download speeds.
 #
 
+from __future__ import print_function
 import datetime
 from obspy import UTCDateTime
 import timeit
@@ -42,9 +43,9 @@ if ( bulk == 0 ):
             nptstot = 0
             for i in range(0,len(st)):
                 nptstot = nptstot + st[i].stats.npts
-            print "TIME one-channel download: " +  str(Timer2-Timer0) + " sec  Nstreams: " + str(len(st)) + "  Approx size: " + str(nptstot/1024) + " KB   " + st[0].stats.network + "." + st[0].stats.station + "." + st[0].stats.channel
+            print ("TIME one-channel download: " +  str(Timer2-Timer0) + " sec  Nstreams: " + str(len(st)) + "  Approx size: " + str(nptstot/1024) + " KB   " + st[0].stats.network + "." + st[0].stats.station + "." + st[0].stats.channel )
         except:
-            print "did not work: " + str(requestline)
+            print ("did not work: " + str(requestline) )
 
 if ( bulk == 1 ):
     bulkrequest = []
@@ -55,16 +56,16 @@ if ( bulk == 1 ):
         chan = lines[i].split()[3]
         requestline = (net,stat,loc,chan,T1,T2)
         bulkrequest.append(requestline)
-#        print "REQ " + str(i) + " " + str(requestline)
+#        print ("REQ " + str(i) + " " + str(requestline) )
     try:
-        print str(requestline)
+        print (str(requestline) )
         Timer0 = timeit.default_timer()
         st = client.get_waveforms_bulk(bulkrequest)
         Timer2 = timeit.default_timer()
         nptstot = 0
         for i in range(0,len(st)):
            nptstot = nptstot + st[i].stats.npts
-           print "TIME bulk download: " +  str(Timer2-Timer0) + " sec  Nstreams: " + str(len(st)) + "  Approx size: " + str(nptstot/1048576) + " MB   " + st[i].stats.network + "." + st[i].stats.station + "." + st[i].stats.channel
+           print ("TIME bulk download: " +  str(Timer2-Timer0) + " sec  Nstreams: " + str(len(st)) + "  Approx size: " + str(nptstot/1048576) + " MB   " + st[i].stats.network + "." + st[i].stats.station + "." + st[i].stats.channel )
     except:
-        print "Bulk request did not work"
+        print ("Bulk request did not work" )
 

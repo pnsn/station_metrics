@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import datetime
 from obspy import UTCDateTime
 import timeit
@@ -29,8 +30,8 @@ def download_waveforms_fdsn_bulk(chanfile,starttime,duration,client):
         chan = lines[i].split()[3]
         requestline = (net,stat,loc,chan,T1,T2)
         bulkrequest.append(requestline)
-#        print "REQ " + str(i) + " " + str(requestline)
-#        print str(requestline)
+#        print ("REQ " + str(i) + " " + str(requestline))
+#        print (str(requestline))
     try:
         Timer0 = timeit.default_timer()
         st = client.get_waveforms_bulk(bulkrequest)
@@ -38,11 +39,11 @@ def download_waveforms_fdsn_bulk(chanfile,starttime,duration,client):
         nptstot = 0
         for i in range(0,len(st)):
            nptstot = nptstot + st[i].stats.npts
-        print "TIME bulk download: " +  str(Timer2-Timer0) + " sec  Nstreams: " + str(len(st)) + "  Approx size: " + str(nptstot/1048576) + " MB" 
+        print ("TIME bulk download: " +  str(Timer2-Timer0) + " sec  Nstreams: " + str(len(st)) + "  Approx size: " + str(nptstot/1048576) + " MB" )
     except:
         Timer2 = timeit.default_timer()
-        print  "Failed download request or no data for: " + chanfile + " " + str(T1) + " to " + str(T2) + "  request took: " + str(Timer2-Timer0) + " sec"
-        print bulkrequest
+        print  ("Failed download request or no data for: " + chanfile + " " + str(T1) + " to " + str(T2) + "  request took: " + str(Timer2-Timer0) + " sec" )
+        print (bulkrequest)
         st = []
     return st
 
@@ -53,7 +54,7 @@ def download_metadata_fdsn(net,stat,loc,chan,starttime,client):
         T2 = UTCDateTime(starttime + datetime.timedelta(0,1))
         inventory = client.get_stations(network=net,station=stat,location=loc,channel=chan,starttime=T1,endtime=T2, level='response')
     except:
-        print "Inventory not available for: " + net + "." + stat + "." + loc +"." + chan + str(starttime) + " to " + str(endtime)
+        print ("Inventory not available for: " + net + "." + stat + "." + loc +"." + chan + str(starttime) + " to " + str(endtime) )
         inventory = []
     return inventory
 
@@ -73,7 +74,7 @@ def raw_trace_to_ground_motion_filtered_pruned(TraceOrig,T1,T2,AccVelDisp,FullRe
     trace = TraceOrig.copy()
     trace.detrend(type='demean')
     if ( len(inv) == 0 ):
-        print "No metadata"
+        print ("No metadata")
     else:
         #----- correct for gain factor only
         if ( FullResponse == 0 ):

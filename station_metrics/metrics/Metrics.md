@@ -65,7 +65,7 @@ In the figure below, only one spike is counted since it is the only one that exc
 
 <img src="https://github.com/pnsn/station_metrics/blob/master/station_metrics/img/Metric_Nspikes.png" width=800 alt="Metric: Nspikes" />
 
-Note: In ObsPy for hour-long traces, calculating the STA/LTA function takes around 0.4 sec per trace, while the similar z_detect takes only about 0.1 sec. <a href="https://docs.obspy.org/tutorial/code_snippets/trigger_tutorial.html">[ObsPy trigger tutorial]</a> Triggers are implemented as described in <a href="https://docs.obspy.org/citations.html#withers1998">[Withers 1998]</a>
+Note: In ObsPy for hour-long traces, calculating the STA/LTA function takes around 0.4 sec per trace, while the similar z_detect takes only about 0.1 sec. <a href="https://docs.obspy.org/tutorial/code_snippets/trigger_tutorial.html">[ObsPy trigger tutorial]</a> Triggers are implemented as described in <a href="https://docs.obspy.org/citations.html#withers1998">[Withers 1998]</a>.
 
 What I've been calculating.  Uses ObsPy z_detect trigger with 1 sec window.
 - *snr10_0p01cm* Number of spikes with SNR > 10 and amplitude exceeding 0.01 cm/s^2 using acceleration data filtered 0.3-15 Hz.  Good for looking for very good stations.

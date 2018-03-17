@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 import numpy as np
 
 def noise_floor(x):
@@ -32,7 +33,7 @@ def duration_exceed_RMS(x, ampthresh, RMSlen, dt):
         RMS = np.sqrt(smooth((x**2),iRMSwinlen))
         duration = ((RMS > ampthresh).sum())*dt
     else:
-        print "Error duration_exceed_RMS: len(x)=" + str(len(x)/dt) + " must be greater than RMSlen=" + str(RMSlen)
+        print ("Error duration_exceed_RMS: len(x)=" + str(len(x)/dt) + " must be greater than RMSlen=" + str(RMSlen))
         duration = []
 
     return duration
@@ -73,7 +74,7 @@ def count_peaks_stalta(x, y, sta, lta, mpd, mph, dt, ampthresh):
         peakcount = (peakamp>ampthresh).sum()
     else:
         peakcount = []
-        print "Error count_peaks_stalta: len(x)=" + str(len(x)/dt) + " must be > sta+lta=" + str(sta+lta)
+        print ("Error count_peaks_stalta: len(x)=" + str(len(x)/dt) + " must be > sta+lta=" + str(sta+lta))
     return peakcount
 
 

@@ -2,6 +2,7 @@
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
+from __future__ import print_function
 import os
 import sys
 from obspy import read
@@ -33,7 +34,7 @@ padding = PADDING
 duration = DURATION
 starttime = datetime.datetime(YEAR,MONTH,DAY,HOUR,MINUTE,SECOND)
 endtime = starttime + datetime.timedelta(0,duration)
-print "Starttime: " + str(starttime)
+print ("Starttime: " + str(starttime) )
 freqBP1 = fBP1
 freqBP2 = fBP2
 freqBP3 = fBP3
@@ -60,7 +61,7 @@ dbpass = os.environ['POSTGRES_PASSWD']
 try:
     client = Client(datacenter,timeout=300)
 except:
-    print "Failed client connection"
+    print ("Failed client connection" )
     exit()
 
 #----- Read the database SNCL and METRIC tables to make ID lists
@@ -92,7 +93,7 @@ for i in range(0,len(stAll)):
         sncl = stAll[i].stats.network + "." + stAll[i].stats.station + "." + stAll[i].stats.location + "." + stAll[i].stats.channel
     sncl_id = sncl_list.index(sncl)
     datasrc_id = 1
-#    print "SNCL " + sncl + "  sncl_id " + str(sncl_id)
+#    print ("SNCL " + sncl + "  sncl_id " + str(sncl_id) )
     for j in range(0,len(stAll)):
         if ( stAll[j].stats.location == "" ):
             sncl2 = stAll[j].stats.network + "." + stAll[j].stats.station + ".--." + stAll[j].stats.channel
@@ -224,5 +225,5 @@ for i in range(0,len(stAll)):
         T2 = timeit.default_timer()
         Tsum = Tsum + T2 - T1
 
-        print sncl + " " + numstring + "          ------" + str(itrace) + " " + str(T2-T1) + "  " + str(T2-T0)
+        print (sncl + " " + numstring + "          ------" + str(itrace) + " " + str(T2-T1) + "  " + str(T2-T0) )
 
