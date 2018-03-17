@@ -2,10 +2,7 @@
 Metrics
 =======
 
-## C
-# *nr20_0p34cm* Number of spikes with STA/LTA > 20 and amplitude exceeding 0.34 cm/s^2 using acceleration data filtered 0.3-15 Hz. 
-
-These are the collection of scripts to calculate near-real time station metrics which are being calculated hourly.
+These are a collection of scripts to calculate near-real time station metrics which are being calculated hourly.
 
 ## metrics of completeness
 
@@ -22,7 +19,9 @@ These are the collection of scripts to calculate near-real time station metrics 
 - *rawmin*  Minimum amplitude in counts.
 - *rawmax*  Maximum amplitude in counts.
 
-## metrics of noise (do we want the full PSD?)
+## metrics of power at different periods
+
+These use the ObsPy PPSD class to calculate the probablistic power spectral densities based on the routines used by <a href="https://docs.obspy.org/citations.html#mcnamara2004">[McNamara 2004]</a>.  This is the same method as used by PQLX and IRIS MUSTANG.
 
 - *pow50sec* Power in db at 50 seconds.
 - *pow30sec* Power in db at 30 seconds.
@@ -34,12 +33,29 @@ These are the collection of scripts to calculate near-real time station metrics 
 - *pow10Hz* Power in db at 10 Hertz.
 - *pow20Hz* Power in db at 20 Hertz.
 - *pow50Hz* Power in db at 50 Hertz.
-- *RMS0p01cm* Total duration in seconds of RMS acceleration amplitude exceeding 0.01 cm/s^2 using a 5 sec RMS window.
-- *RMS0p035cm* Total duration in seconds of RMS acceleration amplitude exceeding 0.035 cm/s^2 using a 5 sec RMS window. This was the proposed ShakeAlert threshold, but has since been doubled to 0.07 cm/s^2.
-- *RMS0p1cm* Total duration in seconds of RMS acceleration amplitude exceeding 0.1 cm/s^2 using a 5 sec RMS window.
-- *RMS1cm* Total duration in seconds of RMS acceleration amplitude exceeding 1 cm/s^2 using a 5 sec RMS window.
-- *NoiseFloorVel* Range in cm/s of the 2nd to 98th percentile of sorted velocity amplitudes, which approximates median envelope amplitude.
-- *NoiseFloorAcc* Range of cm/s^2 the 2nd to 98th percentile of sorted acceleration amplitudes, which approximates median envelope amplitude.
+
+## other metrics of noise levels
+
+Noise floor:
+98th percentile of sorted amplitude.  After traces have been gain corrected and filtered, the amplitudes are sorted.  The 98th percentile amplitude is a surprisingly good approximation to the median envelope amplitude which is the "noise floor" if you eyeball a trace (see figure below).  The frequency band used is 0.3-15 Hz which is the band primarily used by ShakeAlert and is appropriate for most regional seismic network applications.
+
+- *NoiseFloorVel* The 98th percentile of sorted, filtered, gain corrected velocity amplitudes (cm/s).
+- *NoiseFloorAcc* The 98th percentile of sorted, filtered, gain corrected acceleration amplitudes (cm/s^2).
+
+<img src="https://github.com/pnsn/station_metrics/blob/master/station_metrics/img/Metric_noisefloor.png" width=800 alt="Metric: Noise Floor" />
+
+RMS noise:
+This metric was introduced into the ShakeAlert station acceptance document to flag stations that have a very loud noise floor for at least one minute per hour, on average.  This helps flag stations that are near high levels of intermittent cultural noise, e.g. near a road, train tracks or heavy machinery like a pump.  This metric is applied to gain corrected and filtered (0.3-15 Hz) acceleration traces for both strong motion (native acceleration) and broadband (native velocity) channels.  The proposed ShakeAlert threshold is that the RMS function using a sliding 5 sec window be no more than 60 second per hour, on average, above 0.07 cm/s^2.  The ShakeAlert threshold is set rather high since SA is tuned for events larger than M4.5.  Lower thresholds are also measured to help identify stations that may not be ideal for certain regional seismic network applications which include monitoring small earthquakes. 
+
+All use a 5 sec RMS window and gain corrected acceleration traces filtered 0.3-15 Hz.
+- *RMS0p01cm* Total duration in seconds of RMS function exceeding 0.01 cm/s^2.
+- *RMS0p035cm* Total duration in seconds of RMS function exceeding 0.035 cm/s^2.
+- *RMS00p1cm* Total duration in seconds of RMS function exceeding 0.1 cm/s^2.
+- *RMS01cm* Total duration in seconds of RMS function exceeding 1 cm/s^2.
+
+In the figure below, the total duration of the RMS above threshold is about 15 seconds in the time window shown.
+
+<img src="https://github.com/pnsn/station_metrics/blob/master/station_metrics/img/Metric_RMS.png" width=800 alt="Metric: RMS" />
 
 ## metrics counting spikes/triggers
 
@@ -59,11 +75,8 @@ What I've been calculating.  Uses ObsPy z_detect trigger with 1 sec window.
 - *snr20_3cm* Number of spikes with SNR > 20 and amplitude exceeding 3 cm/s^2 using acceleration data filtered 0.3-15 Hz.
 - *snr20_5cm* Number of spikes with SNR > 20 and amplitude exceeding 5 cm/s^2 using acceleration data filtered 0.3-15 Hz.  Good for looking for terrible stations.
 
-## Some outstanding questions
-- *0.75-20 Hz or 0.3-15 Hz* filtering, both have been thrown around.
-- Should metrics use *acceleration* or *acceleration/velocity (native ground motion units)*?
-- Are the suggested thresholds for RMS and Nspikes metrics appropriate/complete? 
-- Should we use an sta/lta (ObsPy: classic_sta_lta) ratio where sta = 0.5s and lta = 5.0 s (0.4 sec/trace), rather than the faster z_detect (0.1sec)?
+#### Some outstanding questions
+- In ObsPy for hour-long traces, the STA/LTA function takes around 0.4 sec per trace, while the similar z_detect is much quicker, taking only about 0.1 sec.  Choose the z_detect for speed.
 
 ## Groups of metrics
 - completness
