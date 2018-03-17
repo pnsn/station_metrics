@@ -75,9 +75,3 @@ What I've been calculating.  Uses ObsPy z_detect trigger with 1 sec window.
 - *snr20_3cm* Number of spikes with SNR > 20 and amplitude exceeding 3 cm/s^2 using acceleration data filtered 0.3-15 Hz.
 - *snr20_5cm* Number of spikes with SNR > 20 and amplitude exceeding 5 cm/s^2 using acceleration data filtered 0.3-15 Hz.  Good for looking for terrible stations.
 
-## Groups of metrics
-- completness
-- noise
-- ShakeAlert_acceptance = pctavailable, ngaps, rawmean, rawrange, RMS0p035cm, snr20_0p17cm
-- health = pctavailable, ngaps, rawmean
-
