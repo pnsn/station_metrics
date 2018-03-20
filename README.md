@@ -4,7 +4,8 @@
 # Overview
 
 These are the collection of scripts to calculate near-real time station metrics which are being calculated hourly at the PNSN.
-NOTE:  A few things are still needed.  pip_squeak.py is clean, but calculate_metrics.py still needs to be cleaned up (as well as making it run from a config file).
+
+*NOTE:  A few things are still needed.  pip_squeak.py is clean, but calculate_metrics.py still needs to be cleaned up (as well as making it run from a config file).*
 
 # Installation
 
