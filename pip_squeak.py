@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/home/ahutko/anaconda3/bin/python
+##!/usr/bin/env python
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
@@ -18,7 +19,7 @@ from obspy.signal.trigger import z_detect
 from obspy.signal.trigger import classic_sta_lta
 from obspy.signal.filter import envelope 
 from obspy.signal.filter import bandpass
-from obspy.signal import PPSD
+#from obspy.signal import PPSD
 from obspy import Stream
 from get_data_metadata import *
 from noise_metrics import *
@@ -32,7 +33,7 @@ except:
 #----- read config file
 
 parser = SafeConfigParser()
-parser.read("config.ini")
+parser.read("config.pip_squeak")
 
 FDSNtimeout = float(parser.get('SectionOne','FDSNtimeout'))
 tpadding = float(parser.get('SectionOne','tpadding'))
@@ -48,9 +49,9 @@ freqBB2 = float(parser.get('SectionOne','freqBB2'))
 mpd = float(parser.get('SectionOne','mpd'))
 RMSlen = float(parser.get('SectionOne','RMSlen'))
 GainOrFullResp = parser.get('SectionOne','GainOrFullResp')
-PSDperiods = (parser.get('SectionOne','PSDperiods'))[1:-1].split(",")
-PSDperiods = [float(i) for i in PSDperiods]
-iplot = parser.get('SectionOne','iplot')
+#PSDperiods = (parser.get('SectionOne','PSDperiods'))[1:-1].split(",")
+#PSDperiods = [float(i) for i in PSDperiods]
+#iplot = parser.get('SectionOne','iplot')
 
 #----- read input arguments
 
@@ -229,5 +230,6 @@ for i in range(0,len(stAll)):
         else:
             strpctavail = str( "pctavailable_FAIL: %.4f " % (100*dt*nptstotal/lenrequested) )
 
-        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, itrace, segmentlong, segmentshort) )
+#        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, itrace, segmentlong, segmentshort) )
+        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, ntr, segmentlong, segmentshort) )
 

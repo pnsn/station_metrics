@@ -1,18 +1,30 @@
 [SectionOne]
-
+#  Set the timeout for the FDSNWS client.  Less than 5sec is fine for IRIS.  SCEDC might need more time.
 FDSNtimeout: 24
+
+#  Padding length on both sides of the trace to avoid edge effects when filtering. Should be > (2/freqBB2).
 tpadding: 120
+
+#  Lenths in sec of the Short Term Average and Long Term Average.
 sta: 0.05
 lta: 5.0
+
+#  Frequencies for filtering for use in Nspikes, RMS, noisefloor metrics.  freq_min, low_freq_corner, high_freq_corner, freq_max.
 freqBP1: 0.25
 freqBP2: 0.3
 freqBP3: 15.0
 freqBP4: 17.0
+
+# freq_min and low_freq_corner for broad band filtering to get rid of very long period signals.  high_freq_corner and freq_max are near nyquist.
 freqBB1: 0.01
 freqBB2: 0.02
+
+#  Minimum peak distance.  When counting spikes in the STA/LTA function, this is min dist. bw peaks that exceed the STA/LTA threshold (=20).
 mpd: 10.0
+
+#  Length of the running RMS windowing function used for the RMS noise duration metric.
 RMSlen: 5.0
+
+#  Either use just the "Gain" or the full "Resp" (response) file for instrument response removal.
 GainOrFullResp: "Gain"
-PSDperiods: [50, 30, 20, 12, 10, 5, 1, 0.2, 0.1, 0.05, 0.02]
-iplot: 0
 

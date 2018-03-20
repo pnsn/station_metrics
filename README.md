@@ -72,10 +72,10 @@ UW REED -- HNZ
 >> ./pip_squeak.py -i MyStationList -dc IRIS -s 2018-01-03T22:00:00 -d 336
 UW.ALKI.--.ENZ No_data_returned
 
-UW.ALST.--.ENZ  download: 32.54s calculate: 181.33s plot: 0.00s ngaps_PASS: 0.012  rms_PASS: 0.000  nspikes_PASS: 0.000  pctavailable_PASS: 99.9521   Nsegments: 1  segmentlong: 487084.600  segmentshort: 1566.760 
-UW.BABE.--.ENZ  download: 32.54s calculate: 359.38s plot: 0.00s ngaps_PASS: 0.030  rms_FAIL: 151.445  nspikes_FAIL: 2.521  pctavailable_PASS: 99.9949   Nsegments: 2  segmentlong: 499481.000  segmentshort: 4548.000 
-UW.BABR.--.BHZ  download: 32.54s calculate: 423.75s plot: 0.00s ngaps_PASS: 0.003  rms_PASS: 0.000  nspikes_PASS: 0.000  pctavailable_PASS: 99.9540   Nsegments: 3  segmentlong: 774467.750  segmentshort: 434581.475 
-UW.REED.--.HNZ  download: 32.54s calculate: 874.54s plot: 0.00s ngaps_PASS: 0.065  rms_FAIL: 334.611  nspikes_FAIL: 15.613  pctavailable_PASS: 99.9902   Nsegments: 4  segmentlong: 170661.830  segmentshort: 0.860 
+UW.ALST.--.ENZ  download: 27.96s calculate: 176.58s plot: 0.00s ngaps_PASS: 0.012  rms_PASS: 0.000  nspikes_PASS: 0.000  pctavailable_PASS: 99.9521   Nsegments: 5  segmentlong: 487084.600  segmentshort: 1566.760 
+UW.BABE.--.ENZ  download: 27.96s calculate: 351.37s plot: 0.00s ngaps_PASS: 0.030  rms_FAIL: 151.445  nspikes_FAIL: 2.521  pctavailable_PASS: 99.9949   Nsegments: 11  segmentlong: 499481.000  segmentshort: 4548.000 
+UW.BABR.--.BHZ  download: 27.96s calculate: 415.10s plot: 0.00s ngaps_PASS: 0.003  rms_PASS: 0.000  nspikes_PASS: 0.000  pctavailable_PASS: 99.9540   Nsegments: 2  segmentlong: 774467.750  segmentshort: 434581.475 
+UW.REED.--.HNZ  download: 27.96s calculate: 840.27s plot: 0.00s ngaps_PASS: 0.065  rms_FAIL: 334.611  nspikes_FAIL: 15.613  pctavailable_PASS: 99.9902   Nsegments: 23  segmentlong: 170661.830  segmentshort: 0.860 
 >> 
 >>
 ```
