@@ -22,17 +22,18 @@ These can easily be added via command line using <a href="https://www.anaconda.c
 
 # Files
 
-- *calculate_metrics.py*    This is the main ObsPy based python script for calculating metrics for a list of stations.  Writes to a db. 
-- *pip_squeak.py* This is a one-off script made for the ShakeAlert station acceptance group. (still in testing/flux) 
+- *calculate_metrics.py*       This is the main ObsPy based python script for calculating metrics for a list of stations.  Writes to a db. 
+- *pip_squeak.py*              This is a one-off script made for the ShakeAlert station acceptance group. (still in testing/flux) 
 - *parse_and_validate_args.py* Used by pip_squeak.py to read, pase and validate input arguments.
-- *get_data_metadata.py*    This uses ObsPy bulkrequests to download data.  Also gets metadata/response/gain factors.
-- *noise_metrics.py*        These are functions to calculate metrics such as noise floor, N spikes, duration of RMS > threshold.
-- *plot_station.py*         Makes a simple .png figure of the seismogram being analyzed.
-- *plot_pip_squeak.py*      Makes a simple .png figure of the seismogram being analyzed, raw trace, STA/LTA trace, ShakeAlert station acceptance thresholds etc.
-- *database_read_write.py*  Reads and writes to the postgres database.  NOTE: needs to change INSERT to UPSERT.
-- *TestDownloadingSpeed.py* Simple script to test downloading speed at FDSN data centers. Choose either serial or bulk download.
-- *run_metrics.csh*  This is the shell script that runs the python code, it's set up on an hourly cron.
+- *get_data_metadata.py*       This uses ObsPy bulkrequests to download data.  Also gets metadata/response/gain factors.
+- *noise_metrics.py*           These are functions to calculate metrics such as noise floor, N spikes, duration of RMS > threshold.
+- *plot_station.py*            Makes a simple .png figure of the seismogram being analyzed.
+- *plot_pip_squeak.py*         Makes a simple .png figure of the seismogram being analyzed, raw trace, STA/LTA trace, ShakeAlert station acceptance thresholds etc.
+- *database_read_write.py*     Reads and writes to the postgres database.  NOTE: needs to change INSERT to UPSERT.
+- *TestDownloadingSpeed.py*    Simple script to test downloading speed at FDSN data centers. Choose either serial or bulk download.
+- *run_metrics.csh*            This is the shell script that runs the python code, it's set up on an hourly cron.
 - *ShakeAlertList.IRISZ, ShakeAlertList.NCEDCZ, ShakeAlertList.SCEDCZ* These are the (outdated) channel lists for the three data centers.
+- *config.pip_squeak*          Simple config file for pip_squeak to input parameters, defaults are for ShakeAlert station acceptance.
 
 # Station Metrics
 
