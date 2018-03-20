@@ -76,7 +76,7 @@ stAll = download_waveforms_fdsn_bulk(chanfile,Time1padded,duration+tbuffer+(2*pa
 #----- Get the time slices we want for analysis.
 Time1 = starttime - datetime.timedelta(0,tbuffer)
 Time2 = starttime + datetime.timedelta(0,duration)
-lenrequested = (Time2-Time1).seconds
+lenrequested = (Time2-Time1).total_seconds()
 
 #----- Loop over stations.  If a station has gaps, a stream of that sncl will 
 #-----      be made from all the traces.
@@ -120,7 +120,7 @@ for i in range(0,len(stAll)):
         datastalta = []
         nptstotal = 0
         inv = download_metadata_fdsn(stAll[i].stats.network, stAll[i].stats.station, stAll[i].stats.location, stAll[i].stats.channel, Time1, client)
-        dt = stAll[j].stats.delta
+        dt = stAll[i].stats.delta
         freqBB3 = 0.9 * (1/(2*dt))
         freqBB4 = 0.99 * (1/(2*dt))
 

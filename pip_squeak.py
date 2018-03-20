@@ -1,5 +1,4 @@
-#!/home/ahutko/anaconda3/bin/python
-##!/usr/bin/env python
+#!/usr/bin/env python
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
@@ -23,32 +22,35 @@ from obspy.signal import PPSD
 from obspy import Stream
 from get_data_metadata import *
 from noise_metrics import *
-########from plot_station import *
-
-from plot_station2 import *
-#from plot_station import *
-
+from plot_pip_squeak import *
 from parse_and_validate_args import *
+try:
+    from ConfigParser import SafeConfigParser
+except:
+    from configparser import SafeConfigParser
 
-#----- hardwired parameters for ShakeAlert acceptance
-FDSNtimeout = 24   #--- FDSN client timeout
-tpadding = 120
-sta = 0.05
-lta = 5.0
+#----- read config file
+
+parser = SafeConfigParser()
+parser.read("config.ini")
+
+FDSNtimeout = float(parser.get('SectionOne','FDSNtimeout'))
+tpadding = float(parser.get('SectionOne','tpadding'))
+sta = float(parser.get('SectionOne','sta'))
+lta = float(parser.get('SectionOne','lta'))
 tbuffer = sta + lta
-freqBP1 = 0.25
-freqBP2 = 0.3
-freqBP3 = 15.0
-freqBP4 = 17.0
-freqBB1 = 0.01
-freqBB2 = 0.02
-mpd = 10.0
-RMSlen = 5.0
-GainOrFullResp = "Gain"
-PSDperiods = [50, 30, 20, 12, 10, 5, 1, 0.2, 0.1, 0.05, 0.02]
-iplot = 0
-
-T0 = timeit.default_timer()
+freqBP1 = float(parser.get('SectionOne','freqBP1'))
+freqBP2 = float(parser.get('SectionOne','freqBP2'))
+freqBP3 = float(parser.get('SectionOne','freqBP3'))
+freqBP4 = float(parser.get('SectionOne','freqBP4'))
+freqBB1 = float(parser.get('SectionOne','freqBB1'))
+freqBB2 = float(parser.get('SectionOne','freqBB2'))
+mpd = float(parser.get('SectionOne','mpd'))
+RMSlen = float(parser.get('SectionOne','RMSlen'))
+GainOrFullResp = parser.get('SectionOne','GainOrFullResp')
+PSDperiods = (parser.get('SectionOne','PSDperiods'))[1:-1].split(",")
+PSDperiods = [float(i) for i in PSDperiods]
+iplot = parser.get('SectionOne','iplot')
 
 #----- read input arguments
 
@@ -62,36 +64,38 @@ location = args.location
 datacenter = args.datacenter
 iplot = args.iplot
 
-#print ("start " + str(starttime) + " " + str(endtime) + " " + str(durationinhours) + " " + str(durationinsec) + " " + datacenter + " " + str(type(durationinhours)) + " " + str(type(durationinsec))  )
-
 #----- Set up the FDSN client
 
+Tdc0 = timeit.default_timer()
 try:
     client = Client(datacenter,timeout = FDSNtimeout)
 except:
     print ( "Failed to connect to FDSN client. Used a timeout of " + str(FDSNtimeout) )
+Tdc1 = timeit.default_timer()
+print ("Time to connect to FDSNWS: " + str(Tdc1-Tdc0) )
 
 #----- Download waveform(s) 
 
 Time1padded = starttime - datetime.timedelta(0,tbuffer+tpadding)
 
+T0 = timeit.default_timer()
 if ( infile is None ):
     stAll = download_waveform_single_trace(network,station,location,channel,Time1padded,durationinsec+tbuffer+(2*tpadding),client)
 else:
     stAll = download_waveforms_fdsn_bulk(infile,Time1padded,durationinsec+tbuffer+(2*tpadding),client)
 print("")
+T1 = timeit.default_timer()
 
 #----- Get the time slices to analyze.
 
 Time1 = starttime - datetime.timedelta(0,tbuffer)
 Time2 = starttime + datetime.timedelta(0,durationinsec)
-lenrequested = (Time2-Time1).seconds
+lenrequested = (Time2-Time1).total_seconds()
 
 #----- Loop over seismograms.  If a station has gaps, a stream of that sncl will 
 #----- be made from all the traces.
 
 itrace = 0
-T1 = timeit.default_timer()
 Tsum = 0
 for i in range(0,len(stAll)):
     ntr = 1
@@ -100,7 +104,7 @@ for i in range(0,len(stAll)):
         sncl = stAll[i].stats.network + "." + stAll[i].stats.station + ".--." + stAll[i].stats.channel
     else:
         sncl = stAll[i].stats.network + "." + stAll[i].stats.station + "." + stAll[i].stats.location + "." + stAll[i].stats.channel
-#    print "SNCL " + sncl 
+#    print ( str(i) + " SNCL " + sncl )
     for j in range(0,len(stAll)):
         if ( stAll[j].stats.location == "" ):
             sncl2 = stAll[j].stats.network + "." + stAll[j].stats.station + ".--." + stAll[j].stats.channel
@@ -127,7 +131,7 @@ for i in range(0,len(stAll)):
         datastalta = []
         nptstotal = 0
         inv = download_metadata_fdsn(stAll[i].stats.network, stAll[i].stats.station, stAll[i].stats.location, stAll[i].stats.channel, Time1, client)
-        dt = stAll[j].stats.delta
+        dt = stAll[i].stats.delta
         freqBB3 = 0.9 * (1/(2*dt))
         freqBB4 = 0.99 * (1/(2*dt))
         segmentlong = 0
@@ -176,38 +180,12 @@ for i in range(0,len(stAll)):
 #                    VelFiltlabel = "Vel " + str(freqBP2) + "-" + str(freqBP3) + " Hz (cm/s)"
                     AccBroadlabel = str(freqBB2) + "-" + str(freqBB3) + "Hz RMS Acc (cm/s^2)"
                     AccFiltlabel =  str(freqBP2) + "-" + str(freqBP3) + "Hz Spikes Acc (cm/s^2)"
-                    VelFiltlabel =  str(freqBP2) + "-" + str(freqBP3) + "Hz Vel (cm/s)"
+                    VelFiltlabel =  "   " + str(freqBP2) + "-" + str(freqBP3) + "Hz    Vel (cm/s)"
                     for ij in range(0,len(stAccBroadplot)):
                         stAccBroadplot[ij].data = stAccBroadplot[ij].data*100
                         stAccFiltplot[ij].data = stAccFiltplot[ij].data*100
                         stVelFiltplot[ij].data = stVelFiltplot[ij].data*100
-
-
-
-                    from obspy.signal.util import smooth
-                    iRMSwinlen = int(5.0/dt)
-                    rmsthing = np.sqrt(smooth(((stAccFiltplot[ij].data*100)**2),iRMSwinlen))
-
-
-# for RMS plot
-
-#                    st1 = stAccFiltplot.copy()
-#                    import obspy.signal
-#                    env = obspy.signal.filter.envelope(st1[0].data)
-#                    for ijk in range(0,len(env)):
-#                        print (str(st1[0].data[ijk]) + " " + str(env[ijk]))
-
-#                    make_station_figure_talk(strawplot,stVelFiltplot,stAccFiltplot,stAccFiltplot,env,"Raw",VelFiltlabel,AccBroadlabel,AccFiltlabel,"Sta/Lta",0,0,0.07,0.34,0)  #--- of order 25sec/channel for 1 hr long traces
-                    make_station_figure_talk(strawplot,stVelFiltplot,stAccFiltplot,stAccFiltplot,datastalta,"Raw",VelFiltlabel,AccBroadlabel,AccFiltlabel,"Sta/Lta",0,0,0.07,0.34,20)  #--- of order 25sec/channel for 1 hr long traces
-
-
-#                    make_station_figure_wthresholds(strawplot,stVelFiltplot,stAccFiltplot,stAccFiltplot,datastalta,"Raw",VelFiltlabel,AccBroadlabel,AccFiltlabel,"Sta/Lta",0,0,0,0.34,20)  #--- of order 25sec/channel for 1 hr long traces
-
-# default
-#                    make_station_figure_wthresholds(strawplot,stVelFiltplot,stAccBroadplot,stAccFiltplot,datastalta,"Raw",VelFiltlabel,AccBroadlabel,AccFiltlabel,"Sta/Lta",0,0,0.07,0.34,20)  #--- of order 25sec/channel for 1 hr long traces
-
-# old one
-#                    make_station_figure(strawplot,stVelFiltplot,stAccBroadplot,stAccFiltplot,datastalta,"Raw",VelFiltlabel,AccBroadlabel,AccFiltlabel,"Sta/Lta")  #--- of order 25sec/channel for 1 hr long traces
+                    make_station_figure_pip_squeak(strawplot,stVelFiltplot,stAccFiltplot,stAccFiltplot,datastalta,"Raw       (counts)",VelFiltlabel,AccBroadlabel,AccFiltlabel,"     STA/LTA",0,0,0.07,0.34,20,RMSlen)  #--- of order 25sec/channel for 1 hr long traces
             T4 = timeit.default_timer()
             Tplot = T4-T3
 
@@ -221,8 +199,8 @@ for i in range(0,len(stAll)):
         ngaps = ntr - 1
         NoiseFloorAcc = noise_floor(dataAccFilt)
         NoiseFloorVel = noise_floor(dataVelFilt)
-        snr20_0p34cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.0034)  #--- ShakeAlert stat. acceptance thresh. is now 0.0034
-        RMSduration_0p07cm = duration_exceed_RMS(dataAccBroad,0.0007,RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007.
+        snr20_0p34cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.0034)  #--- ShakeAlert stat. acceptance thresh. is now 0.0034 m/s^2 = 0.34cm/s^2.
+        RMSduration_0p07cm = duration_exceed_RMS(dataAccBroad,0.0007,RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007 m/s^2 = 0.07cm/s^2.
         T2 = timeit.default_timer()
 
         if ( ngaps/durationinhours < 1.0 ):
@@ -246,14 +224,10 @@ for i in range(0,len(stAll)):
             strnspikes = "nspikes_FAIL: " + str(snr20_0p34cm/durationinhours)
             strnspikes = str( "nspikes_FAIL: %.3f " % (snr20_0p34cm/durationinhours) )
 
-        if ( 100*dt*nptstotal/lenrequested < 95 ):
+        if ( pctavailable > 95. ):
             strpctavail = str( "pctavailable_PASS: %.4f " % (100*dt*nptstotal/lenrequested) )
         else:
             strpctavail = str( "pctavailable_FAIL: %.4f " % (100*dt*nptstotal/lenrequested) )
 
-#        print ( sncl + " " + " download: " + str(T1-T0) + "s  calculate: " + str(T2-T1) + "s " + " " + strngap + " " + strrms + " " + strnspikes + " " + strpctavail + " Nsegments: " + str(itrace) + " segmentlong: " + str(segmentlong) + "s segmentshort: " + str(segmentshort) + "s" )
-#        print ("")
         print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, itrace, segmentlong, segmentshort) )
-        print ("")
-
 

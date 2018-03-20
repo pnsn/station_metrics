@@ -1,12 +1,30 @@
 
 <a href="https://drive.google.com/drive/u/1/folders/0B8N_TOtFCLuyOVNUUmVuTzJTNHc">Google drive folder for Station_Metrics</a>
 
+# Overview
+
 These are the collection of scripts to calculate near-real time station metrics which are being calculated hourly at the PNSN.
+
+# Installation
+
+These python scripts run on Python 2.7 and Python 3.5 with the following major package dependencies:
+<a href="http://www.numpy.org/">numpy</a>, <a href="https://github.com/obspy/obspy/wiki">obspy</a>, <a href="https://matplotlib.org">matplotlib</a>.
+
+These can easily be added via command line using <a href="https://www.anaconda.com/">Anaconda</a>.  It is recommended you not use your system python, rather use a virtual environment.
+
+```
+>> conda create -n redpy python=3.5
+>> source activate redpy
+>> conda install -c obspy obspy
+>> conda install -c conda-forge bokeh cartopy shapely=1.5.17
+>> conda install pytables pandas
+```
 
 # Files
 
 - *calculate_metrics.py*    This is the main ObsPy based python script for calculating metrics for a list of stations.  Writes to a db. 
-- *calculate_metrics_for_acceptance.py* This is a one-off script made for the ShakeAlert station acceptance group. (still in testing/flux) 
+- *pip_squeak.py* This is a one-off script made for the ShakeAlert station acceptance group. (still in testing/flux) 
+- *parse_and_validate_args.py* Used by pip_squeak.py to read, pase and validate input arguments.
 - *get_data_metadata.py*    This uses ObsPy bulkrequests to download data.  Also gets metadata/response/gain factors.
 - *noise_metrics.py*        These are functions to calculate metrics such as noise floor, N spikes, duration of RMS > threshold.
 - *plot_station.py*         Makes a simple .png figure of the seismogram being analyzed.
@@ -23,7 +41,40 @@ These are the collection of scripts to calculate near-real time station metrics 
 
 Using calculate_metrics.py, calculating hourly metrics for 400 channels takes around 20 minutes on a single CPU when data are downloaded from an FDSNWS such as IRIS.
 
-# Some usage examples
+# Using pip_squeak for one-off ShakeAlert station assessment
 
+Run for a duration (-d) of 1 hour:
+```
+>> ./pip_squeak.py  -N UW -S REED -C HNZ -L -- -dc IRIS -s 2018-01-03T22:00:00 -d 1
+>> UW.REED.--.HNZ  download: 0.33s calculate: 1.17s plot: 0.00s ngaps_PASS: 0.000  rms_FAIL: 738.525  nspikes_FAIL: 23.000  pctavailable_PASS: 100.0001   Nsegments: 1  segmentlong: 3605.055  segmentshort: 3605.055 
+``` 
+
+Same thing, but use an endtime (-e) instead.  And add a figure (-p).  Note, plotting is SLOW (64sec):
+```
+>> ./pip_squeak.py  -N UW -S REED -C HNZ -L -- -dc IRIS -s 2018-01-03T22:00:00 -e 2018-01-03T23:00:00 -p
+>> UW.REED.--.HNZ  download: 0.34s calculate: 1.14s plot: 64.28s ngaps_PASS: 0.000  rms_FAIL: 738.525  nspikes_FAIL: 23.000  pctavailable_PASS: 100.0001   Nsegments: 1  segmentlong: 3605.055  segmentshort: 3605.055 
+```
+
+Now use a list of station (-i) and run it for two weeks.  Note: a datacenter (-dc) is still needed.
+```
+>> cat MyStationList 
+UW ALKI -- ENZ
+UW ALST -- ENZ
+UW BABE -- ENZ
+UW BABR -- BHZ
+UW REED -- HNZ
+>> ./pip_squeak.py -i MyStationList -dc IRIS -s 2018-01-03T22:00:00 -d 1
+UW.ALKI.--.ENZ No_data_returned
+
+UW.ALST.--.ENZ  download: 0.75s calculate: 0.54s plot: 0.00s ngaps_PASS: 0.000  rms_PASS: 0.000  nspikes_PASS: 0.000  pctavailable_PASS: 100.0003   Nsegments: 1  segmentlong: 3605.060  segmentshort: 3605.060 
+UW.BABE.--.ENZ  download: 0.75s calculate: 1.07s plot: 0.00s ngaps_PASS: 0.000  rms_FAIL: 332.640  nspikes_FAIL: 7.000  pctavailable_PASS: 100.0003   Nsegments: 2  segmentlong: 3605.060  segmentshort: 3605.060 
+UW.BABR.--.BHZ  download: 0.75s calculate: 1.29s plot: 0.00s ngaps_PASS: 0.000  rms_PASS: 0.000  nspikes_PASS: 0.000  pctavailable_PASS: 100.0007   Nsegments: 3  segmentlong: 3605.075  segmentshort: 3605.075 
+UW.REED.--.HNZ  download: 0.75s calculate: 2.45s plot: 0.00s ngaps_PASS: 0.000  rms_FAIL: 738.525  nspikes_FAIL: 23.000  pctavailable_PASS: 100.0001   Nsegments: 4  segmentlong: 3605.055  segmentshort: 3605.055 
+>> 
+>>
+```
+
+Example of plotting output from pip_squeak.py:
+<img src="https://github.com/pnsn/station_metrics/blob/master/station_metrics/img/WAVEFORMS.2018.1.3.22.UW.REED..HNZ.png" width=800 alt="Metric: Noise Floor" />
 
 
