@@ -1,15 +1,16 @@
 [SectionOne]
-#  Set the timeout for the FDSNWS client.  Less than 5sec is fine for IRIS.  SCEDC might need more time.
+#  Floats are ok for all numbers.
+#  Set the timeout (sec) for the FDSNWS client.  Less than 5sec is fine for IRIS.  SCEDC might need more time.
 FDSNtimeout: 24
 
-#  Padding length on both sides of the trace to avoid edge effects when filtering. Should be > (2/freqBB2).
+#  Padding length (sec) on both sides of the trace to avoid edge effects when filtering. Should be > (2/freqBB2).
 tpadding: 120
 
-#  Lenths in sec of the Short Term Average and Long Term Average.
+#  Lenths (sec) of the Short Term Average and Long Term Average.
 sta: 0.05
 lta: 5.0
 
-#  Frequencies for filtering for use in Nspikes, RMS, noisefloor metrics.  freq_min, low_freq_corner, high_freq_corner, freq_max.
+#  Frequencies (Hz) for filtering for use in Nspikes, RMS, noisefloor metrics.  freq_min, low_freq_corner, high_freq_corner, freq_max.
 freqBP1: 0.25
 freqBP2: 0.3
 freqBP3: 15.0
@@ -19,10 +20,10 @@ freqBP4: 17.0
 freqBB1: 0.01
 freqBB2: 0.02
 
-#  Minimum peak distance.  When counting spikes in the STA/LTA function, this is min dist. bw peaks that exceed the STA/LTA threshold (=20).
+#  Minimum peak distance (sec).  When counting spikes in the STA/LTA function, this is min dist. bw peaks that exceed the STA/LTA threshold (=20). Good to make >= 2x LTA.
 mpd: 10.0
 
-#  Length of the running RMS windowing function used for the RMS noise duration metric.
+#  Length of the running RMS windowing function (sec) used for the RMS noise duration metric.
 RMSlen: 5.0
 
 #  Either use just the "Gain" or the full "Resp" (response) file for instrument response removal.
