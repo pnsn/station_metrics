@@ -1,0 +1,18 @@
+[SectionOne]
+
+FDSNtimeout: 24
+tpadding: 120
+sta: 0.05
+lta: 5.0
+freqBP1: 0.25
+freqBP2: 0.3
+freqBP3: 15.0
+freqBP4: 17.0
+freqBB1: 0.01
+freqBB2: 0.02
+mpd: 10.0
+RMSlen: 5.0
+GainOrFullResp: "Gain"
+PSDperiods: [50, 30, 20, 12, 10, 5, 1, 0.2, 0.1, 0.05, 0.02]
+iplot: 0
+
