@@ -17,7 +17,7 @@ These can easily be added via command line using <a href="https://www.anaconda.c
 ```
 >> conda create -n stationmetrics python=3.5
 >> source activate stationmetrics
->> conda install -c obspy obspy
+>> conda install obspy
 >> conda install -c conda-forge matplotlib
 >> conda install -c anaconda numpy
 ```
