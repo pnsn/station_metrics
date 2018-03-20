@@ -13,11 +13,11 @@ These python scripts run on Python 2.7 and Python 3.5 with the following major p
 These can easily be added via command line using <a href="https://www.anaconda.com/">Anaconda</a>.  It is recommended you not use your system python, rather use a virtual environment.
 
 ```
->> conda create -n redpy python=3.5
->> source activate redpy
+>> conda create -n stationmetrics python=3.5
+>> source activate stationmetrics
 >> conda install -c obspy obspy
->> conda install -c conda-forge bokeh cartopy shapely=1.5.17
->> conda install pytables pandas
+>> conda install -c conda-forge matplotlib
+>> conda install -c anaconda numpy
 ```
 
 # Files
@@ -28,6 +28,7 @@ These can easily be added via command line using <a href="https://www.anaconda.c
 - *get_data_metadata.py*    This uses ObsPy bulkrequests to download data.  Also gets metadata/response/gain factors.
 - *noise_metrics.py*        These are functions to calculate metrics such as noise floor, N spikes, duration of RMS > threshold.
 - *plot_station.py*         Makes a simple .png figure of the seismogram being analyzed.
+- *plot_pip_squeak.py*      Makes a simple .png figure of the seismogram being analyzed, raw trace, STA/LTA trace, ShakeAlert station acceptance thresholds etc.
 - *database_read_write.py*  Reads and writes to the postgres database.  NOTE: needs to change INSERT to UPSERT.
 - *TestDownloadingSpeed.py* Simple script to test downloading speed at FDSN data centers. Choose either serial or bulk download.
 - *run_metrics.csh*  This is the shell script that runs the python code, it's set up on an hourly cron.
