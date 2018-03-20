@@ -43,7 +43,11 @@ These can easily be added via command line using <a href="https://www.anaconda.c
 
 Using calculate_metrics.py, calculating hourly metrics for 400 channels takes around 20 minutes on a single CPU when data are downloaded from an FDSNWS such as IRIS.
 
+pip_squeak.py takes about 5 sec to connect to an FDSNWS, then about 1 sec per hour per trace of calculations.  Hourly plots take about a minute each.
+
 # Using pip_squeak for one-off ShakeAlert station assessment
+
+Note: PASS/FAIL results are hourly averaged.
 
 Run for a duration (-d) of 1 hour:
 ```
@@ -65,13 +69,13 @@ UW ALST -- ENZ
 UW BABE -- ENZ
 UW BABR -- BHZ
 UW REED -- HNZ
->> ./pip_squeak.py -i MyStationList -dc IRIS -s 2018-01-03T22:00:00 -d 1
+>> ./pip_squeak.py -i MyStationList -dc IRIS -s 2018-01-03T22:00:00 -d 336
 UW.ALKI.--.ENZ No_data_returned
 
-UW.ALST.--.ENZ  download: 0.75s calculate: 0.54s plot: 0.00s ngaps_PASS: 0.000  rms_PASS: 0.000  nspikes_PASS: 0.000  pctavailable_PASS: 100.0003   Nsegments: 1  segmentlong: 3605.060  segmentshort: 3605.060 
-UW.BABE.--.ENZ  download: 0.75s calculate: 1.07s plot: 0.00s ngaps_PASS: 0.000  rms_FAIL: 332.640  nspikes_FAIL: 7.000  pctavailable_PASS: 100.0003   Nsegments: 2  segmentlong: 3605.060  segmentshort: 3605.060 
-UW.BABR.--.BHZ  download: 0.75s calculate: 1.29s plot: 0.00s ngaps_PASS: 0.000  rms_PASS: 0.000  nspikes_PASS: 0.000  pctavailable_PASS: 100.0007   Nsegments: 3  segmentlong: 3605.075  segmentshort: 3605.075 
-UW.REED.--.HNZ  download: 0.75s calculate: 2.45s plot: 0.00s ngaps_PASS: 0.000  rms_FAIL: 738.525  nspikes_FAIL: 23.000  pctavailable_PASS: 100.0001   Nsegments: 4  segmentlong: 3605.055  segmentshort: 3605.055 
+UW.ALST.--.ENZ  download: 32.54s calculate: 181.33s plot: 0.00s ngaps_PASS: 0.012  rms_PASS: 0.000  nspikes_PASS: 0.000  pctavailable_PASS: 99.9521   Nsegments: 1  segmentlong: 487084.600  segmentshort: 1566.760 
+UW.BABE.--.ENZ  download: 32.54s calculate: 359.38s plot: 0.00s ngaps_PASS: 0.030  rms_FAIL: 151.445  nspikes_FAIL: 2.521  pctavailable_PASS: 99.9949   Nsegments: 2  segmentlong: 499481.000  segmentshort: 4548.000 
+UW.BABR.--.BHZ  download: 32.54s calculate: 423.75s plot: 0.00s ngaps_PASS: 0.003  rms_PASS: 0.000  nspikes_PASS: 0.000  pctavailable_PASS: 99.9540   Nsegments: 3  segmentlong: 774467.750  segmentshort: 434581.475 
+UW.REED.--.HNZ  download: 32.54s calculate: 874.54s plot: 0.00s ngaps_PASS: 0.065  rms_FAIL: 334.611  nspikes_FAIL: 15.613  pctavailable_PASS: 99.9902   Nsegments: 4  segmentlong: 170661.830  segmentshort: 0.860 
 >> 
 >>
 ```
