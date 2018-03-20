@@ -4,6 +4,7 @@
 # Overview
 
 These are the collection of scripts to calculate near-real time station metrics which are being calculated hourly at the PNSN.
+NOTE:  A few things are still needed.  pip_squeak.py is clean, but calculate_metrics.py still needs to be cleaned up (as well as making it run from a config file).
 
 # Installation
 
@@ -82,5 +83,4 @@ UW.REED.--.HNZ  download: 27.96s calculate: 840.27s plot: 0.00s ngaps_PASS: 0.06
 
 Example of plotting output from pip_squeak.py:
 <img src="https://github.com/pnsn/station_metrics/blob/master/station_metrics/img/WAVEFORMS.2018.1.3.22.UW.REED..HNZ.png" width=800 alt="Metric: Noise Floor" />
-
 
