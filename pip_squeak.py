@@ -21,9 +21,9 @@ from obspy.signal.filter import envelope
 from obspy.signal.filter import bandpass
 #from obspy.signal import PPSD
 from obspy import Stream
-from get_data_metadata import *
-from noise_metrics import *
-from plot_pip_squeak import *
+from station_metrics.io.get_data_metadata import *
+from station_metrics.metrics.noise_metrics import *
+from station_metrics.plotting.plot_pip_squeak import *
 from parse_and_validate_args import *
 try:
     from ConfigParser import SafeConfigParser
@@ -33,7 +33,7 @@ except:
 #----- read config file
 
 parser = SafeConfigParser()
-parser.read("config.pip_squeak")
+parser.read("config/config.pip_squeak")
 
 FDSNtimeout = float(parser.get('SectionOne','FDSNtimeout'))
 tpadding = float(parser.get('SectionOne','tpadding'))
