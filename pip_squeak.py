@@ -118,6 +118,7 @@ for i in range(0,len(stAll)):
             else:
                 ntr = ntr + 1
     if ( iduplicate == 0 ):
+        T2 = timeit.default_timer()
         itrace = itrace + 1
         tr = []
         trRaw = []
@@ -163,7 +164,7 @@ for i in range(0,len(stAll)):
                 datastalta = np.concatenate((datastalta,stalta),axis=0)
             else:
                 datastalta = np.concatenate((datastalta,np.zeros(trAccBroad.stats.npts)),axis=0)
-            T3 = timeit.default_timer()
+            T4 = timeit.default_timer()
             if ( iplot == 1 ):
                 if ( j == i ):
                     strawplot = Stream(traces=[trRaw])
@@ -179,16 +180,16 @@ for i in range(0,len(stAll)):
 #                    AccBroadlabel = "Acc " + str(freqBB2) + "-" + str(freqBB3) + " Hz (cm/s^2)"
 #                    AccFiltlabel = "Acc " + str(freqBP2) + "-" + str(freqBP3) + " Hz (cm/s^2)"
 #                    VelFiltlabel = "Vel " + str(freqBP2) + "-" + str(freqBP3) + " Hz (cm/s)"
-                    AccBroadlabel = str(freqBB2) + "-" + str(freqBB3) + "Hz RMS Acc (cm/s^2)"
-                    AccFiltlabel =  str(freqBP2) + "-" + str(freqBP3) + "Hz Spikes Acc (cm/s^2)"
+                    AccRMSlabel = str(freqBP2) + "-" + str(freqBP3) + "Hz RMS Acc (cm/s^2)"
+                    AccNspikeslabel =  str(freqBP2) + "-" + str(freqBP3) + "Hz Spikes Acc (cm/s^2)"
                     VelFiltlabel =  "   " + str(freqBP2) + "-" + str(freqBP3) + "Hz    Vel (cm/s)"
                     for ij in range(0,len(stAccBroadplot)):
                         stAccBroadplot[ij].data = stAccBroadplot[ij].data*100
                         stAccFiltplot[ij].data = stAccFiltplot[ij].data*100
                         stVelFiltplot[ij].data = stVelFiltplot[ij].data*100
-                    make_station_figure_pip_squeak(strawplot,stVelFiltplot,stAccFiltplot,stAccFiltplot,datastalta,"Raw       (counts)",VelFiltlabel,AccBroadlabel,AccFiltlabel,"     STA/LTA",0,0,0.07,0.34,20,RMSlen)  #--- of order 25sec/channel for 1 hr long traces
-            T4 = timeit.default_timer()
-            Tplot = T4-T3
+                    make_station_figure_pip_squeak(strawplot,stVelFiltplot,stAccFiltplot,stAccFiltplot,datastalta,"Raw       (counts)",VelFiltlabel,AccRMSlabel,AccNspikeslabel,"     STA/LTA",0,0,0.07,0.34,20,RMSlen)  #--- of order 25sec/channel for 1 hr long traces
+            T5 = timeit.default_timer()
+            Tplot = T5-T4
 
         rawrange = float(np.ptp(dataraw))
         rawmean = np.mean(dataraw)
@@ -202,7 +203,7 @@ for i in range(0,len(stAll)):
         NoiseFloorVel = noise_floor(dataVelFilt)
         snr20_0p34cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.0034)  #--- ShakeAlert stat. acceptance thresh. is now 0.0034 m/s^2 = 0.34cm/s^2.
         RMSduration_0p07cm = duration_exceed_RMS(dataAccBroad,0.0007,RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007 m/s^2 = 0.07cm/s^2.
-        T2 = timeit.default_timer()
+        T3 = timeit.default_timer()
 
         if ( ngaps/durationinhours < 1.0 ):
             strngap = "ngaps_PASS: " + str(ngaps/durationinhours)
@@ -231,5 +232,5 @@ for i in range(0,len(stAll)):
             strpctavail = str( "pctavailable_FAIL: %.4f " % (100*dt*nptstotal/lenrequested) )
 
 #        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, itrace, segmentlong, segmentshort) )
-        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, ntr, segmentlong, segmentshort) )
+        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T3-T2-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, ntr, segmentlong, segmentshort) )
 
