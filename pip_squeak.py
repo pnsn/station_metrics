@@ -2,32 +2,45 @@
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
+# import std packages
 import argparse
+import datetime
+from datetime import date
 import os
 import sys
-from obspy import read
+import time
+import timeit
+
+# import third party packages
 import numpy as np
+from obspy import read
 from obspy.clients.fdsn import Client
 from obspy import UTCDateTime
 from obspy.signal.util import smooth
-import datetime
-from datetime import date
-import time
-import timeit
 from obspy.signal.trigger import z_detect
 from obspy.signal.trigger import classic_sta_lta
 from obspy.signal.filter import envelope 
 from obspy.signal.filter import bandpass
 #from obspy.signal import PPSD
 from obspy import Stream
-from station_metrics.io.get_data_metadata import *
-from station_metrics.metrics.noise_metrics import *
-from station_metrics.plotting.plot_pip_squeak import *
-from config.parse_and_validate_args import *
 try:
     from ConfigParser import SafeConfigParser
 except:
     from configparser import SafeConfigParser
+
+# import station_metrics packages
+from station_metrics.io.get_data_metadata import download_waveform_single_trace
+from station_metrics.io.get_data_metadata import download_waveforms_fdsn_bulk
+from station_metrics.io.get_data_metadata import download_metadata_fdsn
+
+from station_metrics.metrics.preprocessing import raw_trace_to_ground_motion_filtered_pruned
+from station_metrics.metrics.noise_metrics import noise_floor, count_peaks_stalta
+from station_metrics.metrics.noise_metrics import duration_exceed_RMS
+
+from station_metrics.plotting.plot_pip_squeak import make_station_figure_pip_squeak
+
+from config.parse_and_validate_args import validate_args_and_get_times, parse_args
+
 
 #----- read config file
 
@@ -69,8 +82,8 @@ iplot = args.iplot
 Tdc0 = timeit.default_timer()
 try:
     client = Client(datacenter,timeout = FDSNtimeout)
-except:
-    print ( "Failed to connect to FDSN client. Used a timeout of " + str(FDSNtimeout) )
+except Exception as error:
+    print ("Error: {}, Failed to connect to FDSN client. Used a timeout of {}".format(error, FDSNtimeout))
 Tdc1 = timeit.default_timer()
 print ("Time to connect to FDSNWS: " + str(Tdc1-Tdc0) )
 
