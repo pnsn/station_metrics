@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% block head %}
+    <link rel="stylesheet" href="style.css" />
+    <title>{% block title %}{% endblock %}Report</title>
+    {% endblock %}
+</head>
+<body>
+    <div id="content">{% block phase1 %}{% endblock %}</div>
+    <div id="footer">
+        {% block footer %}
+        &copy; 2018, PNSN, Report generated at <script>new Date()</script>
+        {% endblock %}
+    </div>
+</body>
+</html>

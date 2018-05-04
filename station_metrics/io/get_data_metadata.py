@@ -9,7 +9,8 @@ def download_waveform_single_trace(net,stat,loc,chan,starttime,duration,client):
     Uses ObsPy get_waveforms to download from an FDSN WS.
     The FDSN client passed through needs to already be open.
     Request will start at yr/mo/dyThr:mi:sc and be (duration) sec long.
-    starttime is a datetime object
+    starttime is a datetime object. Returns a Stream object that
+    might have multiple traces if there are gaps in the data.
     """
     T1 = UTCDateTime(starttime)
     T2 = UTCDateTime(starttime + datetime.timedelta(0,duration))
@@ -26,7 +27,8 @@ def download_waveforms_fdsn_bulk(chanfile,starttime,duration,client):
     Uses ObsPy get_waveforms_bulk to download from an FDSN WS.
     The FDSN client passed through needs to already be open.
     Request will start at yr/mo/dyThr:mi:sc and be (duration) sec long.
-    starttime is a datetime object
+    starttime is a datetime object. Returns Stream, which may have multiple
+    traces per channel if that data channel has gaps.
     Chanfile should look like:
     AZ BZN -- HHZ
     AZ CPE -- HHZ
@@ -81,12 +83,28 @@ def download_waveforms_fdsn_bulk(chanfile,starttime,duration,client):
     return st
 
 
-def download_metadata_fdsn(net,stat,loc,chan,starttime,client):
+def download_metadata_fdsn(client,net=None,sta=None,loc=None,chan=None,starttime=None):
+    kwargs = {}
+    kwargs['level'] = 'response'
+    if starttime:
+        try:
+            T1 = UTCDateTime(starttime)
+            T2 = UTCDateTime(starttime + datetime.timedelta(0,1))
+            kwargs['starttime'] = T1
+            kwargs['endtime'] = T2
+        except Exception as error:
+            print("unable to parse starttime: {}, Error: {}".format(starttime,error))
+    if net:
+        kwargs['network'] = net
+    if sta:
+        kwargs['station'] = sta
+    if chan:
+        kwargs['channel'] = chan
+    if loc:
+        kwargs['location'] = loc
     try:
-        T1 = UTCDateTime(starttime)
-        T2 = UTCDateTime(starttime + datetime.timedelta(0,1))
-        inventory = client.get_stations(network=net,station=stat,location=loc,channel=chan,starttime=T1,endtime=T2, level='response')
-    except:
-        print ( "Inventory not available for: " + net + "." + stat + "." + loc +"." + chan + str(starttime) + " to " + str(endtime) )
+        inventory = client.get_stations(**kwargs)
+    except Exception as error:
+        print ("Unable to get Inventory for: {}, Error: {}".format(kwargs,error))
         inventory = []
     return inventory

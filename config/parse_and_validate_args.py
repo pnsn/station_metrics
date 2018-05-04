@@ -41,8 +41,8 @@ def parse_args():
     parser.add_argument('-i','--infile',action='store', dest='infile',help='name of file where lines are: NET STAT LOC CHAN')
     parser.add_argument('-N','--net', action='store', dest='network',help='network')
     parser.add_argument('-S','--sta', action='store', dest='station',help='station')
-    parser.add_argument('-C','--cha', action='store', dest='channel',help='channel')
-    parser.add_argument('-L','--loc', action='store', dest='location',help='location',  type=_postprocess_sysargv)
+    #parser.add_argument('-C','--cha', action='store', dest='channel',help='channel')
+    #parser.add_argument('-L','--loc', action='store', dest='location',help='location',  type=_postprocess_sysargv)
     parser.add_argument('-s','--start', action='store', dest='startstring',help='start time YYYY-MM-DDTHH:MM:SS')
     parser.add_argument('-e','--end', action='store', dest='endstring',help='end time YYYY-MM-DDTHH:MM:SS')
     parser.add_argument('-d','--duration', action='store', dest='durationinhours',help='duration in hours')
@@ -95,8 +95,8 @@ def validate_args_and_get_times(args):
     infile = args.infile
     network = args.network
     station = args.station
-    channel = args.channel
-    location = args.location
+    #channel = args.channel
+    #location = args.location
     startstring = args.startstring
     endstring = args.endstring
     durationinhours = args.durationinhours
@@ -130,24 +130,22 @@ def validate_args_and_get_times(args):
                 exit()
 
     #----- make sure there is either an entire SNCL or an input file of SNCLs
-    if ( ( network is not None and station is not None and location is not None and channel is not None ) or infile is not None ):
-        idonothing = 1
-    else:
-        print ("Error:  need either network + station + location + channel  OR a file with SNCLs")
+    if ( ( network is None or station is None ) and infile is None ):
+        print ("Error:  need either network + station  OR a file with SNCLs")
         exit()
 
-    #----- validate channel input
-    instsampling_list = ['H','B','S','E','L']
-    insttype_list = ['N','H','X','C']
-    component_list = ['0','1','2','3','Z','N','E','R','T','Q']
-    if ( channel is not None ):
-        if ( len(channel) != 3 ):
-           print ("Error: invalid channel " + channel )
-           exit()
-        else:
-            if ( channel[0] not in instsampling_list or channel[1] not in insttype_list or channel[2] not in component_list ):
-                print ("Error: invalid channel " + channel )
-
+#    #----- validate channel input
+#    instsampling_list = ['H','B','S','E','L']
+#    insttype_list = ['N','H','X','C']
+#    component_list = ['0','1','2','3','Z','N','E','R','T','Q']
+#    if ( channel is not None ):
+#        if ( len(channel) != 3 ):
+#           print ("Error: invalid channel " + channel )
+#           exit()
+#        else:
+#            if ( channel[0] not in instsampling_list or channel[1] not in insttype_list or channel[2] not in component_list ):
+#                print ("Error: invalid channel " + channel )
+#
     #----- read and do minimal validation of the infile if there is one
     if ( infile is not None ):
         f = open(infile,'r')
@@ -169,11 +167,11 @@ def validate_args_and_get_times(args):
                     exit()
 
     #----- validate the FDSN data center against a list
-    if ( datacenter is not None ):
-        if ( datacenter not in [ "IRIS", "NCEDC", "SCEDC", "BGR", "EMSC", "ETH", "GEONET", "GFZ", "ICGC", "INGV", "IPGP", "ISC", "KOERI", "LMU", "NIEP", "NOA", "ODC", "ORFEUS", "RESIF", "TEXNET", "USGS", "USP" ] ):
+    if (datacenter is not None):
+        if (datacenter not in [ "IRIS", "NCEDC", "SCEDC", "BGR", "EMSC", "ETH", "GEONET", "GFZ", "ICGC", "INGV", "IPGP", "ISC", "KOERI", "LMU", "NIEP", "NOA", "ODC", "ORFEUS", "RESIF", "TEXNET", "USGS", "USP" ]):
             print ("Error: need a valid FDSN data center")
             exit()
 
-    return [ starttime, endtime, durationinhours, durationinsec ]
+    return [starttime, endtime, durationinhours, durationinsec]
 
 
