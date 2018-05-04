@@ -103,7 +103,7 @@ def write_database4(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,value
     cols = ('id','sncl_id','metric_id','value','starttime','endtime','datasrc_id','created_at')
     iid = last_insert_id(dbconn.cursor(),'measurements','id') + 1 
 
-    print ("Last ID is " + str(iid) ) #+ " " + str(type(iid)) )
+    print ("Last ID is " + str(iid) ) + " " + str(type(iid)) )
 
     for idb in range(0,len(metriclist)):
         if ( metriclist[idb] in metric_list_db ):

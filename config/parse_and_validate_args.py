@@ -138,8 +138,8 @@ def validate_args_and_get_times(args):
 
     #----- validate channel input
     instsampling_list = ['H','B','S','E','L']
-    insttype_list = ['N','H','X']
-    component_list = ['0','1','2','3','Z','N','E','R','T']
+    insttype_list = ['N','H','X','C']
+    component_list = ['0','1','2','3','Z','N','E','R','T','Q']
     if ( channel is not None ):
         if ( len(channel) != 3 ):
            print ("Error: invalid channel " + channel )

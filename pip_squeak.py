@@ -1,5 +1,4 @@
-#!/home/ahutko/anaconda3/bin/python
-##!/usr/bin/env python
+#!/usr/bin/env python
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
@@ -24,7 +23,7 @@ from obspy import Stream
 from station_metrics.io.get_data_metadata import *
 from station_metrics.metrics.noise_metrics import *
 from station_metrics.plotting.plot_pip_squeak import *
-from parse_and_validate_args import *
+from config.parse_and_validate_args import *
 try:
     from ConfigParser import SafeConfigParser
 except:
