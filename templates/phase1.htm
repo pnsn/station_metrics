@@ -1,5 +1,5 @@
 {% extends "report.htm" %}
-{% block title %}Phase1 Report for {{ channel.net }}.{{ channel.sta }} {% endblock %}
+{% block title %}Phase1 Report for {{ network_code }}.{{ station.code }} {% endblock %}
 {% block head %}
     {{ super() }}
     <style type="text/css">
@@ -7,14 +7,97 @@
     </style>
 {% endblock %}
 {% block phase1 %}
-    <h1>{{ self.title() }}</h1>
+    <div id="intro">
+        <h2>{{ self.title() }}</h2>
+        <h4>{{ starttime.isoformat() }} - {{ endtime.isoformat() }}</h4>
+        <a href="./{{ station.code }}.pdf">Link to PDF</a>
+
+        <div id="site_info">
+            <table class="table table-bordered">
+              <caption>Site Information</caption>
+              <thead>
+                 <tr>
+                  <th>Station</th>
+                  <th>Institution</th>
+                  <th>Latitude (deg N)</th>
+                  <th>Longitude (deg E)</th>
+                  <th>Elevation (m)</th>
+                  <th>Start Date</th>
+                  <th>Telemetry Type</th>
+                  <th>Next closest site (km)</th>
+                 </tr>
+              </thead>
+              <tbody>
+              <tr>
+                  <td>{{network_code }}.{{ station.code }}</td>
+                  <td>PNSN</td>
+                  <td>{{ station.latitude | round(7,method='common') }}</td>
+                  <td>{{ station.longitude | round(7,method='common') }}</td>
+                  <td>{{ station.elevation | round() }}</td>
+                  <td>{{ (station.start_date).isoformat() }}</td>
+                  <td></td>
+                  <td></td>
+              </tr>
+              </tbody>
+            </table>
+            <div id="location_accuracy">
+                <p><input type="checkbox">Location accurate to 100 m   ______________ (initial)</p>
+            </div>
+        </div>
+
+        <div id="logger_info">
+            <table class="table table-bordered">
+             <caption>Digitizer</caption>
+             <thead>
+             <tr>
+              <th>Datalogger</th>
+              <th>Serial number</th>
+             </tr>
+             </thead>
+             <tbody>
+             <tr>
+              <td></td>
+              <td></td>
+             </tr>
+             </tbody>
+            </table>
+            <div id="timing_accuracy">
+                 <p><input type="checkbox">Time stamp accurate to 0.01s  _____________ (initial)</p>
+            </div>
+        </div>
+
+        <div id="sensor_info">
+            <table class="table">
+              <caption>Sensor(s)</caption>
+              <tr>
+                  <th>Channel</th>
+                  <th>Sensor</th>
+                  <th>Serial number</th>
+                  <th>Metadata verified?</th>
+              </tr>
+              {% for ch in station.channels %}
+              {% if ch.location_code == "" %}
+                  {% set loc = "--" %}
+              {% else %}
+                  {% set loc = ch.location_code %}
+              {% endif %}
+              {% if ch.code in allowed %}
+              <tr>
+                  <td>{{ ch.code }}.{{ loc }}</td>
+                  <td>{{ ch.sensor.description }}</td>
+                  <td></td>
+                  <td></td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </table>
+        </div>
+    </div>
+
+
     <div id="quality_metrics">
-        <h2>Data Quality Metrics</h2>
-        <div id="site_info"></div>
-        <div id="sensor_info"></div>
+        <h3>Data Quality Metrics</h3>
+        <div id="description"></div>
         <div id="metrics"></div>
     </div>
-    <p class="important">
-      Welcome to my Phase1 Report
-    </p>
 {% endblock %}

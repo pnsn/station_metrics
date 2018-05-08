@@ -28,9 +28,12 @@ try:
 except:
     from configparser import SafeConfigParser
 
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from weasyprint import HTML
+
 # import station_metrics packages
 from station_metrics.io.get_data_metadata import download_waveform_single_trace
-from station_metrics.io.get_data_metadata import download_waveforms_fdsn_bulk
+from station_metrics.io.get_data_metadata import download_fdsn_bulk
 from station_metrics.io.get_data_metadata import download_metadata_fdsn
 
 from station_metrics.metrics.preprocessing import raw_trace_to_ground_motion_filtered_pruned
@@ -42,7 +45,7 @@ from station_metrics.plotting.plot_pip_squeak import make_station_figure_pip_squ
 from config.parse_and_validate_args import validate_args_and_get_times, parse_args
 
 # define which channel codes denote acceptable seismic channels
-SEIS_CHANNELS = ['BHE', 'BHN', 'BHZ', 'HHE', 'HHN', 'HHZ',
+SEISMIC_CHANNELS = ['BHE', 'BHN', 'BHZ', 'HHE', 'HHN', 'HHZ',
                  'BH1', 'BH2', 'BH3', 'HH1', 'HH2', 'HH3',
                  'ENE', 'ENN', 'ENZ', 'HNE', 'HNN', 'HNZ',
                  'EN1', 'EN2', 'EN3', 'HN1', 'HN2', 'HN3']
@@ -56,7 +59,13 @@ if __name__ == "__main__":
             config/pipsqueak.cfg --> configuring the metrics
             command-line arguments --> specify station and time period
     """
-            
+    # prepare report engine (jinja2)
+    env = Environment(
+        loader=FileSystemLoader("./templates"),
+        autoescape=select_autoescape(['html', 'htm', 'xml'])
+    )
+    template = env.get_template('phase1.htm')
+        
     #----- Read Processing parameters from a config file
     
     parser = SafeConfigParser()
@@ -81,12 +90,25 @@ if __name__ == "__main__":
     #iplot = parser.get('SectionOne','iplot')
     
     #----- command-line arguments specify what data to get and where
+    # options that influence program structure:
+    # infile: 
+    #     multiple channels, possibly from multiple stations, are defined in an input file. 
+    # command-line arguments -N network, -S station:
+    #     pip_squeak is run for the channels of a single station only.
     
     args = parse_args()
     [starttime, endtime, durationinhours, durationinsec] = validate_args_and_get_times(args)
+    # get data from a little before starttime to remedy edge effects
+    Time1padded = starttime - datetime.timedelta(0,tbuffer+tpadding)
+    duration_padded = durationinsec+tbuffer+(2*tpadding)
+
     infile = args.infile
-    network = args.network
-    station = args.station
+    if infile:
+        network = None
+        station = None
+    else: 
+        network = args.network
+        station = args.station
     #channel = args.channel
     #location = args.location
     datacenter = args.datacenter
@@ -103,22 +125,51 @@ if __name__ == "__main__":
     print ("Time to connect to FDSNWS: " + str(Tdc1-Tdc0) )
     
     #----- Download meta-data
-    inv = download_metadata_fdsn(client,net=network,sta=station,starttime=starttime)
-    print inv
-    
-    # keep only the seismic and soh channels.
+    Tdc0 = timeit.default_timer()
+    if infile:
+        inv = download_fdsn_bulk(infile,Time1padded,duration_padded,client,type="metadata")
+    else:
+        inv = download_metadata_fdsn(client,net=network,sta=station,starttime=Time1padded)
+    Tdc1 = timeit.default_timer()
+    inv.write("inventory.xml","STATIONXML")
+    print ("Time to download metadata from {}: {}".format(datacenter, str(Tdc1-Tdc0)))
+
+    # Figure out how many stations to create a report for (one report per station)
+    stations = {} # list of Station objects
+    for n in inv:
+        for s in n:
+            if s.code not in stations:
+                stations[n.code + "." + s.code] = s
+                with open("./templates/"+ s.code + ".html", "w") as fh:
+                    fh.write(template.render(starttime=starttime,endtime=endtime,network_code=n.code,station=s))
+
+    print("Creating report(s) for time period {} - {}, station code(s): ".format(starttime,endtime))
+    for sta_code in stations:
+        print("{}".format(sta_code))
     
     #----- Download waveform(s) 
     
-    Time1padded = starttime - datetime.timedelta(0,tbuffer+tpadding)
-    
-    T0 = timeit.default_timer()
-    if ( infile is None ):
-        stAll = download_waveform_single_trace(network,station,location,channel,Time1padded,durationinsec+tbuffer+(2*tpadding),client)
+    if ( infile ):
+        T0 = timeit.default_timer()
+        stAll = download_fdsn_bulk(infile,Time1padded,duration_padded,client,type="waveforms")
     else:
-        stAll = download_waveforms_fdsn_bulk(infile,Time1padded,durationinsec+tbuffer+(2*tpadding),client)
-    print("")
+        # construct the bulkrequest list of tuples
+        # single network, single station, loop over channels
+        bulkrequest = []
+        for n in inv:
+            for s in n:
+                for chan in s:
+                    channel = chan.code
+                    location = chan.location_code
+                    if location == "":
+                        location = "--"
+                    if channel in SEISMIC_CHANNELS:
+                        bulkrequest.append((network, station, location, channel, Time1padded.isoformat(), (Time1padded + datetime.timedelta(seconds=duration_padded)).isoformat()))
+        T0 = timeit.default_timer()
+        stAll = client.get_waveforms_bulk(bulkrequest)
     T1 = timeit.default_timer()
+    stAll.write("waveforms.msd","MSEED")
+    print ("Time to download waveforms from {}: {}".format(datacenter, str(T1-T0)))
     
     #----- Get the time slices to analyze.
     
