@@ -3,8 +3,8 @@
   <Source>IRIS-DMC</Source>
   <Sender>IRIS-DMC</Sender>
   <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.1.33</Module>
-  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?starttime=2018-04-30T23%3A57%3A54.950000&amp;station=LUMI&amp;network=UW&amp;endtime=2018-04-30T23%3A57%3A55.950000&amp;level=response</ModuleURI>
-  <Created>2018-05-07T20:15:03</Created>
+  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?starttime=2018-05-05T23%3A57%3A54.950000&amp;level=response&amp;network=UW&amp;endtime=2018-05-05T23%3A57%3A55.950000&amp;station=LUMI</ModuleURI>
+  <Created>2018-05-09T16:22:05</Created>
   <Network code="UW" endDate="2500-12-31T23:59:59" restrictedStatus="open" startDate="1963-01-01T00:00:00">
     <Description>Pacific Northwest Seismic Network</Description>
     <TotalNumberStations>603</TotalNumberStations>
@@ -12,7 +12,7 @@
     <Station code="LUMI" endDate="2599-12-31T23:59:59" restrictedStatus="open" startDate="2018-04-19T00:00:00">
       <Latitude unit="DEGREES">48.7201</Latitude>
       <Longitude unit="DEGREES">-122.7063</Longitude>
-      <Elevation>19.3999996185</Elevation>
+      <Elevation>19.399999618530273</Elevation>
       <Site>
         <Name>Lummi Island, WA</Name>
       </Site>
@@ -64,7 +64,7 @@
                 <Description>Voltage in Volts</Description>
               </OutputUnits>
               <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
-              <NormalizationFactor>2.45957e+13</NormalizationFactor>
+              <NormalizationFactor>24595700000000.0</NormalizationFactor>
               <NormalizationFrequency unit="HERTZ">1.0</NormalizationFrequency>
               <Pole number="0">
                 <Real minusError="0.0" plusError="0.0">-981.0</Real>
@@ -260,7 +260,7 @@
                 <Description>Voltage in Volts</Description>
               </OutputUnits>
               <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
-              <NormalizationFactor>2.45957e+13</NormalizationFactor>
+              <NormalizationFactor>24595700000000.0</NormalizationFactor>
               <NormalizationFrequency unit="HERTZ">1.0</NormalizationFrequency>
               <Pole number="0">
                 <Real minusError="0.0" plusError="0.0">-981.0</Real>
@@ -456,7 +456,7 @@
                 <Description>Voltage in Volts</Description>
               </OutputUnits>
               <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
-              <NormalizationFactor>2.45957e+13</NormalizationFactor>
+              <NormalizationFactor>24595700000000.0</NormalizationFactor>
               <NormalizationFrequency unit="HERTZ">1.0</NormalizationFrequency>
               <Pole number="0">
                 <Real minusError="0.0" plusError="0.0">-981.0</Real>

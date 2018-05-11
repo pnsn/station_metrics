@@ -82,9 +82,10 @@ def download_fdsn_bulk(chanfile,starttime,duration,client,type='waveforms'):
     #        print ("TIME bulk download: " +  str(Timer2-Timer0) + " sec  Nstreams: " + str(len(st)) + "  Approx size: " + str(nptstot/1048576) + " MB" )
     except:
         Timer2 = timeit.default_timer()
-        print ( "Failed download request or no data for: " + chanfile + " " + str(T1) + " to " + str(T2) + "  request took: " + str(Timer2-Timer0) + " sec" )
-        print ( bulkrequest )
-        st = []
+        print ("Failed download request or no data for: " + chanfile + " " + str(T1) + " to " + \
+                str(T2) + "  request took: " + str(Timer2-Timer0) + " sec")
+        print (bulkrequest)
+        st = Stream()
     return st
 
 

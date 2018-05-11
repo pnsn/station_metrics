@@ -1,5 +1,5 @@
 {% extends "report.htm" %}
-{% block title %}Phase1 Report for {{ network_code }}.{{ station.code }} {% endblock %}
+{% block title %}Station Assessment Phase1 Report for {{ network_code }}.{{ station.code }} {% endblock %}
 {% block head %}
     {{ super() }}
     <style type="text/css">
@@ -97,7 +97,40 @@
 
     <div id="quality_metrics">
         <h3>Data Quality Metrics</h3>
-        <div id="description"></div>
-        <div id="metrics"></div>
+        <div id="description">
+            <h4>Measurement period: {{ starttime.isoformat() }} - {{ endtime.isoformat() }} ({{ (endtime-starttime).days }} days)</h4>
+        </div>
+        <div id="metrics">
+            <table class="table">
+              <caption>Metrics</caption>
+              <tr>
+                  <th>Channel</th>
+                  <th>GPS clock lock</th>
+                  <th>Clock phase (drift)</th>
+                  <th>Percentage of data with acceptable latency</th>
+                  <th>Number of gaps</th>
+                  <th>Duration of gaps</th>
+                  <th>Total number of noise glitches</th>
+                  <th>Number of noise glitches per hour<th>
+                  <th>Acceptable RMS exceded in s per hour</th>
+                  <th>PASS/FAIL</th>
+              </tr>
+              {% for nscl in metrics %}
+              <tr>
+                  <td>{{ nscl }}</td>
+                  <td class="{{ metrics[nscl]["clock_lock_lcq"][1] }}">{{ metrics[nscl]["clock_lock_lcq"][0] }}</td>
+                  <td class="{{ metrics[nscl]["clock_phase_lce"][1] }}">{{ metrics[nscl]["clock_phase_lce"][0] }}</td>
+                  <td class="{{ metrics[nscl]["acceptable_latency"][1] }}">{{ metrics[nscl]["acceptable_latency"][0] }}</td>
+                  <td class="no_threshold"></td>
+                  <td class="no_threshold"></td>
+                  <td class="{{ metrics[nscl]["spikes_total"][1] }}">{{ metrics[nscl]["spikes_total"][0] }}</td>
+                  <td class="{{ metrics[nscl]["spikes_per_hour"][1] }}">{{ metrics[nscl]["spikes_per_hour"][0] }}</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+              </tr>
+              {% endfor %}
+            </table>
+        </div>
     </div>
 {% endblock %}
