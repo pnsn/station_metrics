@@ -19,6 +19,7 @@ except:
     from configparser import SafeConfigParser
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+import six
 from weasyprint import HTML
 
 # import station_metrics packages
@@ -58,7 +59,7 @@ if __name__ == "__main__":
     #----- Read Processing parameters from a config file
     
     parser = SafeConfigParser()
-    parser.read("pip_squeak.cfg")
+    parser.read("config/config.pip_squeak")
     
     FDSNtimeout = float(parser.get('SectionOne','FDSNtimeout'))
     tpadding = float(parser.get('SectionOne','tpadding'))
@@ -177,7 +178,7 @@ if __name__ == "__main__":
             for trace in lcq:
                 value_counts = Counter(trace.data)
                 number_of_points = number_of_points + len(trace.data)
-                for value, count in value_counts.iteritems():
+                for value, count in six.iteritems(value_counts):
                     if value < 60:
                         lcq_below_60 = lcq_below_60 + count
             print("Number of LCQ samples below 60: {} out of {}, i.e. {:4.1f}%".format(lcq_below_60, \
