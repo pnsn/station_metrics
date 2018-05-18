@@ -374,3 +374,4 @@ if __name__ == "__main__":
                          network_code=net_obj.code,station=sta_obj,allowed=SEISMIC_CHANNELS, \
                          metrics=channel_metrics))
             HTML("./templates/"+net_obj.code + "." + sta_obj.code+".html").write_pdf(net_obj.code + "." + sta_obj.code + ".pdf")
+
