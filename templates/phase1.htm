@@ -1,5 +1,5 @@
 {% extends "report.htm" %}
-{% block title %}Station Assessment Phase1 Report for {{ network_code }}.{{ station.code }} {% endblock %}
+{% block title %}Abbreviated Station Assessment Report for {{ network_code }}.{{ station.code }} {% endblock %}
 {% block head %}
     {{ super() }}
     <style type="text/css">
@@ -23,8 +23,6 @@
                   <th>Longitude (deg E)</th>
                   <th>Elevation (m)</th>
                   <th>Start Date</th>
-                  <th>Telemetry Type</th>
-                  <th>Next closest site (km)</th>
                  </tr>
               </thead>
               <tbody>
@@ -35,8 +33,6 @@
                   <td>{{ station.longitude | round(7,method='common') }}</td>
                   <td>{{ station.elevation | round() }}</td>
                   <td>{{ (station.start_date).isoformat() }}</td>
-                  <td></td>
-                  <td></td>
               </tr>
               </tbody>
             </table>
@@ -45,35 +41,14 @@
             </div>
         </div>
 
-        <div id="logger_info">
-            <table class="table table-bordered">
-             <caption>Digitizer</caption>
-             <thead>
-             <tr>
-              <th>Datalogger</th>
-              <th>Serial number</th>
-             </tr>
-             </thead>
-             <tbody>
-             <tr>
-              <td></td>
-              <td></td>
-             </tr>
-             </tbody>
-            </table>
-            <div id="timing_accuracy">
-                 <p><input type="checkbox">Time stamp accurate to 0.01s  _____________ (initial)</p>
-            </div>
-        </div>
 
         <div id="sensor_info">
             <table class="table">
               <caption>Sensor(s)</caption>
               <tr>
                   <th>Channel</th>
+                  <th>Sample rate</th>
                   <th>Sensor</th>
-                  <th>Serial number</th>
-                  <th>Metadata verified?</th>
               </tr>
               {% for ch in station.channels %}
               {% if ch.location_code == "" %}
@@ -84,14 +59,37 @@
               {% if ch.code in allowed %}
               <tr>
                   <td>{{ ch.code }}.{{ loc }}</td>
+                  <td>{{ ch.sample_rate }}</td>
                   <td>{{ ch.sensor.description }}</td>
-                  <td></td>
-                  <td></td>
               </tr>
               {% endif %}
               {% endfor %}
             </table>
         </div>
+
+        <div id="timing_info">
+            <table class="table table-bordered">
+             <caption>Time quality</caption>
+             <thead>
+             <tr>
+              <th>Clock locking/quality (%)</th>
+              <th>Clock drift/phase (%)</th>
+             </tr>
+             </thead>
+             <tbody>
+             <tr>
+             {% for nscl in clock_metrics %}
+                 {% if "LCQ" in nscl %}
+                 <td class="{{ clock_metrics[nscl]["clock_lock_lcq"][1] }}">{{ clock_metrics[nscl]["clock_lock_lcq"][0] }}</td>
+                 {% elif "LCE" in nscl %}
+                 <td class="{{ clock_metrics[nscl]["clock_phase_lce"][1] }}">{{ clock_metrics[nscl]["clock_phase_lce"][0] }}</td>
+                 {% endif %}
+             {% endfor %}
+             </tr>
+             </tbody>
+            </table>
+        </div>
+
     </div>
 
 
@@ -105,8 +103,6 @@
               <caption>Metrics</caption>
               <tr>
                   <th>Channel</th>
-                  <th>GPS clock lock</th>
-                  <th>Clock phase (drift)</th>
                   <th>Percentage of data with acceptable latency</th>
                   <th>Number of gaps</th>
                   <th>Duration of gaps</th>
@@ -118,8 +114,6 @@
               {% for nscl in metrics %}
               <tr>
                   <td>{{ nscl }}</td>
-                  <td class="{{ metrics[nscl]["clock_lock_lcq"][1] }}">{{ metrics[nscl]["clock_lock_lcq"][0] }}</td>
-                  <td class="{{ metrics[nscl]["clock_phase_lce"][1] }}">{{ metrics[nscl]["clock_phase_lce"][0] }}</td>
                   <td class="{{ metrics[nscl]["acceptable_latency"][1] }}">{{ metrics[nscl]["acceptable_latency"][0] }}</td>
                   <td class="no_threshold"></td>
                   <td class="no_threshold"></td>

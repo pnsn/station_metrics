@@ -41,6 +41,14 @@ SEISMIC_CHANNELS = ['BHE', 'BHN', 'BHZ', 'HHE', 'HHN', 'HHZ',
 # define a few SOH channels we might be interested in
 SOH_CHANNELS = ['LCQ', 'LCE']
 
+THRESHOLD = { 
+             'lcq':60,               # minimum quality=60, read Q330 manual
+             'lce':5000,             # maximum phase(drift)=5000 microseconds
+             'latency':3.5,          # maximum latency 3.5s between now and middle of packet
+             'rms_noise':0.0007,     # maximum RMS amplitude 0.07 cm/s^2 
+             'spikes' : 0.0034       # maximum spike amplitude 0.34 sm/s^2
+            }
+
 if __name__ == "__main__":
     """
         Generates Phase1 Station Acceptance Report.
@@ -157,34 +165,67 @@ if __name__ == "__main__":
                         )
 
             timer_start = timeit.default_timer()
-            stAll = client.get_waveforms_bulk(bulkrequest)
+            try:
+                stAll = client.get_waveforms_bulk(bulkrequest)
+            except Exception as e:
+                print("Error: Problem requesting waveform data: {}".format(e))
+                # create empty stream
+                stAll = Stream()
             timer_end = timeit.default_timer()
-            stAll.write("waveforms.msd","MSEED")
             print ("Time to download waveforms from {}: {}".format(datacenter, str(timer_end - timer_start)))
 
             # Now request the SOH channels.
+            soh_metrics = {}
             timer_start = timeit.default_timer()
-            stSOH = client.get_waveforms_bulk(soh_bulkrequest)
+            try:
+                stSOH = client.get_waveforms_bulk(soh_bulkrequest)
+            except Exception as e:
+                print("Error: Problem requesting SOH data: {}".format(e))
+                # create empty stream
+                stSOH = Stream()
+                soh_metrics["LCQ"] = {"clock_lock_lcq" : ("Not available","fail")}
+                soh_metrics["LCE"] = {"clock_phase_lce": ("Not available","fail")}
+ 
             timer_end = timeit.default_timer()
-            stSOH.write("soh.msd","MSEED")
             print ("Time to download SOH time series from {}: {}".format(datacenter, str(timer_end - timer_start)))
             
-            # LCQ channel has distinct values between 0-100, e.g. 20, 60, 100
-            lcq = stSOH.select(channel="LCQ")
-            # anticipate possible gaps in these data but do not keep track
-            lcq_below_60 = 0
-            number_of_points = 0
-            for trace in lcq:
-                value_counts = Counter(trace.data)
-                number_of_points = number_of_points + len(trace.data)
-                for value, count in value_counts.iteritems():
-                    if value < 60:
-                        lcq_below_60 = lcq_below_60 + count
-            print("Number of LCQ samples below 60: {} out of {}, i.e. {:4.1f}%".format(lcq_below_60, \
-                   number_of_points,100*(lcq_below_60/number_of_points)))
+            # if there channels in stSOH then calculate the metric
+            for trace in stSOH:
+                # anticipate possible gaps in these data but do not keep track
+                lcq_pass = 0
+                lce_pass = 0
+                number_of_lcq_points = 0
+                number_of_lce_points = 0
+                location = trace.stats.location
+                if location == "":
+                    location = "--"
+                nslc = ".".join([trace.stats.network, trace.stats.station, location, trace.stats.channel])
+                if trace.stats.channel == "LCQ":
+                    # LCQ channel has distinct values between 0-100, e.g. 20, 60, 100
+                    value_counts = Counter(trace.data)
+                    number_of_lcq_points = number_of_lcq_points + len(trace.data)
+                    for value, count in value_counts.iteritems():
+                        if value >= THRESHOLD['lcq']:
+                            lcq_pass = lcq_pass + count
+                    lcq_metric = 100*(lcq_pass/number_of_lcq_points)
+                    print("Number of LCQ samples at 60 or better: {} out of {}, i.e. {:4.1f}%".format(lcq_pass, \
+                           number_of_lcq_points,100*(lcq_pass/number_of_lcq_points)))
+                    soh_metrics[nslc] = { "clock_lock_lcq" : 
+                                          (lcq_metric, "pass" if lcq_metric >= 98.0 else "fail")
+                                        } 
+                if trace.stats.channel == "LCE":
+                    # LCE channel can have any value, loop over all samples
+                    for sample in trace.data:
+                        if abs(sample) < THRESHOLD['lce']:
+                            lce_pass = lce_pass + 1
+                        number_of_lce_points = number_of_lce_points + 1
+                    lce_metric = 100*(lce_pass/number_of_lce_points)
+                    print("Number of LCE samples below 5000 microsecs: {} out of {}, i.e. {:4.1f}%".format(lce_pass, \
+                           number_of_lce_points,100*(lce_pass/number_of_lce_points)))
 
-            #TO DO: add same for lce channel, but cutoff is abs(lce) < 5000 microseconds
-
+                    soh_metrics[nslc] = { "clock_phase_lce" : 
+                                          (lce_metric, "pass" if lce_metric >= 98.0 else "fail")
+                                        } 
             #----- Get the time slices to analyze.
             
             lenrequested = (slice_endtime - slice_starttime).total_seconds()
@@ -348,8 +389,6 @@ if __name__ == "__main__":
                                "spikes_total": (snr20_0p34cm, "no_threshold"), \
                                "spikes_per_hour": (snr20_0p34cm/durationinhours, "pass" if snr20_0p34cm/durationinhours < 1.0 else "fail"), \
                                "rms_exceeded_per_hour": (RMSduration_0p07cm/durationinhours, "pass" if RMSduration_0p07cm/durationinhours < 60.0 else "fail"), \
-                               "clock_lock_lcq" : (50, "fail"), \
-                               "clock_phase_lce" : (5040/1.0E6, "fail"),  \
                                "acceptable_latency" : (97.3, "fail")
                                }
                     if sncl not in channel_metrics:
@@ -358,5 +397,5 @@ if __name__ == "__main__":
             with open("./templates/" + net_obj.code + "." + sta_obj.code + ".html", "w") as fh:
                 fh.write(template.render(starttime=starttime,endtime=endtime, \
                          network_code=net_obj.code,station=sta_obj,allowed=SEISMIC_CHANNELS, \
-                         metrics=channel_metrics))
+                         clock_metrics=soh_metrics, metrics=channel_metrics))
             HTML("./templates/"+net_obj.code + "." + sta_obj.code+".html").write_pdf(net_obj.code + "." + sta_obj.code + ".pdf")
