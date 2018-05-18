@@ -140,7 +140,6 @@ if __name__ == "__main__":
     for net_obj in inv:
         for sta_obj in net_obj:
 
-            print("Creating report for time period {} - {}, station: {}.{}".format(starttime,endtime,net_obj.code,sta_obj.code))
     
             # Download waveform for this station 
     
@@ -189,13 +188,14 @@ if __name__ == "__main__":
             timer_end = timeit.default_timer()
             print ("Time to download SOH time series from {}: {}".format(datacenter, str(timer_end - timer_start)))
             
+            print("Creating report for time period {} - {}, station: {}.{}".format(starttime,endtime,net_obj.code,sta_obj.code))
             # if there channels in stSOH then calculate the metric
+            lcq_pass = 0
+            lce_pass = 0
+            number_of_lcq_points = 0
+            number_of_lce_points = 0
+            # anticipate possible gaps in these data but do not keep track
             for trace in stSOH:
-                # anticipate possible gaps in these data but do not keep track
-                lcq_pass = 0
-                lce_pass = 0
-                number_of_lcq_points = 0
-                number_of_lce_points = 0
                 location = trace.stats.location
                 if location == "":
                     location = "--"
@@ -207,24 +207,25 @@ if __name__ == "__main__":
                     for value, count in value_counts.iteritems():
                         if value >= THRESHOLD['lcq']:
                             lcq_pass = lcq_pass + count
-                    lcq_metric = 100*(lcq_pass/number_of_lcq_points)
-                    print("Number of LCQ samples at 60 or better: {} out of {}, i.e. {:4.1f}%".format(lcq_pass, \
-                           number_of_lcq_points,100*(lcq_pass/number_of_lcq_points)))
-                    soh_metrics[nslc] = { "clock_lock_lcq" : 
-                                          (lcq_metric, "pass" if lcq_metric >= 98.0 else "fail")
-                                        } 
                 if trace.stats.channel == "LCE":
                     # LCE channel can have any value, loop over all samples
                     for sample in trace.data:
                         if abs(sample) < THRESHOLD['lce']:
                             lce_pass = lce_pass + 1
                         number_of_lce_points = number_of_lce_points + 1
-                    lce_metric = 100*(lce_pass/number_of_lce_points)
-                    print("Number of LCE samples below 5000 microsecs: {} out of {}, i.e. {:4.1f}%".format(lce_pass, \
-                           number_of_lce_points,100*(lce_pass/number_of_lce_points)))
 
-                    soh_metrics[nslc] = { "clock_phase_lce" : 
-                                          (lce_metric, "pass" if lce_metric >= 98.0 else "fail")
+            lcq_metric = 100*(lcq_pass/number_of_lcq_points)
+            print("Number of LCQ samples at 60 or better: {} out of {}, i.e. {:4.1f}%".format(lcq_pass, \
+                   number_of_lcq_points,100*(lcq_pass/number_of_lcq_points)))
+            soh_metrics["LCQ"] = { "clock_lock_lcq" : 
+                                  (lcq_metric, "pass" if lcq_metric >= 98.0 else "fail")
+                                        } 
+            lce_metric = 100*(lce_pass/number_of_lce_points)
+            print("Number of LCE samples below 5000 microsecs: {} out of {}, i.e. {:4.1f}%".format(lce_pass, \
+                   number_of_lce_points,100*(lce_pass/number_of_lce_points)))
+
+            soh_metrics["LCE"] = { "clock_phase_lce" : 
+                                  (lce_metric, "pass" if lce_metric >= 98.0 else "fail")
                                         } 
             #----- Get the time slices to analyze.
             
@@ -347,8 +348,8 @@ if __name__ == "__main__":
                     ngaps = ntr - 1
                     NoiseFloorAcc = noise_floor(dataAccFilt)
                     NoiseFloorVel = noise_floor(dataVelFilt)
-                    snr20_0p34cm = count_peaks_stalta(dataAccFilt,datastalta,sta,lta,mpd,20,dt,0.0034)  #--- ShakeAlert stat. acceptance thresh. is now 0.0034 m/s^2 = 0.34cm/s^2.
-                    RMSduration_0p07cm = duration_exceed_RMS(dataAccFilt,0.0007,RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007 m/s^2 = 0.07cm/s^2.
+                    snr20_0p34cm = count_peaks_stalta(dataAccFilt,datastalta,sta,lta,mpd,20,dt,THRESHOLD['spikes'])  #--- ShakeAlert stat. acceptance thresh. is now 0.0034 m/s^2 = 0.34cm/s^2.
+                    RMSduration_0p07cm = duration_exceed_RMS(dataAccFilt,THRESHOLD['rms_noise'],RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007 m/s^2 = 0.07cm/s^2.
                     T3 = timeit.default_timer()
             
                     if ( ngaps/durationinhours < 1.0 ):
