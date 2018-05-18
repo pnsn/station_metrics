@@ -20,7 +20,7 @@ These can easily be added via command line using <a href="https://www.anaconda.c
 >> conda install obspy
 >> conda install -c conda-forge matplotlib
 >> conda install -c anaconda numpy
->> conda install -c jlmenut weasyprint  (OR  pip install weasyprint)
+>> pip install weasyprint
 ```
 
 # Files
