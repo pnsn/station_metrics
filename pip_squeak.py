@@ -19,7 +19,6 @@ except:
     from configparser import SafeConfigParser
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-import six
 from weasyprint import HTML
 
 # import station_metrics packages
@@ -164,27 +163,41 @@ if __name__ == "__main__":
             print ("Time to download waveforms from {}: {}".format(datacenter, str(timer_end - timer_start)))
 
             # Now request the SOH channels.
-            timer_start = timeit.default_timer()
-            stSOH = client.get_waveforms_bulk(soh_bulkrequest)
-            timer_end = timeit.default_timer()
-            stSOH.write("soh.msd","MSEED")
-            print ("Time to download SOH time series from {}: {}".format(datacenter, str(timer_end - timer_start)))
-            
-            # LCQ channel has distinct values between 0-100, e.g. 20, 60, 100
-            lcq = stSOH.select(channel="LCQ")
-            # anticipate possible gaps in these data but do not keep track
-            lcq_below_60 = 0
-            number_of_points = 0
-            for trace in lcq:
-                value_counts = Counter(trace.data)
-                number_of_points = number_of_points + len(trace.data)
-                for value, count in six.iteritems(value_counts):
-                    if value < 60:
-                        lcq_below_60 = lcq_below_60 + count
-            print("Number of LCQ samples below 60: {} out of {}, i.e. {:4.1f}%".format(lcq_below_60, \
-                   number_of_points,100*(lcq_below_60/number_of_points)))
+            try:
+                timer_start = timeit.default_timer()
+                stSOH = client.get_waveforms_bulk(soh_bulkrequest)
+                timer_end = timeit.default_timer()
+                stSOH.write("soh.msd","MSEED")
+                print ("Time to download SOH time series from {}: {}".format(datacenter, str(timer_end - timer_start)))
 
-            #TO DO: add same for lce channel, but cutoff is abs(lce) < 5000 microseconds
+                # LCQ channel has distinct values between 0-100, e.g. 20, 60, 100
+                try:
+                    lcq = stSOH.select(channel="LCQ")
+                    lcq_below_60 = 0
+                    number_of_points_lcq = 0
+                    for trace in lcq:
+                        lcq_below_60 = lcq_below_60 + (trace.data < 100).sum()
+                        number_of_points_lcq = number_of_points_lcq + len(trace.data)
+                    print("Number of LCQ samples below 60: {} out of {}, i.e. {:4.1f}%".format(lcq_below_60, \
+                           number_of_points_lcq,100*(lcq_below_60/number_of_points_lcq)))
+                except:
+                    print "No state of health info for channel LCQ"
+
+                # Now count abs(LCE) < 5000 microseconds
+                try:
+                    lce = st.SOH.select(channel="LCE")
+                    lce_below_5000 = 0
+                    number_of_points_lce = 0
+                    for trace in lce:
+                        lce_below_5000 = lce_below_5000 + (abs(trace.data) < 5000).sum()
+                        number_of_points_lce = number_of_points_lce + len(trace.data)
+                    print("Number of LCE samples below 5000: {} out of {}, i.e. {:4.1f}%".format(lce_below_5000, \
+                           number_of_points_lce,100*(lce_below_5000/number_of_points_lce)))
+                except:
+                    print "No state of health info for channel LCE"
+
+            except:
+                print "No state of health channel info"
 
             #----- Get the time slices to analyze.
             
@@ -307,8 +320,8 @@ if __name__ == "__main__":
                     ngaps = ntr - 1
                     NoiseFloorAcc = noise_floor(dataAccFilt)
                     NoiseFloorVel = noise_floor(dataVelFilt)
-                    snr20_0p34cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.0034)  #--- ShakeAlert stat. acceptance thresh. is now 0.0034 m/s^2 = 0.34cm/s^2.
-                    RMSduration_0p07cm = duration_exceed_RMS(dataAccBroad,0.0007,RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007 m/s^2 = 0.07cm/s^2.
+                    snr20_0p34cm = count_peaks_stalta(dataAccFilt,datastalta,sta,lta,mpd,20,dt,0.0034)  #--- ShakeAlert stat. acceptance thresh. is now 0.0034 m/s^2 = 0.34cm/s^2.
+                    RMSduration_0p07cm = duration_exceed_RMS(dataAccFilt,0.0007,RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007 m/s^2 = 0.07cm/s^2.
                     T3 = timeit.default_timer()
             
                     if ( ngaps/durationinhours < 1.0 ):
