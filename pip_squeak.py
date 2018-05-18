@@ -214,15 +214,21 @@ if __name__ == "__main__":
                             lce_pass = lce_pass + 1
                         number_of_lce_points = number_of_lce_points + 1
 
-            lcq_metric = 100*(lcq_pass/number_of_lcq_points)
-            print("Number of LCQ samples at 60 or better: {} out of {}, i.e. {:4.1f}%".format(lcq_pass, \
-                   number_of_lcq_points,100*(lcq_pass/number_of_lcq_points)))
+            if number_of_lcq_points > 0:
+                lcq_metric = 100*(lcq_pass/number_of_lcq_points)
+            else:
+                lcq_metric = 0
+            print("Number of LCQ samples at 60 or better: {} out of {}".format(lcq_pass, \
+                   number_of_lcq_points))
             soh_metrics["LCQ"] = { "clock_lock_lcq" : 
                                   (lcq_metric, "pass" if lcq_metric >= 98.0 else "fail")
                                         } 
-            lce_metric = 100*(lce_pass/number_of_lce_points)
-            print("Number of LCE samples below 5000 microsecs: {} out of {}, i.e. {:4.1f}%".format(lce_pass, \
-                   number_of_lce_points,100*(lce_pass/number_of_lce_points)))
+            if number_of_lce_points > 0:
+                lce_metric = 100*(lce_pass/number_of_lce_points)
+            else:
+                lce_metric = 0
+            print("Number of LCE samples below 5000 microsecs: {} out of {}".format(lce_pass, \
+                   number_of_lce_points))
 
             soh_metrics["LCE"] = { "clock_phase_lce" : 
                                   (lce_metric, "pass" if lce_metric >= 98.0 else "fail")
