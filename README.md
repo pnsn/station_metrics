@@ -10,7 +10,7 @@ These are the collection of scripts to calculate near-real time station metrics 
 # Installation
 
 These python scripts run on Python 2.7 and Python 3.5 with the following major package dependencies:
-<a href="http://www.numpy.org/">numpy</a>, <a href="https://github.com/obspy/obspy/wiki">obspy</a>, <a href="https://matplotlib.org">matplotlib</a>.
+<a href="http://www.numpy.org/">numpy</a>, <a href="https://github.com/obspy/obspy/wiki">obspy</a>, <a href="https://matplotlib.org">matplotlib</a>, <a href="https://weasyprint.org">weasyprint</a>.
 
 These can easily be added via command line using <a href="https://www.anaconda.com/">Anaconda</a>.  It is recommended you not use your system python, rather use a virtual environment.
 
@@ -20,6 +20,7 @@ These can easily be added via command line using <a href="https://www.anaconda.c
 >> conda install obspy
 >> conda install -c conda-forge matplotlib
 >> conda install -c anaconda numpy
+>> conda install -c jlmenut weasyprint  (OR  pip install weasyprint)
 ```
 
 # Files
