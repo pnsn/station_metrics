@@ -66,7 +66,7 @@ if __name__ == "__main__":
     #----- Read Processing parameters from a config file
     
     parser = SafeConfigParser()
-    parser.read("pip_squeak.cfg")
+    parser.read("config/config.pip_squeak")
     
     FDSNtimeout = float(parser.get('SectionOne','FDSNtimeout'))
     tpadding = float(parser.get('SectionOne','tpadding'))
@@ -347,8 +347,8 @@ if __name__ == "__main__":
                     ngaps = ntr - 1
                     NoiseFloorAcc = noise_floor(dataAccFilt)
                     NoiseFloorVel = noise_floor(dataVelFilt)
-                    snr20_0p34cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.0034)  #--- ShakeAlert stat. acceptance thresh. is now 0.0034 m/s^2 = 0.34cm/s^2.
-                    RMSduration_0p07cm = duration_exceed_RMS(dataAccBroad,0.0007,RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007 m/s^2 = 0.07cm/s^2.
+                    snr20_0p34cm = count_peaks_stalta(dataAccFilt,datastalta,sta,lta,mpd,20,dt,0.0034)  #--- ShakeAlert stat. acceptance thresh. is now 0.0034 m/s^2 = 0.34cm/s^2.
+                    RMSduration_0p07cm = duration_exceed_RMS(dataAccFilt,0.0007,RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007 m/s^2 = 0.07cm/s^2.
                     T3 = timeit.default_timer()
             
                     if ( ngaps/durationinhours < 1.0 ):
@@ -399,3 +399,4 @@ if __name__ == "__main__":
                          network_code=net_obj.code,station=sta_obj,allowed=SEISMIC_CHANNELS, \
                          clock_metrics=soh_metrics, metrics=channel_metrics))
             HTML("./templates/"+net_obj.code + "." + sta_obj.code+".html").write_pdf(net_obj.code + "." + sta_obj.code + ".pdf")
+
