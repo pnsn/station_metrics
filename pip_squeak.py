@@ -133,20 +133,23 @@ if __name__ == "__main__":
     else:
         inv = download_metadata_fdsn(client,net=network,sta=station,starttime=request_starttime)
     timer_end = timeit.default_timer()
+    print(inv)
     inv.write("inventory.xml","STATIONXML")
     print ("Time to download metadata from {}: {}".format(datacenter, str(timer_end - timer_start)))
 
     # Create one report per station in the Inventory file.
     for net_obj in inv:
+        network = net_obj.code
         for sta_obj in net_obj:
+            station = sta_obj.code
+            bulkrequest = []
+            soh_bulkrequest = []
 
     
             # Download waveform for this station 
     
             # construct the bulkrequest list of tuples
             # single network, single station, loop over channels
-            bulkrequest = []
-            soh_bulkrequest = []
             for chan in sta_obj:
                 channel = chan.code
                 location = chan.location_code
