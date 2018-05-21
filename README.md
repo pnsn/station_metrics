@@ -15,11 +15,11 @@ These python scripts run on Python 2.7 and Python 3.5 with the following major p
 These can easily be added via command line using <a href="https://www.anaconda.com/">Anaconda</a>.  It is recommended you not use your system python, rather use a virtual environment.
 
 ```
->> conda create -n stationmetrics python=3.5
+>> conda create -n stationmetrics python=3.5     (OR "python=2.7" also works)
 >> source activate stationmetrics
->> conda install obspy
->> conda install -c conda-forge matplotlib
 >> conda install -c anaconda numpy
+>> conda install -c conda-forge matplotlib
+>> conda install obspy
 >> pip install weasyprint
 ```
 
