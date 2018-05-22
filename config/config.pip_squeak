@@ -7,12 +7,12 @@ FDSNtimeout: 24
 tpadding: 120
 
 #  Lenths (sec) of the Short Term Average and Long Term Average.
-sta: 0.05
+sta: 0.5
 lta: 5.0
 
 #  Frequencies (Hz) for filtering for use in Nspikes, RMS, noisefloor metrics.  freq_min, low_freq_corner, high_freq_corner, freq_max.
-freqBP1: 0.25
-freqBP2: 0.3
+freqBP1: 0.06
+freqBP2: 0.075
 freqBP3: 15.0
 freqBP4: 17.0
 
