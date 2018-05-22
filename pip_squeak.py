@@ -5,6 +5,7 @@
 # import std packages
 from collections import Counter
 import datetime
+import six
 import timeit
 
 # import third party packages
@@ -207,7 +208,7 @@ if __name__ == "__main__":
                     # LCQ channel has distinct values between 0-100, e.g. 20, 60, 100
                     value_counts = Counter(trace.data)
                     number_of_lcq_points = number_of_lcq_points + len(trace.data)
-                    for value, count in value_counts.iteritems():
+                    for value, count in six.iteritems(value_counts):
                         if value >= THRESHOLD['lcq']:
                             lcq_pass = lcq_pass + count
                 if trace.stats.channel == "LCE":
