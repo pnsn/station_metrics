@@ -24,42 +24,58 @@ from noise_metrics import *
 from plot_station import *
 from obspy import Stream
 from database_read_write import *
+from config.parse_and_validate_args import *
+try:
+    from ConfigParser import SafeConfigParser
+except:
+    from configparser import SafeConfigParser
 
-#----- Set up variables
-chanfile = "CHANFILE"
-datacenter = "DATACENTER"
-sta = STA
-lta = LTA
-padding = PADDING
-duration = DURATION
-starttime = datetime.datetime(YEAR,MONTH,DAY,HOUR,MINUTE,SECOND)
-endtime = starttime + datetime.timedelta(0,duration)
-print ("Starttime: " + str(starttime) )
-freqBP1 = fBP1
-freqBP2 = fBP2
-freqBP3 = fBP3
-freqBP4 = fBP4
-freqBB1 = fBB1
-freqBB2 = fBB2
-mpd = MPD
-RMSlen = RMSLEN
-GainOrFullResp = "GAINORFULLRESP"
-#PSDperiods = [100,90,80,70,60,50,40,30,20,15,12,10,9,8,7,6,5,4,3,2,1,0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1,0.09,0.08,0.07,0.06,0.05,0.04,0.03,0.02,0.01 ]
-PSDperiods = [50, 30, 20, 12, 10, 5, 1, 0.2, 0.1, 0.05, 0.02 ]
+#----- read config file
+
+parser = SafeConfigParser()
+parser.read("config/config.db")
+
+FDSNtimeout = float(parser.get('SectionOne','FDSNtimeout'))
+tpadding = float(parser.get('SectionOne','tpadding'))
+sta = float(parser.get('SectionOne','sta'))
+lta = float(parser.get('SectionOne','lta'))
+tbuffer = sta + lta
+freqBP1 = float(parser.get('SectionOne','freqBP1'))
+freqBP2 = float(parser.get('SectionOne','freqBP2'))
+freqBP3 = float(parser.get('SectionOne','freqBP3'))
+freqBP4 = float(parser.get('SectionOne','freqBP4'))
+freqBB1 = float(parser.get('SectionOne','freqBB1'))
+freqBB2 = float(parser.get('SectionOne','freqBB2'))
+mpd = float(parser.get('SectionOne','mpd'))
+RMSlen = float(parser.get('SectionOne','RMSlen'))
+GainOrFullResp = parser.get('SectionOne','GainOrFullResp')
+PSDperiods = (parser.get('SectionOne','PSDperiods'))[1:-1].split(",")
+PSDperiods = [float(i) for i in PSDperiods]
+iplot = parser.get('SectionOne','iplot')
+dbname = parser.get('SectionOne','dbname')
+hostname = parser.get('SectionOne','hostname')
+dbuser = os.environ['POSTGRES_USER']
+dbpass = os.environ['POSTGRES_PASSWD']
+
+#----- read input arguments
+
+args = parse_args()
+[ starttime, endtime, durationinhours, durationinsec ] = validate_args_and_get_times(args)
+infile = args.infile
+network = args.network
+station = args.station
+channel = args.channel
+location = args.location
+datacenter = args.datacenter
 
 if ( "esp" in GainOrFullResp or "ESP" in GainOrFullResp ):
     ifullresp = 1
 else: 
     ifullresp = 0
-iplot = IPLOT   #---- careful: of order 25sec/channel for 1 hr long traces
-dbname = "DBNAME"
-hostname = "HOSTNAME"
-dbuser = os.environ['POSTGRES_USER']
-dbpass = os.environ['POSTGRES_PASSWD']
 
 #----- Set up the FDSN client
 try:
-    client = Client(datacenter,timeout=300)
+    client = Client(datacenter,FDSNtimeout=500)
 except:
     print ("Failed client connection" )
     exit()
@@ -70,12 +86,12 @@ except:
 
 #----- Download waveforms using channel list
 tbuffer = sta + lta
-Time1padded = starttime - datetime.timedelta(0,tbuffer+PADDING)
-stAll = download_waveforms_fdsn_bulk(chanfile,Time1padded,duration+tbuffer+(2*padding),client)
+Time1padded = starttime - datetime.timedelta(0,tbuffer+tpadding)
+stAll = download_waveforms_fdsn_bulk(infile,Time1padded,durationinsec+tbuffer+(2*tpadding),client)
 
 #----- Get the time slices we want for analysis.
 Time1 = starttime - datetime.timedelta(0,tbuffer)
-Time2 = starttime + datetime.timedelta(0,duration)
+Time2 = starttime + datetime.timedelta(0,durationinsec)
 lenrequested = (Time2-Time1).total_seconds()
 
 #----- Loop over stations.  If a station has gaps, a stream of that sncl will 
@@ -205,20 +221,22 @@ for i in range(0,len(stAll)):
 
         snr10_0p01cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,10,dt,0.0001)
         snr20_0p05cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.0005)  #--- of order 0.02 sec/trace each
-        snr20_0p17cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.0017)  #--- ShakeAlert stat. acceptance thresh. is now 0.0035
+        snr20_0p17cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.0017)  #--- 2017 ShakeAlert stat. acceptance thresh.
+        snr20_0p34cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.0034)  #--- 2018 ShakeAlert stat. acceptance thresh.
         snr20_1cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.01)
         snr20_3cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.03)
         snr20_5cm = count_peaks_stalta(dataAccBroad,datastalta,sta,lta,mpd,20,dt,0.05)
 
         RMSduration_0p01cm = duration_exceed_RMS(dataAccBroad,0.0001,RMSlen,dt)  #--- of order 0.05 sec/trace each
-        RMSduration_0p035cm = duration_exceed_RMS(dataAccBroad,0.00035,RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007.
+        RMSduration_0p035cm = duration_exceed_RMS(dataAccBroad,0.00035,RMSlen,dt)  #--- 2017 ShakeAlert stat. acceptance thresh.
+        RMSduration_0p07cm = duration_exceed_RMS(dataAccBroad,0.0007,RMSlen,dt)  #--- 2018 ShakeAlert stat. acceptance thresh. 
         RMSduration_0p1cm = duration_exceed_RMS(dataAccBroad,0.001,RMSlen,dt)
         RMSduration_1cm = duration_exceed_RMS(dataAccBroad,0.01,RMSlen,dt)
 
-        numstring = "%d %d %d %d %d %d %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.6g %.6g %.4g %d    %.4g %.4g %.4g %.4g " % ( snr10_0p01cm, snr20_0p05cm, snr20_0p17cm, snr20_1cm, snr20_3cm, snr20_5cm, pow50sec, pow30sec, pow20sec, pow10sec, pow5sec, pow1Hz, pow5Hz, pow10Hz, pow20Hz, pow50Hz, NoiseFloorAcc, NoiseFloorVel, rawrange, rawmean, rawrms, rawmin, rawmax, segmentshort, segmentlong, pctavailable, ngaps, RMSduration_0p01cm, RMSduration_0p035cm, RMSduration_0p1cm, RMSduration_1cm )
+        numstring = "%d %d %d %d %d %d %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.4g %.6g %.6g %.4g %d    %.4g %.4g %.4g %.4g  %.4g %d" % ( snr10_0p01cm, snr20_0p05cm, snr20_0p17cm, snr20_1cm, snr20_3cm, snr20_5cm, pow50sec, pow30sec, pow20sec, pow10sec, pow5sec, pow1Hz, pow5Hz, pow10Hz, pow20Hz, pow50Hz, NoiseFloorAcc, NoiseFloorVel, rawrange, rawmean, rawrms, rawmin, rawmax, segmentshort, segmentlong, pctavailable, ngaps, RMSduration_0p01cm, RMSduration_0p035cm, RMSduration_0p1cm, RMSduration_1cm, RMSduration_0p07cm, snr20_0p34cm )
 
-        metriclist = [ "snr10_0p01cm", "snr20_0p05cm", "snr20_0p17cm", "snr20_1cm", "snr20_3cm", "snr20_5cm", "pow50sec", "pow30sec", "pow20sec", "pow12sec", "pow10sec", "pow5sec", "pow1Hz", "pow5Hz", "pow10Hz", "pow20Hz", "pow50Hz", "NoiseFloorAcc", "NoiseFloorVel", "rawrange", "rawmean", "rawrms", "rawmin", "rawmax", "segmentshort", "segmentlong", "pctavailable", "ngaps", "RMSduration_0p01cm", "RMSduration_0p035cm", "RMSduration_0p1cm", "RMSduration_1cm" ] 
-        valuelist = [ snr10_0p01cm, snr20_0p05cm, snr20_0p17cm, snr20_1cm, snr20_3cm, snr20_5cm, pow50sec, pow30sec, pow20sec, pow12sec, pow10sec, pow5sec, pow1Hz, pow5Hz, pow10Hz, pow20Hz, pow50Hz, NoiseFloorAcc, NoiseFloorVel, rawrange, rawmean, rawrms, rawmin, rawmax, segmentshort, segmentlong, pctavailable, ngaps, RMSduration_0p01cm, RMSduration_0p035cm, RMSduration_0p1cm, RMSduration_1cm  ]
+        metriclist = [ "snr10_0p01cm", "snr20_0p05cm", "snr20_0p17cm", "snr20_0p34cm", "snr20_1cm", "snr20_3cm", "snr20_5cm", "pow50sec", "pow30sec", "pow20sec", "pow12sec", "pow10sec", "pow5sec", "pow1Hz", "pow5Hz", "pow10Hz", "pow20Hz", "pow50Hz", "NoiseFloorAcc", "NoiseFloorVel", "rawrange", "rawmean", "rawrms", "rawmin", "rawmax", "segmentshort", "segmentlong", "pctavailable", "ngaps", "RMSduration_0p01cm", "RMSduration_0p035cm", "RMSduration_0p07cm", "RMSduration_0p1cm", "RMSduration_1cm" ] 
+        valuelist = [ snr10_0p01cm, snr20_0p05cm, snr20_0p17cm, snr20_0p34cm, snr20_1cm, snr20_3cm, snr20_5cm, pow50sec, pow30sec, pow20sec, pow12sec, pow10sec, pow5sec, pow1Hz, pow5Hz, pow10Hz, pow20Hz, pow50Hz, NoiseFloorAcc, NoiseFloorVel, rawrange, rawmean, rawrms, rawmin, rawmax, segmentshort, segmentlong, pctavailable, ngaps, RMSduration_0p01cm, RMSduration_0p035cm, RMSduration_0p07cm, RMSduration_0p1cm, RMSduration_1cm  ]
 
         T1 = timeit.default_timer()
         write_database(dbconnection,sncl_id,starttime,endtime,datasrc_id,metriclist,valuelist,metric_list,metric_id_list)
