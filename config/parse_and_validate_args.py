@@ -70,6 +70,7 @@ def parse_args():
         print ('One of these:')
         print ('  -e,  --endtime      Trace end time (YYYY-MM-DD,HH:MM:SS)')
         print ('  -d,  --duration     Duration in hours from starttime')
+        print ('                      Note: if duration is neg, starttime becomes endtime')
         print (' ')
         print ('One of these:')
         print ('  -I,  --infile       Name of file whose lines are: Net Sta Loc Cha')
@@ -114,9 +115,15 @@ def validate_args_and_get_times(args):
             exit()
         if ( durationinhours is not None ):
             try:
-                endtime = starttime + datetime.timedelta(seconds=3600*float(durationinhours))
-                durationinsec = float(durationinhours) * 3600.
-                durationinhours = float(durationinhours)
+                if ( float(durationinhours) > 0 ):
+                    durationinhours = float(durationinhours) 
+                    durationinsec = durationinhours * 3600.
+                    endtime = starttime + datetime.timedelta(seconds=durationinsec)
+                else:
+                    durationinhours = abs(float(durationinhours))
+                    durationinsec = durationinhours * 3600.
+                    endtime = starttime
+                    starttime = endtime - datetime.timedelta(seconds=durationinsec)
             except:
                 print ("Error: invalid durationinhours; requires integer")
                 exit()

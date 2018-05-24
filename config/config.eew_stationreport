@@ -1,7 +1,7 @@
 [SectionOne]
 #  Floats are ok for all numbers.
 #  Set the timeout (sec) for the FDSNWS client.  Less than 5sec is fine for IRIS.  SCEDC might need more time.
-FDSNtimeout: 300
+FDSNtimeout: 24
 
 #  Padding length (sec) on both sides of the trace to avoid edge effects when filtering. Should be > (2/freqBB2).
 tpadding: 120
@@ -14,8 +14,8 @@ lta: 5.0
 minSTALTAlen: 10.0
 
 #  Frequencies (Hz) for filtering for use in Nspikes, RMS, noisefloor metrics.  freq_min, low_freq_corner, high_freq_corner, freq_max.
-freqBP1: 0.25
-freqBP2: 0.3
+freqBP1: 0.06
+freqBP2: 0.075
 freqBP3: 15.0
 freqBP4: 17.0
 
@@ -30,14 +30,3 @@ RMSlen: 5.0
 
 #  Either use just the "Gain" or the full "Resp" (response) file for instrument response removal.
 GainOrFullResp: "Gain"
-
-#  The periods at which the power will be measured.
-PSDperiods: [50, 30, 20, 12, 10, 5, 1, 0.2, 0.1, 0.05, 0.02 ]
-
-#  The names of the postgress database and host machine.
-dbname: station_metrics
-hostname: web3.ess.washington.edu
-
-#  If you want to make a plot, not a good idea when doing many stations as it is slow.
-iplot: 0
-

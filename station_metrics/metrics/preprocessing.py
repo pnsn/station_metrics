@@ -20,7 +20,10 @@ def raw_trace_to_ground_motion_filtered_pruned(TraceOrig,T1,T2,AccVelDisp,FullRe
         #----- correct for gain factor only
         if ( FullResponse == 0 ):
             trace.remove_sensitivity(inv)
-            trace.filter("bandpass", freqmin = f2, freqmax = f3)
+            if ( f3 == 0 ):
+                trace.filter("highpass", freq = f2)
+            else:
+                trace.filter("bandpass", freqmin = f2, freqmax = f3)
             trace = trace.slice(UTCDateTime(T1),UTCDateTime(T2))
 #            trace.detrend(type='polynomial',order=3)  #--- of order 0.08 sec/trace
 #            trace.detrend(type='linear')              #--- of order 0.027 sec/trace
