@@ -3,6 +3,7 @@
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
 # import std packages
+import sys
 from collections import Counter
 import datetime
 import timeit
@@ -102,6 +103,11 @@ if __name__ == "__main__":
 
     slice_starttime = starttime - datetime.timedelta(seconds=lta)
     slice_endtime = starttime + datetime.timedelta(seconds=(durationinsec + sta))
+
+    endminusstarttime = (endtime - starttime).total_seconds()
+    if ( endminusstarttime < minSTALTAlen ):
+        print ("EXITING: requested time is too short or wrong " + str(starttime) + " to " + str(endtime) )
+        sys.exit()
 
     infile = args.infile
     if infile:
@@ -232,10 +238,6 @@ if __name__ == "__main__":
                                   (lce_metric, "pass" if lce_metric >= 98.0 else "fail")
                                         } 
 
-            #----- Get the time slices to analyze.
-            
-            lenrequested = (slice_endtime - slice_starttime).total_seconds()
-            
             #----- Loop over seismograms.  If a station has gaps, a stream of that sncl will 
             #----- be made from all the traces.
             
@@ -281,18 +283,13 @@ if __name__ == "__main__":
                     nptstotal = 0
                     dt = stAll[i].stats.delta
                     segmentlong = 0
-                    segmentshort = 9e6
+                    segmentshort = 1e10
                     for j in range(i,i+ntr):
                         trRaw = stAll[j].copy()
                         trRaw = trRaw.slice(UTCDateTime(slice_starttime),UTCDateTime(slice_endtime))
                         npts = trRaw.stats.npts
-                        nptstotal = nptstotal + npts
                         trPadded = stAll[j].copy()
                         trPadded = trPadded.detrend(type='polynomial',order=3)
-                        if ( dt*npts > segmentlong ):
-                            segmentlong = dt*npts
-                        if ( dt*npts < segmentshort ):
-                            segmentshort = dt*npts
 
                         trVelHighPass = raw_trace_to_ground_motion_filtered_pruned(trPadded, \
                                      slice_starttime, slice_endtime, "Vel", 0, 0, \
@@ -326,21 +323,28 @@ if __name__ == "__main__":
                                 stVelHighPassplot += Stream(traces=[trVelHighPass])
                                 stAccFiltplot += Stream(traces=[trAccFilt])
                             if ( j == i + ntr -1 ):
-            #                    VelHighPasslabel = "Acc " + str(freqHP) + "-" + str(freqHP) + " Hz (cm/s^2)"
-            #                    AccFiltlabel = "Acc " + str(freqBP2) + "-" + str(freqBP3) + " Hz (cm/s^2)"
-            #                    VelFiltlabel = "Vel " + str(freqBP2) + "-" + str(freqBP3) + " Hz (cm/s)"
                                 AccRMSlabel = str(freqBP2) + "-" + str(freqBP3) + "Hz RMS Acc (cm/s^2)"
                                 AccNspikeslabel =  str(freqBP2) + "-" + str(freqBP3) + "Hz Spikes Acc (cm/s^2)"
-                                VelFiltlabel =  "   HighPass " + str(freqHP) + "Hz    Vel (cm/s)"
+                                VelHighPasslabel =  "   HighPass " + str(freqHP) + "Hz    Vel (cm/s)"
                                 for ij in range(0,len(stVelHighPassplot)):
                                     stVelHighPassplot[ij].data = stVelHighPassplot[ij].data*100
                                     stAccFiltplot[ij].data = stAccFiltplot[ij].data*100
 #                                    stVelFiltplot[ij].data = stVelFiltplot[ij].data*100
-                                make_station_figure_eew_stationreport(strawplot,stVelHighPassplot,stAccFiltplot,stAccFiltplot,datastalta,"Raw       (counts)",VelFiltlabel,AccRMSlabel,AccNspikeslabel,"     STA/LTA",0,0,0.07,0.34,20,RMSlen)  #--- of order 25sec/channel for 1 hr long traces
+                                make_station_figure_eew_stationreport(strawplot,stVelHighPassplot,stAccFiltplot,stAccFiltplot,datastalta,"Raw       (counts)",VelHighPasslabel,AccRMSlabel,AccNspikeslabel,"     STA/LTA",0,0,0.07,0.34,20,RMSlen)  #--- of order 25sec/channel for 1 hr long traces
                                 stVelHighPassplot.clear()
                                 stAccFiltplot.clear()
                         T5 = timeit.default_timer()
                         Tplot = T5-T4
+                        print (" " )
+                        print ("NPTS 1:  " + str(npts) + " " + str(nptstotal) )
+                        trRaw = trRaw.slice(UTCDateTime(starttime),UTCDateTime(endtime))
+                        npts = trRaw.stats.npts
+                        nptstotal = nptstotal + npts
+                        print ("NPTS 2:  " + str(npts) + " " + str(nptstotal) )
+                        if ( dt*npts > segmentlong ):
+                            segmentlong = dt*npts
+                        if ( dt*npts < segmentshort ):
+                            segmentshort = dt*npts
 
                     rawrange = float(np.ptp(dataraw))
                     rawmean = np.mean(dataraw)
@@ -348,7 +352,7 @@ if __name__ == "__main__":
                     rawrms = np.sqrt(np.mean((dataraw-rawmean)**2))
                     rawmin = min(dataraw)
                     rawmax = max(dataraw)
-                    pctavailable = 100.*(nptstotal/(lenrequested/dt))
+                    pctavailable = 100.*(nptstotal/(endminusstarttime/dt))
                     ngaps = ntr - 1
                     NoiseFloorAcc = noise_floor(dataAccFilt)
                     NoiseFloorVel = noise_floor(dataVelFilt)
@@ -381,9 +385,9 @@ if __name__ == "__main__":
                         strnspikes = str( "nspikes_FAIL: %.3f " % (snr20_0p34cm/durationinhours) )
             
                     if ( pctavailable > 95. ):
-                        strpctavail = str( "pctavailable_PASS: %.4f " % (100*dt*nptstotal/lenrequested) )
+                        strpctavail = str( "pctavailable_PASS: %.4f " % (100*dt*nptstotal/endminusstarttime) )
                     else:
-                        strpctavail = str( "pctavailable_FAIL: %.4f " % (100*dt*nptstotal/lenrequested) )
+                        strpctavail = str( "pctavailable_FAIL: %.4f " % (100*dt*nptstotal/endminusstarttime) )
             
             #        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, itrace, segmentlong, segmentshort) )
                     print ( "%s, calculate: %.2fs, plot: %.2fs, %s, %s, %s, %s,  Nsegments: %d,  segmentlong: %.3f,  segmentshort: %.3f " % (sncl, T3-T2-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, ntr, segmentlong, segmentshort) )
