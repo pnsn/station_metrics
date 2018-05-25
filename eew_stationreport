@@ -335,12 +335,9 @@ if __name__ == "__main__":
                                 stAccFiltplot.clear()
                         T5 = timeit.default_timer()
                         Tplot = T5-T4
-                        print (" " )
-                        print ("NPTS 1:  " + str(npts) + " " + str(nptstotal) )
                         trRaw = trRaw.slice(UTCDateTime(starttime),UTCDateTime(endtime))
                         npts = trRaw.stats.npts
                         nptstotal = nptstotal + npts
-                        print ("NPTS 2:  " + str(npts) + " " + str(nptstotal) )
                         if ( dt*npts > segmentlong ):
                             segmentlong = dt*npts
                         if ( dt*npts < segmentshort ):
