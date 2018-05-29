@@ -3,9 +3,9 @@
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
 # import std packages
+import sys
 from collections import Counter
 import datetime
-import six
 import timeit
 
 # import third party packages
@@ -30,7 +30,7 @@ from station_metrics.metrics.preprocessing import raw_trace_to_ground_motion_fil
 from station_metrics.metrics.noise_metrics import noise_floor, count_peaks_stalta
 from station_metrics.metrics.noise_metrics import duration_exceed_RMS
 
-from station_metrics.plotting.plot_pip_squeak import make_station_figure_pip_squeak
+from station_metrics.plotting.plot_eew_stationreport import make_station_figure_eew_stationreport
 
 from config.parse_and_validate_args import validate_args_and_get_times, parse_args
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     """
         Generates Phase1 Station Acceptance Report.
         Requirements:
-            config/pipsqueak.cfg --> configuring the metrics
+            config/config.eew_stationreport --> configuring the metrics
             command-line arguments --> specify station and time period
     """
     # prepare report engine (jinja2)
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     #----- Read Processing parameters from a config file
     
     parser = SafeConfigParser()
-    parser.read("config/config.pip_squeak")
+    parser.read("config/config.eew_stationreport")
     
     FDSNtimeout = float(parser.get('SectionOne','FDSNtimeout'))
     tpadding = float(parser.get('SectionOne','tpadding'))
@@ -78,32 +78,36 @@ if __name__ == "__main__":
     freqBP2 = float(parser.get('SectionOne','freqBP2'))
     freqBP3 = float(parser.get('SectionOne','freqBP3'))
     freqBP4 = float(parser.get('SectionOne','freqBP4'))
-    freqBB1 = float(parser.get('SectionOne','freqBB1'))
-    freqBB2 = float(parser.get('SectionOne','freqBB2'))
+    freqHP = float(parser.get('SectionOne','freqHP'))
     mpd = float(parser.get('SectionOne','mpd'))
+    minSTALTAlen = float(parser.get('SectionOne','minSTALTAlen'))
     RMSlen = float(parser.get('SectionOne','RMSlen'))
     GainOrFullResp = parser.get('SectionOne','GainOrFullResp')
     #PSDperiods = (parser.get('SectionOne','PSDperiods'))[1:-1].split(",")
     #PSDperiods = [float(i) for i in PSDperiods]
-    #iplot = parser.get('SectionOne','iplot')
-    
+
     #----- command-line arguments specify what data to get and where
     # options that influence program structure:
     # infile: 
     #     multiple channels, possibly from multiple stations, are defined in an input file. 
     # command-line arguments -N network, -S station:
-    #     pip_squeak is run for the channels of a single station only.
+    #     eew_stationreport is run for the channels of a single station only.
     
     args = parse_args()
     [starttime, endtime, durationinhours, durationinsec] = validate_args_and_get_times(args)
 
     # get data from a little before starttime to remedy edge effects
-    request_starttime = starttime - datetime.timedelta(0,tbuffer+tpadding)
-    duration_padded = durationinsec+tbuffer+(2*tpadding)
-    request_endtime = request_starttime + datetime.timedelta(seconds=duration_padded)
-    
-    slice_starttime = starttime - datetime.timedelta(seconds=tbuffer)
-    slice_endtime = starttime + datetime.timedelta(seconds=(durationinsec + tbuffer))
+    request_starttime = starttime - datetime.timedelta(0,lta+tpadding)
+    duration_padded = durationinsec + sta + lta + (2*tpadding)
+    request_endtime = starttime + datetime.timedelta(seconds=duration_padded)
+
+    slice_starttime = starttime - datetime.timedelta(seconds=lta)
+    slice_endtime = starttime + datetime.timedelta(seconds=(durationinsec + sta))
+
+    endminusstarttime = (endtime - starttime).total_seconds()
+    if ( endminusstarttime < minSTALTAlen ):
+        print ("EXITING: requested time is too short or wrong " + str(starttime) + " to " + str(endtime) )
+        sys.exit()
 
     infile = args.infile
     if infile:
@@ -198,6 +202,7 @@ if __name__ == "__main__":
             lce_pass = 0
             number_of_lcq_points = 0
             number_of_lce_points = 0
+
             # anticipate possible gaps in these data but do not keep track
             for trace in stSOH:
                 location = trace.stats.location
@@ -206,17 +211,12 @@ if __name__ == "__main__":
                 nslc = ".".join([trace.stats.network, trace.stats.station, location, trace.stats.channel])
                 if trace.stats.channel == "LCQ":
                     # LCQ channel has distinct values between 0-100, e.g. 20, 60, 100
-                    value_counts = Counter(trace.data)
+                    lcq_pass = lcq_pass + (trace.data >= THRESHOLD['lcq']).sum()
                     number_of_lcq_points = number_of_lcq_points + len(trace.data)
-                    for value, count in six.iteritems(value_counts):
-                        if value >= THRESHOLD['lcq']:
-                            lcq_pass = lcq_pass + count
                 if trace.stats.channel == "LCE":
                     # LCE channel can have any value, loop over all samples
-                    for sample in trace.data:
-                        if abs(sample) < THRESHOLD['lce']:
-                            lce_pass = lce_pass + 1
-                        number_of_lce_points = number_of_lce_points + 1
+                    lce_pass = lce_pass + (abs(trace.data) < THRESHOLD['lce']).sum()
+                    number_of_lce_points = number_of_lce_points + len(trace.data)
 
             if number_of_lcq_points > 0:
                 lcq_metric = 100*(lcq_pass/number_of_lcq_points)
@@ -237,10 +237,7 @@ if __name__ == "__main__":
             soh_metrics["LCE"] = { "clock_phase_lce" : 
                                   (lce_metric, "pass" if lce_metric >= 98.0 else "fail")
                                         } 
-            #----- Get the time slices to analyze.
-            
-            lenrequested = (slice_endtime - slice_starttime).total_seconds()
-            
+
             #----- Loop over seismograms.  If a station has gaps, a stream of that sncl will 
             #----- be made from all the traces.
             
@@ -274,92 +271,93 @@ if __name__ == "__main__":
                     itrace = itrace + 1
                     tr = []
                     trRaw = []
-                    trAccBroad = []
+                    trVelHighPass = []
                     trAccFilt = []
                     trVelFilt = []
                     stalta = []
                     dataraw = []
-                    dataAccBroad = []
+                    dataVelHighPass = []
                     dataAccFilt = []
                     dataVelFilt = []
                     datastalta = []
                     nptstotal = 0
                     dt = stAll[i].stats.delta
-                    freqBB3 = 0.9 * (1/(2*dt))
-                    freqBB4 = 0.99 * (1/(2*dt))
                     segmentlong = 0
-                    segmentshort = 9e6
+                    segmentshort = 1e10
                     for j in range(i,i+ntr):
                         trRaw = stAll[j].copy()
                         trRaw = trRaw.slice(UTCDateTime(slice_starttime),UTCDateTime(slice_endtime))
                         npts = trRaw.stats.npts
-                        nptstotal = nptstotal + npts
                         trPadded = stAll[j].copy()
                         trPadded = trPadded.detrend(type='polynomial',order=3)
-                        if ( dt*npts > segmentlong ):
-                            segmentlong = dt*npts
-                        if ( dt*npts < segmentshort ):
-                            segmentshort = dt*npts
-                        trAccBroad = raw_trace_to_ground_motion_filtered_pruned(trPadded, \
-                                     slice_starttime, slice_endtime, "Acc", 0, freqBB1, \
-                                     freqBB2, freqBB3, freqBB4, inv)
+
+                        trVelHighPass = raw_trace_to_ground_motion_filtered_pruned(trPadded, \
+                                     slice_starttime, slice_endtime, "Vel", 0, 0, \
+                                     freqHP, 0, 0, inv)
                         trAccFilt = raw_trace_to_ground_motion_filtered_pruned(trPadded, \
                                     slice_starttime, slice_endtime, "Acc", 0, freqBP1, \
                                     freqBP2, freqBP3, freqBP4, inv)
                         trVelFilt = raw_trace_to_ground_motion_filtered_pruned(trPadded, \
                                     slice_starttime, slice_endtime, "Vel", 0, freqBP1, \
                                     freqBP2, freqBP3, freqBP4, inv)
-                        stalta = trAccBroad.copy()
+                        stalta = trVelHighPass.copy()
                         dataraw = np.concatenate((dataraw,trRaw.data),axis=0)
-                        dataAccBroad = np.concatenate((dataAccBroad,trAccBroad.data),axis=0)
+                        dataVelHighPass = np.concatenate((dataVelHighPass,trVelHighPass.data),axis=0)
                         dataAccFilt = np.concatenate((dataAccFilt,trAccFilt.data),axis=0)
                         dataVelFilt = np.concatenate((dataVelFilt,trVelFilt.data),axis=0)
-            
-                        if ( npts*dt > tbuffer ):
-            #                stalta = z_detect(trAccBroad,int(1.0/dt))                      #--- of order 0.1 sec/trace 
-                            stalta = classic_sta_lta(trAccBroad,int(sta/dt),int(lta/dt))  #--- of order 0.4 sec/trace
+
+                        if ( npts*dt > minSTALTAlen ):
+            #                stalta = z_detect(trVelHighPass,int(1.0/dt))                      #--- of order 0.1 sec/trace 
+                            stalta = classic_sta_lta(trVelHighPass,int(sta/dt),int(lta/dt))  #--- of order 0.4 sec/trace
                             datastalta = np.concatenate((datastalta,stalta),axis=0)
                         else:
-                            datastalta = np.concatenate((datastalta,np.zeros(trAccBroad.stats.npts)),axis=0)
+                            datastalta = np.concatenate((datastalta,np.zeros(trVelHighPass.stats.npts)),axis=0)
                         T4 = timeit.default_timer()
                         if ( iplot == 1 ):
                             if ( j == i ):
                                 strawplot = Stream(traces=[trRaw])
-                                stAccBroadplot = Stream(traces=[trAccBroad])
+                                stVelHighPassplot = Stream(traces=[trVelHighPass])
                                 stAccFiltplot = Stream(traces=[trAccFilt])
-                                stVelFiltplot = Stream(traces=[trVelFilt])
                             else:
                                 strawplot += Stream(traces=[trRaw])
-                                stAccBroadplot += Stream(traces=[trAccBroad])
+                                stVelHighPassplot += Stream(traces=[trVelHighPass])
                                 stAccFiltplot += Stream(traces=[trAccFilt])
-                                stVelFiltplot += Stream(traces=[trVelFilt])
                             if ( j == i + ntr -1 ):
-            #                    AccBroadlabel = "Acc " + str(freqBB2) + "-" + str(freqBB3) + " Hz (cm/s^2)"
-            #                    AccFiltlabel = "Acc " + str(freqBP2) + "-" + str(freqBP3) + " Hz (cm/s^2)"
-            #                    VelFiltlabel = "Vel " + str(freqBP2) + "-" + str(freqBP3) + " Hz (cm/s)"
                                 AccRMSlabel = str(freqBP2) + "-" + str(freqBP3) + "Hz RMS Acc (cm/s^2)"
                                 AccNspikeslabel =  str(freqBP2) + "-" + str(freqBP3) + "Hz Spikes Acc (cm/s^2)"
-                                VelFiltlabel =  "   " + str(freqBP2) + "-" + str(freqBP3) + "Hz    Vel (cm/s)"
-                                for ij in range(0,len(stAccBroadplot)):
-                                    stAccBroadplot[ij].data = stAccBroadplot[ij].data*100
+                                VelHighPasslabel =  "   HighPass " + str(freqHP) + "Hz    Vel (cm/s)"
+                                for ij in range(0,len(stVelHighPassplot)):
+                                    stVelHighPassplot[ij].data = stVelHighPassplot[ij].data*100
                                     stAccFiltplot[ij].data = stAccFiltplot[ij].data*100
-                                    stVelFiltplot[ij].data = stVelFiltplot[ij].data*100
-                                make_station_figure_pip_squeak(strawplot,stVelFiltplot,stAccFiltplot,stAccFiltplot,datastalta,"Raw       (counts)",VelFiltlabel,AccRMSlabel,AccNspikeslabel,"     STA/LTA",0,0,0.07,0.34,20,RMSlen)  #--- of order 25sec/channel for 1 hr long traces
+#                                    stVelFiltplot[ij].data = stVelFiltplot[ij].data*100
+                                make_station_figure_eew_stationreport(strawplot,stVelHighPassplot,stAccFiltplot,stAccFiltplot,datastalta,"Raw       (counts)",VelHighPasslabel,AccRMSlabel,AccNspikeslabel,"     STA/LTA",0,0,0.07,0.34,20,RMSlen)  #--- of order 25sec/channel for 1 hr long traces
+                                stVelHighPassplot.clear()
+                                stAccFiltplot.clear()
                         T5 = timeit.default_timer()
                         Tplot = T5-T4
-            
+                        trRaw = trRaw.slice(UTCDateTime(starttime),UTCDateTime(endtime))
+                        npts = trRaw.stats.npts
+                        nptstotal = nptstotal + npts
+                        if ( dt*npts > segmentlong ):
+                            segmentlong = dt*npts
+                        if ( dt*npts < segmentshort ):
+                            segmentshort = dt*npts
+
                     rawrange = float(np.ptp(dataraw))
                     rawmean = np.mean(dataraw)
             #        rawrms = np.sqrt(np.vdot(dataraw, dataraw)/dataraw.size)
                     rawrms = np.sqrt(np.mean((dataraw-rawmean)**2))
                     rawmin = min(dataraw)
                     rawmax = max(dataraw)
-                    pctavailable = 100.*(nptstotal/(lenrequested/dt))
+                    pctavailable = 100.*(nptstotal/(endminusstarttime/dt))
                     ngaps = ntr - 1
                     NoiseFloorAcc = noise_floor(dataAccFilt)
                     NoiseFloorVel = noise_floor(dataVelFilt)
+                    dataVelFilt = []
                     snr20_0p34cm = count_peaks_stalta(dataAccFilt,datastalta,sta,lta,mpd,20,dt,THRESHOLD['spikes'])  #--- ShakeAlert stat. acceptance thresh. is now 0.0034 m/s^2 = 0.34cm/s^2.
+                    datastalta = []
                     RMSduration_0p07cm = duration_exceed_RMS(dataAccFilt,THRESHOLD['rms_noise'],RMSlen,dt)  #--- ShakeAlert stat. acceptance thresh. is now 0.0007 m/s^2 = 0.07cm/s^2.
+                    dataAccFilt = []
                     T3 = timeit.default_timer()
             
                     if ( ngaps/durationinhours < 1.0 ):
@@ -384,12 +382,12 @@ if __name__ == "__main__":
                         strnspikes = str( "nspikes_FAIL: %.3f " % (snr20_0p34cm/durationinhours) )
             
                     if ( pctavailable > 95. ):
-                        strpctavail = str( "pctavailable_PASS: %.4f " % (100*dt*nptstotal/lenrequested) )
+                        strpctavail = str( "pctavailable_PASS: %.4f " % (100*dt*nptstotal/endminusstarttime) )
                     else:
-                        strpctavail = str( "pctavailable_FAIL: %.4f " % (100*dt*nptstotal/lenrequested) )
+                        strpctavail = str( "pctavailable_FAIL: %.4f " % (100*dt*nptstotal/endminusstarttime) )
             
             #        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, itrace, segmentlong, segmentshort) )
-                    print ( "%s calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T3-T2-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, ntr, segmentlong, segmentshort) )
+                    print ( "%s, calculate: %.2fs, plot: %.2fs, %s, %s, %s, %s,  Nsegments: %d,  segmentlong: %.3f,  segmentshort: %.3f " % (sncl, T3-T2-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, ntr, segmentlong, segmentshort) )
                     metric_thresholds = { 
                                 "spikes_per_hour_threshold": 1.0, \
                                 "rms_exceeded_per_hour_threshold": 60.0, \

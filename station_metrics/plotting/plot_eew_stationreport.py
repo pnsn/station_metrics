@@ -11,7 +11,7 @@ import numpy as np
 import datetime
 from obspy.signal.util import smooth
 
-def make_station_figure_pip_squeak(st1,st2,st3,st4,st5,label1,label2,label3,label4,label5,thresh1,thresh2,thresh3,thresh4,thresh5,RMSwinlen):
+def make_station_figure_eew_stationreport(st1,st2,st3,st4,st5,label1,label2,label3,label4,label5,thresh1,thresh2,thresh3,thresh4,thresh5,RMSwinlen):
 
         net = st1[0].stats.network
         stat = st1[0].stats.station
