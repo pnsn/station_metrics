@@ -181,20 +181,24 @@ if __name__ == "__main__":
             timer_end = timeit.default_timer()
             print ("Time to download waveforms from {}: {}".format(datacenter, str(timer_end - timer_start)))
 
-            # Now request the SOH channels.
+            # Now request the SOH channels if so desired.
             soh_metrics = {}
-            timer_start = timeit.default_timer()
-            try:
-                stSOH = client.get_waveforms_bulk(soh_bulkrequest)
-            except Exception as e:
-                print("Error: Problem requesting SOH data: {}".format(e))
-                # create empty stream
+            if len(soh_bulkrequest) == 0:
+                print("No SOH channels requested")
                 stSOH = Stream()
-                soh_metrics["LCQ"] = {"clock_lock_lcq" : ("Not available","fail")}
-                soh_metrics["LCE"] = {"clock_phase_lce": ("Not available","fail")}
- 
-            timer_end = timeit.default_timer()
-            print ("Time to download SOH time series from {}: {}".format(datacenter, str(timer_end - timer_start)))
+            else:
+                timer_start = timeit.default_timer()
+                try:
+                    stSOH = client.get_waveforms_bulk(soh_bulkrequest)
+                except Exception as e:
+                    print("Error: Problem requesting SOH data: {}".format(e))
+                    # create empty stream
+                    stSOH = Stream()
+                    soh_metrics["LCQ"] = {"clock_lock_lcq" : ("Not available","fail")}
+                    soh_metrics["LCE"] = {"clock_phase_lce": ("Not available","fail")}
+     
+                timer_end = timeit.default_timer()
+                print ("Time to download SOH time series from {}: {}".format(datacenter, str(timer_end - timer_start)))
             
             print("Creating report for time period {} - {}, station: {}.{}".format(starttime,endtime,net_obj.code,sta_obj.code))
             # if there channels in stSOH then calculate the metric
