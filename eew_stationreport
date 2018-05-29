@@ -25,6 +25,7 @@ from weasyprint import HTML
 # import station_metrics packages
 from station_metrics.io.get_data_metadata import download_fdsn_bulk
 from station_metrics.io.get_data_metadata import download_metadata_fdsn
+from station_metrics.io.external import latency_gaps_completeness
 
 from station_metrics.metrics.preprocessing import raw_trace_to_ground_motion_filtered_pruned
 from station_metrics.metrics.noise_metrics import noise_floor, count_peaks_stalta
