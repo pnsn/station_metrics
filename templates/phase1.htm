@@ -10,7 +10,7 @@
     <div id="intro">
         <h2>{{ self.title() }}</h2>
         <h4>{{ starttime.isoformat() }} - {{ endtime.isoformat() }}</h4>
-        <a href="./{{ station.code }}.pdf">Link to PDF</a>
+        <a href="./{{ network_code }}.{{ station.code }}.pdf">Link to PDF</a>
 
         <div id="site_info">
             <table class="table table-bordered">
@@ -36,9 +36,6 @@
               </tr>
               </tbody>
             </table>
-            <div id="location_accuracy">
-                <p><input type="checkbox">Location accurate to 100 m   ______________ (initial)</p>
-            </div>
         </div>
 
 
@@ -77,15 +74,22 @@
              </tr>
              </thead>
              <tbody>
-             <tr>
-             {% for nscl in clock_metrics %}
-                 {% if "LCQ" in nscl %}
-                 <td class="{{ clock_metrics[nscl]["clock_lock_lcq"][1] }}">{{ clock_metrics[nscl]["clock_lock_lcq"][0] }}</td>
-                 {% elif "LCE" in nscl %}
-                 <td class="{{ clock_metrics[nscl]["clock_phase_lce"][1] }}">{{ clock_metrics[nscl]["clock_phase_lce"][0] }}</td>
-                 {% endif %}
-             {% endfor %}
-             </tr>
+             {% if clock_metrics|length > 0 %}
+               <tr>
+               {% for nscl in clock_metrics %}
+                   {% if "LCQ" in nscl %}
+                   <td class="{{ clock_metrics[nscl]["clock_lock_lcq"][1] }}">{{ clock_metrics[nscl]["clock_lock_lcq"][0] }}</td>
+                   {% elif "LCE" in nscl %}
+                   <td class="{{ clock_metrics[nscl]["clock_phase_lce"][1] }}">{{ clock_metrics[nscl]["clock_phase_lce"][0] }}</td>
+                   {% endif %}
+               {% endfor %}
+               </tr>
+             {% else %}
+               <tr>
+                   <td>no information</td>
+                   <td>no information</td>
+               </tr>
+             {% endif %}
              </tbody>
             </table>
         </div>
@@ -93,37 +97,64 @@
     </div>
 
 
+
+    <div id="promptness_info">
+        <h3>Data Promptness Metrics</h3>
+        <div id="description">
+          <p>Collected from earthworm WAVE_RING using sniffwave_tally</p>
+        </div>
+        <div id="promptness_metrics">
+            <table class="table">
+              <tr>
+                  <th>Channel</th>
+                  <th>Measurement period</th>
+                  <th>Percentage of data with acceptable latency</th>
+                  <th>Percent completeness</th>
+                  <th>Percent completeness incl. gap penalties</th>
+                  <th>Number of gaps per hour</th>
+              </tr>
+              {% if latency_metrics|length > 0 %}
+                {% for nscl in latency_metrics %}
+                <tr>
+                    <td>{{ nscl }}</td>
+                    <td>{{ latency_metrics[nscl]["measurement_start"].strftime("%Y-%m-%dT%H:%M:%S") }} - {{ latency_metrics[nscl]["measurement_end"].strftime("%Y-%m-%dT%H:%M:%S") }} ({{ latency_metrics[nscl]["window_length"] }} seconds)</td>
+                    <td class="{{ latency_metrics[nscl]["acceptable_latency"][1] }}">{{ latency_metrics[nscl]["acceptable_latency"][0] | round(4,method='common') }}</td>
+                    <td class="{{ latency_metrics[nscl]["completeness"][1] }}">{{ latency_metrics[nscl]["completeness"][0] | round(5,method='common') }}</td>
+                    <td class="{{ latency_metrics[nscl]["completeness_incl_penalty"][1] }}">{{ latency_metrics[nscl]["completeness_incl_penalty"][0] | round(5,method='common') }}</td>
+                    <td class="{{ latency_metrics[nscl]["gaps_per_hour"][1] }}">{{ latency_metrics[nscl]["gaps_per_hour"][0] | round(5,method='common') }}</td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                    <td class="fail">missing</td>
+                    <td class="fail">missing</td>
+                    <td class="fail">missing</td>
+                    <td class="fail">missing</td>
+                    <td class="fail">missing</td>
+                    <td class="fail">missing</td>
+                </tr>
+              {% endif %}
+            </table>
+        </div>
+    </div>
+
     <div id="quality_metrics">
         <h3>Data Quality Metrics</h3>
         <div id="description">
-            <h4>Measurement period: {{ starttime.isoformat() }} - {{ endtime.isoformat() }} ({{ (endtime-starttime).days }} days)</h4>
+            <h4>Measurement period: {{ starttime.isoformat() }} - {{ endtime.isoformat() }} ({{ (endtime-starttime) }})</h4>
         </div>
         <div id="metrics">
             <table class="table">
-              <caption>Metrics</caption>
               <tr>
                   <th>Channel</th>
-                  <th>Percentage of data with acceptable latency</th>
-                  <th>Total number of gaps</th>
-                  <th>Total duration of gaps</th>
-                  <th>Number of out-of-order packets</th>
-                  <th>Percentage of data with acceptable latency incl. penalties</th>
-                  <th>Total number of noise glitches</th>
-                  <th>Number of noise glitches per hour<th>
+                  <th>Number of noise glitches per hour</th>
                   <th>Acceptable RMS exceded in s per hour</th>
-                  <th>PASS/FAIL</th>
               </tr>
               {% for nscl in metrics %}
               <tr>
                   <td>{{ nscl }}</td>
-                  <td class="{{ metrics[nscl]["acceptable_latency"][1] }}">{{ metrics[nscl]["acceptable_latency"][0] }}</td>
-                  <td class="no_threshold"></td>
-                  <td class="no_threshold"></td>
-                  <td class="{{ metrics[nscl]["spikes_total"][1] }}">{{ metrics[nscl]["spikes_total"][0] }}</td>
-                  <td class="{{ metrics[nscl]["spikes_per_hour"][1] }}">{{ metrics[nscl]["spikes_per_hour"][0] }}</td>
-                  <td></td>
-                  <td></td>
-                  <td></td>
+                  <td class="{{ metrics[nscl]["spikes_per_hour"][1] }}">{{ metrics[nscl]["spikes_per_hour"][0] | round(5,method='common')}}</td>
+                  <td class="{{ metrics[nscl]["rms_exceeded_per_hour"][1] }}">{{ metrics[nscl]["rms_exceeded_per_hour"][0] | round(5,method='common') }}</td>
               </tr>
               {% endfor %}
             </table>
