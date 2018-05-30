@@ -41,13 +41,12 @@ def parse_args():
     parser.add_argument('-i','--infile',action='store', dest='infile',help='name of file where lines are: NET STAT LOC CHAN')
     parser.add_argument('-N','--net', action='store', dest='network',help='network')
     parser.add_argument('-S','--sta', action='store', dest='station',help='station')
-    #parser.add_argument('-C','--cha', action='store', dest='channel',help='channel')
-    #parser.add_argument('-L','--loc', action='store', dest='location',help='location',  type=_postprocess_sysargv)
     parser.add_argument('-s','--start', action='store', dest='startstring',help='start time YYYY-MM-DDTHH:MM:SS')
     parser.add_argument('-e','--end', action='store', dest='endstring',help='end time YYYY-MM-DDTHH:MM:SS')
     parser.add_argument('-d','--duration', action='store', dest='durationinhours',help='duration in hours')
     parser.add_argument('-dc','--dc','--datacenter', action='store', dest='datacenter',help='FDSN data center (e.g. IRIS, SCEDC, NCEDC)')
     parser.add_argument('-p','--plot',action='store_true',dest='iplot',help='make plots of each hourly trace (NOTE: can be slow)')
+    parser.add_argument('-l','--latdir',action='store',dest='lat_dir',help='directory with output files from sniffwave_tally (full path)')
 
     helpextended = parser.parse_args(_preprocess_sysargv(sys.argv)).helpmenu
     if ( helpextended is True  ):
@@ -61,7 +60,8 @@ def parse_args():
         print ('calculate_metrics_for_acceptance.py --infile My_NSLC_List.txt --start 2018-01-01T00:00:00 --end 2018-01-14T00:00:00 --datacenter IRIS')
         print ('calculate_metrics_for_acceptance.py -i My_NSLC_List.txt -s 2018-01-01T00:00:00 -e 2018-01-14T00:00:00 --dc SCEDC')
         print ('calculate_metrics_for_acceptance.py -i My_NSLC_List.txt -s 2018-01-01T00:00:00 --duration 24 -dc NCEDC')
-        print ('calculate_metrics_for_acceptance.py -N UW -S WISH -L -- -C BHZ -s 2018-01-01T00:00:00 -d 336 -dc IRIS -p')
+        print ('calculate_metrics_for_acceptance.py -N UW -S WISH -s 2018-01-01T00:00:00 -d 336 -dc IRIS -p')
+        print ('calculate_metrics_for_acceptance.py -N UW -S WISH -s 2018-01-01T00:00:00 -d 336 -dc IRIS -l /home/seis/uw/sniff_tallies')
         print ('')
         print ('Mandatory inputs:')
         print ('-dc, --datacenter     Name of FDSN data center, e.g. IRIS, SCEDC, NCEDC')
@@ -77,12 +77,11 @@ def parse_args():
         print ('or:')
         print ('  -N,  --net          Network code')
         print ('  -S,  --sta          Station code')
-        print ('  -L,  --loc          Location code (use -- for null)')
-        print ('  -C,  --cha          Channel code')
         print (' ')
         print ('Optional flags:')
         print ('-P,  --plot           Flag to make a figure for each hour.  Note: can be slow.')
         print ('-u                    Print this extended help menu')
+        print ('-l, --latdir          directory with output from sniffwave_tally')
         print ('')
 
 
@@ -96,8 +95,6 @@ def validate_args_and_get_times(args):
     infile = args.infile
     network = args.network
     station = args.station
-    #channel = args.channel
-    #location = args.location
     startstring = args.startstring
     endstring = args.endstring
     durationinhours = args.durationinhours
