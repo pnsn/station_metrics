@@ -408,6 +408,7 @@ if __name__ == "__main__":
                     if sncl not in channel_metrics:
                         channel_metrics[sncl] = metrics
 
+            # add latency, gaps, completeness derived from sniffwave, if requested.
             with open("./templates/" + net_obj.code + "." + sta_obj.code + ".html", "w") as fh:
                 fh.write(template.render(starttime=starttime,endtime=endtime, \
                          network_code=net_obj.code,station=sta_obj,allowed=SEISMIC_CHANNELS, \

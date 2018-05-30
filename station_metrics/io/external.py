@@ -1,18 +1,36 @@
-#!/usr/bin/env python
 from __future__ import print_function
 from datetime import datetime
 
 def latency_gaps_completeness(filelist, penalty=30):
     """
-        to do: docstring
+        Reads output files from sniffwave_tally and produces eew_stationreport metrics 
+        percent_latency_good, gaps_per_hour, percent_completeness, percent_completeness_w_penalty
+
+        Args:
+            filelist ([string]): list of filenames, output files from sniffwave_tally, 
+                                 they have to be in time order:
+                                 i.e. filelist[i] created earlier than filelist[i+1]
+            penalty (float): number of seconds that get added per gap in completeness_w_penalty
+                             calculation (default=30s)
+        Returns:
+            dict: key'd on net.sta.loc.chan, nested dictionary has keys:
+                  measurement_start:		UTC starttime of the first packet in measurement window
+                  measurement_end:		UTC endtime of the last packet in measurement window
+                  measurement_gap:		number of seconds between sniffwave runs, where no data was collected
+                  data_timewindow_length:	total number of seconds processed during measuring window
+                  percent_latency_good:		percentage of packets that had a latency < 3.5s
+                  gaps_per_hour:		3600 * (number of gaps/data_timewindow_length in s)
+                  percent_completeness:         100*(data_timewindow_length - total gap duration)/data_timewindow_length
+                  percent_completeness_w_penalty: 100*(data_timewindow_length - (total gap duration + ngaps*penalty))/data_timewindow_length
+                   
     """
     sep = ","
-    scnldict = {}
     totaldict = {}
     if type(filelist) != list:
         filelist = [filelist]
 
     for filename in filelist:
+        scnldict = {}
         with open(filename,"r") as input:
             for line in input:
                 line = line.strip()
@@ -31,7 +49,6 @@ def latency_gaps_completeness(filelist, penalty=30):
                             i = 1
                             for name in field_names[1:]:
                                 scnldict[scnl][name] = fields[i].strip('\n')
-                                #print(i,scnl,name,scnldict[scnl][name])
                                 i += 1
                             totaldict[scnl]['nmeasurements'] = 1
                             totaldict[scnl]['no_data'] = 0.
@@ -50,7 +67,10 @@ def latency_gaps_completeness(filelist, penalty=30):
                             totaldict[scnl]['total_oo'] = int(scnldict[scnl]['n_oo'])
                             totaldict[scnl]['total_oo_dur'] = float(scnldict[scnl]['oo_dur'])
                         else:
-                            scnldict[scnl] = {}
+                            if scnl not in scnldict:
+                                # if the scnl in totaldict but not in scnldict, it means the channel was available
+                                # for an earlier sniffwave run, but not this one.
+                                scnldict[scnl] = {}
                             i = 1
                             for name in field_names[1:]:
                                 scnldict[scnl][name] = fields[i].strip("\n")
@@ -72,35 +92,36 @@ def latency_gaps_completeness(filelist, penalty=30):
 
 
 
-        # calculate metrics
-        metrics = {}
-        for scnl in totaldict:
-            # re-order channel identifiers to be consistent with eew_stationreport (IRIS DMC)
-            [s,c,n,l] = scnl.split(".")
-            nslc = ".".join([n,s,l,c])
-            if nslc not in metrics:
-                metrics[nslc] = {}
-            d = totaldict[scnl]
-            latency_metric = 100 * (d['total_packets']-d['total_late'])/d['total_packets'] # % data good latency
-            gap_metric = 3600.0 * d['total_gaps']/d['total_duration'] # gaps/hour
-            completeness = 100 * (d['total_duration'] - d['total_gap_dur'])/d['total_duration'] # % data available
-            completeness_incl_penalty = 100 * (d['total_duration'] - (d['total_gap_dur'] + d['total_gaps']*penalty))/d['total_duration'] # % data available
-            metrics[nslc]["measurement_start"] = datetime.fromtimestamp(d["first"]).strftime('%Y-%m-%dT%H:%M:%S.%f')
-            metrics[nslc]["measurement_end"] = datetime.fromtimestamp(d["last"]).strftime('%Y-%m-%dT%H:%M:%S.%f')
-            metrics[nslc]["measurement_gap"] = d["no_data"]
-            metrics[nslc]["data_timewindow_length"] = d["total_duration"]
-            metrics[nslc]["percent_latency_good"] = latency_metric
-            metrics[nslc]["gaps_per_hour"] = gap_metric
-            metrics[nslc]["percent_completeness"] = completeness
-            metrics[nslc]["percent_completeness_w_penalty"] = completeness_incl_penalty
+    # calculate metrics
+    metrics = {}
+    for scnl in totaldict:
+        # re-order channel identifiers to be consistent with eew_stationreport (IRIS DMC)
+        [s,c,n,l] = scnl.split(".")
+        nslc = ".".join([n,s,l,c])
+        if nslc not in metrics:
+            metrics[nslc] = {}
+        d = totaldict[scnl]
+        latency_metric = 100 * (d['total_packets']-d['total_late'])/d['total_packets'] # % data good latency
+        gap_metric = 3600.0 * d['total_gaps']/d['total_duration'] # gaps/hour
+        completeness = 100 * (d['total_duration'] - d['total_gap_dur'])/d['total_duration'] # % data available
+        completeness_incl_penalty = 100 * (d['total_duration'] - (d['total_gap_dur'] + d['total_gaps']*penalty))/d['total_duration'] # % data available
+        metrics[nslc]["measurement_start"] = datetime.fromtimestamp(d["first"]).strftime('%Y-%m-%dT%H:%M:%S.%f')
+        metrics[nslc]["measurement_end"] = datetime.fromtimestamp(d["last"]).strftime('%Y-%m-%dT%H:%M:%S.%f')
+        metrics[nslc]["measurement_gap"] = d["no_data"]
+        metrics[nslc]["data_timewindow_length"] = d["total_duration"]
+        metrics[nslc]["percent_latency_good"] = latency_metric
+        metrics[nslc]["gaps_per_hour"] = gap_metric
+        metrics[nslc]["percent_completeness"] = completeness
+        metrics[nslc]["percent_completeness_w_penalty"] = completeness_incl_penalty
 
-        return metrics
+    return metrics
 
 if __name__ == "__main__":
     import glob
     # input files are the output from sniffwave_tally
     inputdir = "../test-data/" # read input files from this directory
     filelist = glob.glob(inputdir + "*.csv")
+    filelist = sorted(filelist)
     # move to processed directory after done.
     savedir = "processed/"
     metrics = latency_gaps_completeness(filelist)
