@@ -3,6 +3,7 @@
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
 # import std packages
+import os
 import sys
 from collections import Counter
 import datetime
@@ -36,6 +37,10 @@ from station_metrics.plotting.plot_eew_stationreport import make_station_figure_
 
 from config.parse_and_validate_args import validate_args_and_get_times, parse_args
 
+# define how many days we want latency info for (at most)
+MAX_LATENCY_DAYS = 14
+
+
 # define which channel codes denote acceptable seismic channels
 SEISMIC_CHANNELS = ['BHE', 'BHN', 'BHZ', 'HHE', 'HHN', 'HHZ',
                     'BH1', 'BH2', 'BH3', 'HH1', 'HH2', 'HH3',
@@ -47,7 +52,9 @@ SOH_CHANNELS = ['LCQ', 'LCE']
 THRESHOLD = { 
              'lcq':60,               # minimum quality=60, read Q330 manual
              'lce':5000,             # maximum phase(drift)=5000 microseconds
-             'latency':3.5,          # maximum latency 3.5s between now and middle of packet
+             'percent_latency_good':98,          # good=maximum latency 3.5s between now and middle of packet
+             'percent_completeness':98,          
+             'gaps_per_hour':1,	     # maximum number of gaps per hour
              'rms_noise':0.0007,     # maximum RMS amplitude 0.07 cm/s^2 
              'spikes' : 0.0034       # maximum spike amplitude 0.34 sm/s^2
             }
@@ -110,6 +117,33 @@ if __name__ == "__main__":
     if ( endminusstarttime < minSTALTAlen ):
         print ("EXITING: requested time is too short or wrong " + str(starttime) + " to " + str(endtime) )
         sys.exit()
+
+    # find out where output reports go
+    if not "REPORT_DIR" in os.environ:
+        print("Error: please set the environment variable REPORT_DIR")
+        sys.exit(1)
+    else:
+        report_dir = "./"
+
+#    save for later, not needed now (decided to dump it all into report_dir)
+#    # create report directories if they don't exist yet
+#    if not os.path.exists(report_dir+"/html"):
+#        try:
+#            os.makedirs(report_dir + "/html")
+#        except Exception as e:
+#            print("Error creating output directory: {}".format(e))
+#            sys.exit(1)
+#
+#    if not os.path.exists(report_dir+"/pdf"):
+#        try:
+#            os.makedirs(report_dir + "/pdf")
+#        except Exception as e:
+#            print("Error creating output directory: {}".format(e))
+#            sys.exit(1)
+
+    if not os.path.isdir(report_dir):
+        print("Error: {} exists but does not appear to be a directory")
+        sys.exit(1)
 
     infile = args.infile
     if infile:
@@ -439,9 +473,9 @@ if __name__ == "__main__":
                     latency_metrics[scnl]["completeness_incl_penalty"] = \
                         (l["percent_completeness_w_penalty"], "pass" if l["percent_completeness_w_penalty"] >= 98 else "fail")
 
-            with open("./templates/" + net_obj.code + "." + sta_obj.code + ".html", "w") as fh:
+            with open(report_dir + net_obj.code + "." + sta_obj.code + ".html", "w") as fh:
                 fh.write(template.render(starttime=starttime,endtime=endtime, \
                          network_code=net_obj.code,station=sta_obj,allowed=SEISMIC_CHANNELS, \
                          clock_metrics=soh_metrics, latency_metrics=latency_metrics, metrics=channel_metrics))
-            HTML("./templates/"+net_obj.code + "." + sta_obj.code+".html").write_pdf(net_obj.code + "." + sta_obj.code + ".pdf")
+            HTML(report_dir + net_obj.code + "." + sta_obj.code+".html").write_pdf(report_dir + net_obj.code + "." + sta_obj.code + ".pdf")
 
