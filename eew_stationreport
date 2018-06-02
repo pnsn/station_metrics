@@ -120,9 +120,9 @@ if __name__ == "__main__":
 
     # find out where output reports go
     if not "REPORT_DIR" in os.environ:
-        print("Error: please set the environment variable REPORT_DIR")
-        sys.exit(1)
-    else:
+#        print("Error: please set the environment variable REPORT_DIR")
+#        sys.exit(1)
+#    else:
         report_dir = "./"
 
 #    save for later, not needed now (decided to dump it all into report_dir)
@@ -153,14 +153,21 @@ if __name__ == "__main__":
         network = args.network
         station = args.station
     datacenter = args.datacenter
+    institution = args.institution
     iplot = args.iplot
     latency_dir = args.lat_dir
     filelist = []
     if latency_dir:
         # make sure this exists and is readable
         try:
-            filelist = glob.glob(latency_dir + "/*")
             # assume files are named YYYY_MM_DD_*.csv
+            filelistall = []
+            filelistall = glob.glob(latency_dir + "/*.csv")
+            # only read sniffwave_tally files in the timerange being measured
+            for ifile in range(0,len(filelistall)):
+               filedate = datetime.datetime.strptime(filelistall[ifile].split("/")[-1].split("_")[0], '%Y-%m-%d')
+               if ( filedate >= starttime and filedate <= endtime ):
+                   filelist.append(filelistall[ifile])
             filelist = sorted(filelist)
             ndays = len(filelist)
             if ndays > MAX_LATENCY_DAYS:
