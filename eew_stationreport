@@ -162,7 +162,10 @@ if __name__ == "__main__":
         try:
             # assume files are named YYYY_MM_DD_*.csv
             filelistall = []
-            filelistall = glob.glob(latency_dir + "/*.csv")
+            if ( institution is none ):
+                filelistall = glob.glob(latency_dir + "/*.csv")
+            else:
+                filelistall = glob.glob(latency_dir + "/*." + institution + ".csv")
             # only read sniffwave_tally files in the timerange being measured
             for ifile in range(0,len(filelistall)):
                filedate = datetime.datetime.strptime(filelistall[ifile].split("/")[-1].split("_")[0], '%Y-%m-%d')
