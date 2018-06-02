@@ -120,9 +120,6 @@ if __name__ == "__main__":
 
     # find out where output reports go
     if not "REPORT_DIR" in os.environ:
-#        print("Error: please set the environment variable REPORT_DIR")
-#        sys.exit(1)
-#    else:
         report_dir = "./"
 
 #    save for later, not needed now (decided to dump it all into report_dir)
