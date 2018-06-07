@@ -19,6 +19,7 @@ These can easily be added via command line using <a href="https://www.anaconda.c
 >> conda activate stationmetrics
 >> conda install -c anaconda numpy
 >> conda install -c conda-forge matplotlib
+>> conda config --add channels conda-forge  (obspy is available from the conda-forge channel)
 >> conda install obspy
 
 If running eew_stationreport these are also needed:
