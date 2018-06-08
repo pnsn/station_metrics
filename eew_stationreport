@@ -7,6 +7,7 @@ import os
 import sys
 from collections import Counter
 import datetime
+from datetime import timedelta
 import glob
 import timeit
 
@@ -92,6 +93,7 @@ if __name__ == "__main__":
     minSTALTAlen = float(parser.get('SectionOne','minSTALTAlen'))
     RMSlen = float(parser.get('SectionOne','RMSlen'))
     GainOrFullResp = parser.get('SectionOne','GainOrFullResp')
+    sniffwave_tally_duration = int(parser.get('SectionOne','sniffwave_tally_duration'))
     #PSDperiods = (parser.get('SectionOne','PSDperiods'))[1:-1].split(",")
     #PSDperiods = [float(i) for i in PSDperiods]
 
@@ -156,17 +158,22 @@ if __name__ == "__main__":
     filelist = []
     if latency_dir:
         # make sure this exists and is readable
+        startday = starttime.replace(hour=0,minute=0,second=0)
+        if ( starttime.hour == 0 and starttime.minute <= np.ceil(sniffwave_tally_duration/60) + 1 ):
+            startday = startday - timedelta(days=1) 
+        endday = endtime.replace(hour=0,minute=0,second=0)
         try:
             # assume files are named YYYY_MM_DD_*.csv
             filelistall = []
-            if ( institution is none ):
+            if ( institution is None ):
                 filelistall = glob.glob(latency_dir + "/*.csv")
             else:
                 filelistall = glob.glob(latency_dir + "/*." + institution + ".csv")
             # only read sniffwave_tally files in the timerange being measured
+
             for ifile in range(0,len(filelistall)):
                filedate = datetime.datetime.strptime(filelistall[ifile].split("/")[-1].split("_")[0], '%Y-%m-%d')
-               if ( filedate >= starttime and filedate <= endtime ):
+               if ( filedate >= startday and filedate <= endday ):
                    filelist.append(filelistall[ifile])
             filelist = sorted(filelist)
             ndays = len(filelist)
@@ -180,7 +187,6 @@ if __name__ == "__main__":
         all_latency_metrics = None
     
     #----- Set up the FDSN client
-    
     Tdc0 = timeit.default_timer()
     try:
         client = Client(datacenter,timeout = FDSNtimeout)
@@ -207,7 +213,6 @@ if __name__ == "__main__":
             station = sta_obj.code
             bulkrequest = []
             soh_bulkrequest = []
-
     
             # Download waveform for this station 
     

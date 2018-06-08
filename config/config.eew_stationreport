@@ -30,3 +30,7 @@ RMSlen: 5.0
 
 #  Either use just the "Gain" or the full "Resp" (response) file for instrument response removal.
 GainOrFullResp: "Gain"
+
+#  Duration of measurements by sniffwave_tally in (integer) seconds.
+sniffwave_tally_duration: 600
+
