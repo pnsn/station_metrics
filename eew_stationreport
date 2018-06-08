@@ -159,7 +159,7 @@ if __name__ == "__main__":
         try:
             # assume files are named YYYY_MM_DD_*.csv
             filelistall = []
-            if ( institution is none ):
+            if ( institution is None ):
                 filelistall = glob.glob(latency_dir + "/*.csv")
             else:
                 filelistall = glob.glob(latency_dir + "/*." + institution + ".csv")
