@@ -176,9 +176,6 @@ if __name__ == "__main__":
                if ( filedate >= startday and filedate <= endday ):
                    filelist.append(filelistall[ifile])
             filelist = sorted(filelist)
-            ndays = len(filelist)
-            if ndays > MAX_LATENCY_DAYS:
-                filelist = filelist[ndays-MAX_LATENCY_DAYS-1:ndays-1]
         except Exception as e:
             print("Error creating list of sniffwave_tally output files: {}".format(e))
     if len(filelist) > 0:
