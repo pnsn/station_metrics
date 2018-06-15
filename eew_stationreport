@@ -2,14 +2,28 @@
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
-# import std packages
+
+# Generate a lock file in /tmp so that only one instance of eew_stationreport can run.
+
 import os
 import sys
+
+pid = str(os.getpid())
+pidfile = "/tmp/eew_stationreport.lockfile"
+
+if os.path.isfile(pidfile):
+    print "%s exists.  Exiting." % pidfile
+    sys.exit()
+else:
+    file(pidfile, 'w').write(pid)
+
+# import std packages
 from collections import Counter
 import datetime
 from datetime import timedelta
 import glob
 import timeit
+import fileinput
 
 # import third party packages
 import numpy as np
@@ -166,9 +180,9 @@ if __name__ == "__main__":
             # assume files are named YYYY_MM_DD_*.csv
             filelistall = []
             if ( institution is None ):
-                filelistall = glob.glob(latency_dir + "/*.csv")
+                filelistall = glob.glob(latency_dir + "/*tally.csv")
             else:
-                filelistall = glob.glob(latency_dir + "/*." + institution + ".csv")
+                filelistall = glob.glob(latency_dir + "/*tally." + institution + ".csv")
             # only read sniffwave_tally files in the timerange being measured
 
             for ifile in range(0,len(filelistall)):
@@ -300,7 +314,7 @@ if __name__ == "__main__":
                    number_of_lce_points))
 
 
-            #----- Loop over seismograms.  If a station has gaps, a stream of that sncl will 
+            #----- Loop over seismograms.  If a station has gaps, a stream of that nslc will 
             #----- be made from all the traces.
             
             # This assumes the data are in the stream ordered by net,sta,loc,chan,starttime, 
@@ -313,16 +327,16 @@ if __name__ == "__main__":
                 ntr = 1
                 iduplicate = 0
                 if ( stAll[i].stats.location == "" ):
-                    sncl = stAll[i].stats.network + "." + stAll[i].stats.station + ".--." + stAll[i].stats.channel
+                    nslc = stAll[i].stats.network + "." + stAll[i].stats.station + ".--." + stAll[i].stats.channel
                 else:
-                    sncl = stAll[i].stats.network + "." + stAll[i].stats.station + "." + stAll[i].stats.location + "." + stAll[i].stats.channel
-            #    print ( str(i) + " SNCL " + sncl )
+                    nslc = stAll[i].stats.network + "." + stAll[i].stats.station + "." + stAll[i].stats.location + "." + stAll[i].stats.channel
+            #    print ( str(i) + " SNCL " + nslc )
                 for j in range(0,len(stAll)):
                     if ( stAll[j].stats.location == "" ):
-                        sncl2 = stAll[j].stats.network + "." + stAll[j].stats.station + ".--." + stAll[j].stats.channel
+                        nslc2 = stAll[j].stats.network + "." + stAll[j].stats.station + ".--." + stAll[j].stats.channel
                     else:
-                        sncl2 = stAll[j].stats.network + "." + stAll[j].stats.station + "." + stAll[j].stats.location + "." + stAll[j].stats.channel
-                    if ( sncl == sncl2 and i != j ):
+                        nslc2 = stAll[j].stats.network + "." + stAll[j].stats.station + "." + stAll[j].stats.location + "." + stAll[j].stats.channel
+                    if ( nslc == nslc2 and i != j ):
                         if ( j < i ):
                             iduplicate = 1
                             break
@@ -448,8 +462,8 @@ if __name__ == "__main__":
                     else:
                         strpctavail = str( "pctavailable_FAIL: %.4f " % (100*dt*nptstotal/endminusstarttime) )
             
-            #        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, itrace, segmentlong, segmentshort) )
-                    print ( "%s, calculate: %.2fs, plot: %.2fs, %s, %s, %s, %s,  Nsegments: %d,  segmentlong: %.3f,  segmentshort: %.3f " % (sncl, T3-T2-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, ntr, segmentlong, segmentshort) )
+            #        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (nslc, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, itrace, segmentlong, segmentshort) )
+                    print ( "%s, calculate: %.2fs, plot: %.2fs, %s, %s, %s, %s,  Nsegments: %d,  segmentlong: %.3f,  segmentshort: %.3f " % (nslc, T3-T2-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, ntr, segmentlong, segmentshort) )
                     metric_thresholds = { 
                                 "spikes_per_hour_threshold": 1.0, \
                                 "rms_exceeded_per_hour_threshold": 60.0, \
@@ -461,8 +475,8 @@ if __name__ == "__main__":
                                "spikes_per_hour": (snr20_0p34cm/durationinhours, "pass" if snr20_0p34cm/durationinhours < 1.0 else "fail"), \
                                "rms_exceeded_per_hour": (RMSduration_0p07cm/durationinhours, "pass" if RMSduration_0p07cm/durationinhours < 60.0 else "fail"), \
                                }
-                    if sncl not in channel_metrics:
-                        channel_metrics[sncl] = metrics
+                    if nslc not in channel_metrics:
+                        channel_metrics[nslc] = metrics
 
             # add latency, gaps, completeness derived from sniffwave, if requested.
             latency_metrics = {}
@@ -487,4 +501,16 @@ if __name__ == "__main__":
                          network_code=net_obj.code,station=sta_obj,allowed=SEISMIC_CHANNELS, \
                          clock_metrics=soh_metrics, latency_metrics=latency_metrics, metrics=channel_metrics))
             HTML(report_dir + net_obj.code + "." + sta_obj.code+".html").write_pdf(report_dir + net_obj.code + "." + sta_obj.code + ".pdf")
+            # uncomment/incldue the css bootstrap in the .html file
+            htmlfile = report_dir + net_obj.code + "." + sta_obj.code+".html"
+            line1 = '<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">  -->'
+            line2 = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">'
+            f = open(htmlfile)
+            for line in fileinput.input(htmlfile, inplace = 1):
+               print line
+               if ( "bootstrapcdn" in line and "link rel" in line ):
+                   print line.replace(line1, line2)
+
+# Remove lockfile
+os.remove(pidfile)
 
