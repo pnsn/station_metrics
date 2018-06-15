@@ -12,10 +12,12 @@ pid = str(os.getpid())
 pidfile = "/tmp/eew_stationreport.lockfile"
 
 if os.path.isfile(pidfile):
-    print "%s exists.  Exiting." % pidfile
+    print ("%s exists.  Exiting." % pidfile)
     sys.exit()
 else:
-    file(pidfile, 'w').write(pid)
+    file = open(pidfile, 'w')
+    file.write(pid)
+    file.close()
 
 # import std packages
 from collections import Counter
@@ -507,9 +509,8 @@ if __name__ == "__main__":
             line2 = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">'
             f = open(htmlfile)
             for line in fileinput.input(htmlfile, inplace = 1):
-               print line
                if ( "bootstrapcdn" in line and "link rel" in line ):
-                   print line.replace(line1, line2)
+                   line.replace(line1,line2)
 
 # Remove lockfile
 os.remove(pidfile)
