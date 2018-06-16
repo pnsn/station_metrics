@@ -198,7 +198,7 @@ if __name__ == "__main__":
         all_latency_metrics = latency_gaps_completeness(filelist)            
     else:
         all_latency_metrics = None
-    
+
     #----- Set up the FDSN client
     Tdc0 = timeit.default_timer()
     try:
@@ -503,14 +503,14 @@ if __name__ == "__main__":
                          network_code=net_obj.code,station=sta_obj,allowed=SEISMIC_CHANNELS, \
                          clock_metrics=soh_metrics, latency_metrics=latency_metrics, metrics=channel_metrics))
             HTML(report_dir + net_obj.code + "." + sta_obj.code+".html").write_pdf(report_dir + net_obj.code + "." + sta_obj.code + ".pdf")
-            # uncomment/incldue the css bootstrap in the .html file
+            # uncomment/include the css bootstrap in the .html file
             htmlfile = report_dir + net_obj.code + "." + sta_obj.code+".html"
             line1 = '<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">  -->'
             line2 = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">'
-            f = open(htmlfile)
-            for line in fileinput.input(htmlfile, inplace = 1):
+            for line in fileinput.input(htmlfile, inplace = True):
                if ( "bootstrapcdn" in line and "link rel" in line ):
-                   line.replace(line1,line2)
+                   line = line.replace(line1,line2)
+               print (line)
 
 # Remove lockfile
 os.remove(pidfile)
