@@ -512,6 +512,9 @@ if __name__ == "__main__":
                    line = line.replace(line1,line2)
                print (line)
 
+            print ("Latency info: ")
+            print (str(latency_metrics))
+
 # Remove lockfile
 os.remove(pidfile)
 
