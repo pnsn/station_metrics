@@ -1,6 +1,5 @@
 
 <a href="https://drive.google.com/drive/u/1/folders/0B8N_TOtFCLuyOVNUUmVuTzJTNHc">Google drive folder for Station_Metrics</a>
-# Caution: under reconstruction, expect bugs.
 # Overview
 
 These are the collection of scripts to calculate near-real time station metrics which are being calculated hourly at the PNSN.
@@ -59,7 +58,7 @@ Used only by calculate_metrics (for database):
 
 Using calculate_metrics.py, calculating hourly metrics for 400 channels takes around 20 minutes on a single CPU when data are downloaded from an FDSNWS such as IRIS.
 
-eew_stationreport takes about 5 sec to connect to an FDSNWS, then about 1 sec per hour per trace of calculations.  Hourly plots take about a minute each.
+eew_stationreport takes about 5 sec to connect to an FDSNWS, then about 1 sec per hour per trace of calculations.  Running for 336 hours (2 weeks) takes of order 30 min, depending on sampling rate and how noisy a trace is.  Hourly plots take about a minute each.
 
 # eew_stationreport for one-off ShakeAlert station assessment
 
