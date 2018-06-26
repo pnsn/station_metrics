@@ -2,7 +2,7 @@
 <a href="https://drive.google.com/drive/u/1/folders/0B8N_TOtFCLuyOVNUUmVuTzJTNHc">Google drive folder for Station_Metrics</a>
 # Overview
 
-These are the collection of scripts to calculate near-real time station metrics which are being calculated hourly at the PNSN.
+These are the collection of scripts to calculate station metrics.  calculate_metrics.py operates in near-real time and is being run hourly at the PNSN.  eew_stationreport is being run on a server and accessible to select users <a href="http://eewreport.pnsn.org">here</a>
 
 *NOTE:  A few things are still needed.  eew_stationreport is clean, but calculate_metrics.py still needs to be cleaned up a bit.*
 
