@@ -67,10 +67,10 @@ In the figure below, only one spike is counted since it is the only one that exc
 
 Note: In ObsPy for hour-long traces, calculating the STA/LTA function (classic_sta_lta) takes around 0.4 sec per trace, while the similar z_detect takes only about 0.1 sec. <a href="https://docs.obspy.org/tutorial/code_snippets/trigger_tutorial.html">[ObsPy trigger tutorial]</a> Triggers are implemented as described in <a href="https://docs.obspy.org/citations.html#withers1998">[Withers 1998]</a>.
 
-What I've been calculating.  Uses ObsPy z_detect trigger with 1 sec window.
+What has been calculating and writing to the database for all of 2018.  Uses ObsPy z_detect trigger with 1 sec window.
 - *snr10_0p01cm* Number of spikes with SNR > 10 and amplitude exceeding 0.01 cm/s^2 using acceleration data filtered 0.075-15 Hz.  Good for looking for very good stations.
 - *snr20_0p05cm* Number of spikes with SNR > 20 and amplitude exceeding 0.05 cm/s^2 using acceleration data filtered 0.075-15 Hz.
-- *snr20_0p17cm* Number of spikes with SNR > 20 and amplitude exceeding 0.17 cm/s^2 using acceleration data filtered 0.075-15 Hz.  This was the proposed ShakeAlert threshold, but has since been doubled to 0.35 cm/s^2.
+- *snr20_0p17cm* Number of spikes with SNR > 20 and amplitude exceeding 0.17 cm/s^2 using acceleration data filtered 0.075-15 Hz.  This was the proposed ShakeAlert threshold, but has since been doubled to 0.34 cm/s^2.
 - *snr20_1cm* Number of spikes with SNR > 20 and amplitude exceeding 1 cm/s^2 using acceleration data filtered 0.075-15 Hz.  Good for looking for bad stations.
 - *snr20_3cm* Number of spikes with SNR > 20 and amplitude exceeding 3 cm/s^2 using acceleration data filtered 0.075-15 Hz.
 - *snr20_5cm* Number of spikes with SNR > 20 and amplitude exceeding 5 cm/s^2 using acceleration data filtered 0.075-15 Hz.  Good for looking for terrible stations.
