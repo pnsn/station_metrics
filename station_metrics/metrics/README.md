@@ -34,7 +34,7 @@ These use the ObsPy PPSD class to calculate the probablistic power spectral dens
 
 ## noise floor
 
-The 98th percentile of sorted amplitude is used to approximate the noise floor.  After traces have been gain corrected and filtered, the amplitudes are sorted.  The 98th percentile amplitude is a surprisingly good approximation to the median envelope amplitude which is the "noise floor" if you eyeball a trace (see figure below).  The frequency band used is ~~0.3~~0.75-15 Hz which is the band primarily used by ShakeAlert and is appropriate for most regional seismic network applications.
+The 98th percentile of sorted amplitude is used to approximate the noise floor.  After traces have been gain corrected and filtered, the amplitudes are sorted.  The 98th percentile amplitude is a surprisingly good approximation to the median envelope amplitude which is the "noise floor" if you eyeball a trace (see figure below).  The frequency band used is ~~0.3~~ 0.75-15 Hz which is the band primarily used by ShakeAlert and is appropriate for most regional seismic network applications.
 
 - *NoiseFloorVel* The 98th percentile of sorted, filtered, gain corrected velocity amplitudes (cm/s).
 - *NoiseFloorAcc* The 98th percentile of sorted, filtered, gain corrected acceleration amplitudes (cm/s^2).
