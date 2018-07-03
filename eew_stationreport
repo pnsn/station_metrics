@@ -2,12 +2,30 @@
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
-# import std packages
+
+# Generate a lock file in /tmp so that only one instance of eew_stationreport can run.
+
+import os
 import sys
+
+pid = str(os.getpid())
+pidfile = "/tmp/eew_stationreport.lockfile"
+
+if os.path.isfile(pidfile):
+    print ("%s exists.  Exiting." % pidfile)
+    sys.exit()
+else:
+    file = open(pidfile, 'w')
+    file.write(pid)
+    file.close()
+
+# import std packages
 from collections import Counter
 import datetime
+from datetime import timedelta
 import glob
 import timeit
+import fileinput
 
 # import third party packages
 import numpy as np
@@ -36,6 +54,10 @@ from station_metrics.plotting.plot_eew_stationreport import make_station_figure_
 
 from config.parse_and_validate_args import validate_args_and_get_times, parse_args
 
+# define how many days we want latency info for (at most)
+MAX_LATENCY_DAYS = 14
+
+
 # define which channel codes denote acceptable seismic channels
 SEISMIC_CHANNELS = ['BHE', 'BHN', 'BHZ', 'HHE', 'HHN', 'HHZ',
                     'BH1', 'BH2', 'BH3', 'HH1', 'HH2', 'HH3',
@@ -47,7 +69,9 @@ SOH_CHANNELS = ['LCQ', 'LCE']
 THRESHOLD = { 
              'lcq':60,               # minimum quality=60, read Q330 manual
              'lce':5000,             # maximum phase(drift)=5000 microseconds
-             'latency':3.5,          # maximum latency 3.5s between now and middle of packet
+             'percent_latency_good':98,          # good=maximum latency 3.5s between now and middle of packet
+             'percent_completeness':98,          
+             'gaps_per_hour':1,	     # maximum number of gaps per hour
              'rms_noise':0.0007,     # maximum RMS amplitude 0.07 cm/s^2 
              'spikes' : 0.0034       # maximum spike amplitude 0.34 sm/s^2
             }
@@ -85,6 +109,7 @@ if __name__ == "__main__":
     minSTALTAlen = float(parser.get('SectionOne','minSTALTAlen'))
     RMSlen = float(parser.get('SectionOne','RMSlen'))
     GainOrFullResp = parser.get('SectionOne','GainOrFullResp')
+    sniffwave_tally_duration = int(parser.get('SectionOne','sniffwave_tally_duration'))
     #PSDperiods = (parser.get('SectionOne','PSDperiods'))[1:-1].split(",")
     #PSDperiods = [float(i) for i in PSDperiods]
 
@@ -97,6 +122,7 @@ if __name__ == "__main__":
     
     args = parse_args()
     [starttime, endtime, durationinhours, durationinsec] = validate_args_and_get_times(args)
+    nowtime = datetime.datetime.now()
 
     # get data from a little before starttime to remedy edge effects
     request_starttime = starttime - datetime.timedelta(0,lta+tpadding)
@@ -111,6 +137,30 @@ if __name__ == "__main__":
         print ("EXITING: requested time is too short or wrong " + str(starttime) + " to " + str(endtime) )
         sys.exit()
 
+    # find out where output reports go
+    if not "REPORT_DIR" in os.environ:
+        report_dir = "./"
+
+#    save for later, not needed now (decided to dump it all into report_dir)
+#    # create report directories if they don't exist yet
+#    if not os.path.exists(report_dir+"/html"):
+#        try:
+#            os.makedirs(report_dir + "/html")
+#        except Exception as e:
+#            print("Error creating output directory: {}".format(e))
+#            sys.exit(1)
+#
+#    if not os.path.exists(report_dir+"/pdf"):
+#        try:
+#            os.makedirs(report_dir + "/pdf")
+#        except Exception as e:
+#            print("Error creating output directory: {}".format(e))
+#            sys.exit(1)
+
+    if not os.path.isdir(report_dir):
+        print("Error: {} exists but does not appear to be a directory")
+        sys.exit(1)
+
     infile = args.infile
     if infile:
         network = None
@@ -119,21 +169,39 @@ if __name__ == "__main__":
         network = args.network
         station = args.station
     datacenter = args.datacenter
+    institution = args.institution
+    email = args.email
     iplot = args.iplot
     latency_dir = args.lat_dir
+    filelist = []
     if latency_dir:
         # make sure this exists and is readable
+        startday = starttime.replace(hour=0,minute=0,second=0)
+        if ( starttime.hour == 0 and starttime.minute <= np.ceil(sniffwave_tally_duration/60) + 1 ):
+            startday = startday - timedelta(days=1) 
+        endday = endtime.replace(hour=0,minute=0,second=0)
         try:
-            filelist = glob.glob(latency_dir + "/*")
-            # assume that alphabetical sorting corresponds to time-sorting
+            # assume files are named YYYY_MM_DD_*.csv
+            filelistall = []
+            if ( institution is None ):
+                filelistall = glob.glob(latency_dir + "/*tally.csv")
+            else:
+                filelistall = glob.glob(latency_dir + "/*tally." + institution + ".csv")
+            # only read sniffwave_tally files in the timerange being measured
+
+            for ifile in range(0,len(filelistall)):
+               filedate = datetime.datetime.strptime(filelistall[ifile].split("/")[-1].split("_")[0], '%Y-%m-%d')
+               if ( filedate >= startday and filedate <= endday ):
+                   filelist.append(filelistall[ifile])
             filelist = sorted(filelist)
         except Exception as e:
             print("Error creating list of sniffwave_tally output files: {}".format(e))
     if len(filelist) > 0:
         all_latency_metrics = latency_gaps_completeness(filelist)            
-    
+    else:
+        all_latency_metrics = None
+
     #----- Set up the FDSN client
-    
     Tdc0 = timeit.default_timer()
     try:
         client = Client(datacenter,timeout = FDSNtimeout)
@@ -160,7 +228,6 @@ if __name__ == "__main__":
             station = sta_obj.code
             bulkrequest = []
             soh_bulkrequest = []
-
     
             # Download waveform for this station 
     
@@ -251,7 +318,7 @@ if __name__ == "__main__":
                    number_of_lce_points))
 
 
-            #----- Loop over seismograms.  If a station has gaps, a stream of that sncl will 
+            #----- Loop over seismograms.  If a station has gaps, a stream of that nslc will 
             #----- be made from all the traces.
             
             # This assumes the data are in the stream ordered by net,sta,loc,chan,starttime, 
@@ -264,16 +331,16 @@ if __name__ == "__main__":
                 ntr = 1
                 iduplicate = 0
                 if ( stAll[i].stats.location == "" ):
-                    sncl = stAll[i].stats.network + "." + stAll[i].stats.station + ".--." + stAll[i].stats.channel
+                    nslc = stAll[i].stats.network + "." + stAll[i].stats.station + ".--." + stAll[i].stats.channel
                 else:
-                    sncl = stAll[i].stats.network + "." + stAll[i].stats.station + "." + stAll[i].stats.location + "." + stAll[i].stats.channel
-            #    print ( str(i) + " SNCL " + sncl )
+                    nslc = stAll[i].stats.network + "." + stAll[i].stats.station + "." + stAll[i].stats.location + "." + stAll[i].stats.channel
+            #    print ( str(i) + " SNCL " + nslc )
                 for j in range(0,len(stAll)):
                     if ( stAll[j].stats.location == "" ):
-                        sncl2 = stAll[j].stats.network + "." + stAll[j].stats.station + ".--." + stAll[j].stats.channel
+                        nslc2 = stAll[j].stats.network + "." + stAll[j].stats.station + ".--." + stAll[j].stats.channel
                     else:
-                        sncl2 = stAll[j].stats.network + "." + stAll[j].stats.station + "." + stAll[j].stats.location + "." + stAll[j].stats.channel
-                    if ( sncl == sncl2 and i != j ):
+                        nslc2 = stAll[j].stats.network + "." + stAll[j].stats.station + "." + stAll[j].stats.location + "." + stAll[j].stats.channel
+                    if ( nslc == nslc2 and i != j ):
                         if ( j < i ):
                             iduplicate = 1
                             break
@@ -399,8 +466,8 @@ if __name__ == "__main__":
                     else:
                         strpctavail = str( "pctavailable_FAIL: %.4f " % (100*dt*nptstotal/endminusstarttime) )
             
-            #        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (sncl, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, itrace, segmentlong, segmentshort) )
-                    print ( "%s, calculate: %.2fs, plot: %.2fs, %s, %s, %s, %s,  Nsegments: %d,  segmentlong: %.3f,  segmentshort: %.3f " % (sncl, T3-T2-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, ntr, segmentlong, segmentshort) )
+            #        print ( "%s  download: %.2fs calculate: %.2fs plot: %.2fs %s %s %s %s  Nsegments: %d  segmentlong: %.3f  segmentshort: %.3f " % (nslc, T1-T0, T2-T1-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, itrace, segmentlong, segmentshort) )
+                    print ( "%s, calculate: %.2fs, plot: %.2fs, %s, %s, %s, %s,  Nsegments: %d,  segmentlong: %.3f,  segmentshort: %.3f " % (nslc, T3-T2-Tplot, Tplot, strngap, strrms, strnspikes, strpctavail, ntr, segmentlong, segmentshort) )
                     metric_thresholds = { 
                                 "spikes_per_hour_threshold": 1.0, \
                                 "rms_exceeded_per_hour_threshold": 60.0, \
@@ -412,8 +479,8 @@ if __name__ == "__main__":
                                "spikes_per_hour": (snr20_0p34cm/durationinhours, "pass" if snr20_0p34cm/durationinhours < 1.0 else "fail"), \
                                "rms_exceeded_per_hour": (RMSduration_0p07cm/durationinhours, "pass" if RMSduration_0p07cm/durationinhours < 60.0 else "fail"), \
                                }
-                    if sncl not in channel_metrics:
-                        channel_metrics[sncl] = metrics
+                    if nslc not in channel_metrics:
+                        channel_metrics[nslc] = metrics
 
             # add latency, gaps, completeness derived from sniffwave, if requested.
             latency_metrics = {}
@@ -433,9 +500,24 @@ if __name__ == "__main__":
                     latency_metrics[scnl]["completeness_incl_penalty"] = \
                         (l["percent_completeness_w_penalty"], "pass" if l["percent_completeness_w_penalty"] >= 98 else "fail")
 
-            with open("./templates/" + net_obj.code + "." + sta_obj.code + ".html", "w") as fh:
-                fh.write(template.render(starttime=starttime,endtime=endtime, \
+            with open(report_dir + net_obj.code + "." + sta_obj.code + ".html", "w") as fh:
+                fh.write(template.render(starttime=starttime,endtime=endtime,institution_code=institution, \
                          network_code=net_obj.code,station=sta_obj,allowed=SEISMIC_CHANNELS, \
-                         clock_metrics=soh_metrics, latency_metrics=latency_metrics, metrics=channel_metrics))
-            HTML("./templates/"+net_obj.code + "." + sta_obj.code+".html").write_pdf(net_obj.code + "." + sta_obj.code + ".pdf")
+                         clock_metrics=soh_metrics, latency_metrics=latency_metrics, metrics=channel_metrics, \
+			 nowtime=nowtime, email=email ))
+            HTML(report_dir + net_obj.code + "." + sta_obj.code+".html").write_pdf(report_dir + net_obj.code + "." + sta_obj.code + ".pdf")
+            # uncomment/include the css bootstrap in the .html file
+            htmlfile = report_dir + net_obj.code + "." + sta_obj.code+".html"
+            line1 = '<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">  -->'
+            line2 = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">'
+            for line in fileinput.input(htmlfile, inplace = True):
+               if ( "bootstrapcdn" in line and "link rel" in line ):
+                   line = line.replace(line1,line2)
+               print (line)
+
+            print ("Latency info: ")
+            print (str(latency_metrics))
+
+# Remove lockfile
+os.remove(pidfile)
 

@@ -47,6 +47,8 @@ def parse_args():
     parser.add_argument('-dc','--dc','--datacenter', action='store', dest='datacenter',help='FDSN data center (e.g. IRIS, SCEDC, NCEDC)')
     parser.add_argument('-p','--plot',action='store_true',dest='iplot',help='make plots of each hourly trace (NOTE: can be slow)')
     parser.add_argument('-l','--latdir',action='store',dest='lat_dir',help='directory with output files from sniffwave_tally (full path)')
+    parser.add_argument('-I','--institution',action='store',dest='institution',help='Institution identifier that is in the sniffwave tally filenames, e.g. UCB')
+    parser.add_argument('-E','--email',action='store',dest='email',help='Email to send copy of report to')
 
     helpextended = parser.parse_args(_preprocess_sysargv(sys.argv)).helpmenu
     if ( helpextended is True  ):
@@ -73,15 +75,17 @@ def parse_args():
         print ('                      Note: if duration is neg, starttime becomes endtime')
         print (' ')
         print ('One of these:')
-        print ('  -I,  --infile       Name of file whose lines are: Net Sta Loc Cha')
+        print ('  -i,  --infile       Name of file whose lines are: Net Sta Loc Cha')
         print ('or:')
         print ('  -N,  --net          Network code')
         print ('  -S,  --sta          Station code')
         print (' ')
         print ('Optional flags:')
+        print ('-I,  --institution    Inst. name in the sniffwave tally files')
         print ('-P,  --plot           Flag to make a figure for each hour.  Note: can be slow.')
         print ('-u                    Print this extended help menu')
         print ('-l, --latdir          directory with output from sniffwave_tally')
+        print ('-E, --email           Email to send copy of report to')
         print ('')
 
 
@@ -99,6 +103,8 @@ def validate_args_and_get_times(args):
     endstring = args.endstring
     durationinhours = args.durationinhours
     datacenter = args.datacenter
+    institution = args.institution
+    email = args.email
 
     #----- validate start/end time
     if ( startstring is None and ( endstring is not None or durationinhours is not None ) ):

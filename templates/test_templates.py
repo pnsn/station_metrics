@@ -27,7 +27,7 @@ if __name__ == "__main__":
                          loc = "--"
                      else:
                          loc = chan.location_code
-                     nscl = ".".join([network.code,station.code,chan.code,loc])
+                     nslc = ".".join([network.code,station.code,chan.code,loc])
                      metrics = { 
                                 "spikes_total": (0.2*24, "no_threshold"), \
                                 "spikes_per_hour": (0.2, "pass"), \
@@ -36,8 +36,8 @@ if __name__ == "__main__":
                                 "clock_phase_lce" : (5040/1.0E6, "fail"),  \
                                 "acceptable_latency" : (97.3, "fail")
                                }
-                     if nscl not in channel_metrics:
-                         channel_metrics[nscl] = metrics
+                     if nslc not in channel_metrics:
+                         channel_metrics[nslc] = metrics
 
             with open(station.code + ".html", "w") as fh:
                 fh.write(template.render(starttime=startdate,endtime=enddate, \

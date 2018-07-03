@@ -4,23 +4,23 @@
     {% block head %}
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">  -->
     <style>
-    body { margin: 20px }
+    body { margin: 20px; }
     caption, h3 { 
       color: blue;
       font-size: 2em;
     }
     <!-- pass=green fail=red no_threshold=gray -->
-    .pass { background-color: #DAF7A6 }
-    .fail { background-color: #FC9984 }
-    .no_threshold { background-color: #F8F9F9 }
+    .test { background-color: #000000; }
+    .pass { background-color: #DAF7A6; }
+    .fail { background-color: #FC9984; }
+    .no_threshold { background-color: #F8F9F9; }
     </style>
     <!-- jQuery library -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <!-- Latest compiled JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script>document.getElementById("now").innerHTML = new Date()</script>
     <title>{% block title %}{% endblock %}Report</title>
     {% endblock %}
 </head>
@@ -29,7 +29,7 @@
     <div id="footer">
         {% block footer %}
         <p>Reference: <a href="2018-01-09-EEW_Station_Acceptance_v2.0-APPROVED.docx.pdf"> Station Acceptance Policy Document</a></p>
-        &copy; 2018, PNSN, Report generated at <span id="now"></span>
+        <p>&copy; 2018, PNSN</p>
         {% endblock %}
     </div>
 </body>
