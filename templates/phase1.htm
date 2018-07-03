@@ -9,7 +9,8 @@
 {% block phase1 %}
     <div id="intro">
         <h2>{{ self.title() }}</h2>
-        <h4>{{ starttime.isoformat() }} - {{ endtime.isoformat() }}</h4>
+        <h4>{{ starttime.isoformat() }} - {{ endtime.isoformat() }} UTC</h4>
+        <tbody>Generated: {{ nowtime.strftime("%Y-%m-%dT%H:%M") }} PT for {{ email }} </tbody>
         <a href="./{{ network_code }}.{{ station.code }}.pdf">Link to PDF</a>
 
         <div id="site_info">
@@ -28,7 +29,7 @@
               <tbody>
               <tr>
                   <td>{{network_code }}.{{ station.code }}</td>
-                  <td>PNSN</td>
+                  <td>{{ institution_code }}</td>
                   <td>{{ station.latitude | round(7,method='common') }}</td>
                   <td>{{ station.longitude | round(7,method='common') }}</td>
                   <td>{{ station.elevation | round() }}</td>
@@ -108,10 +109,10 @@
               <tr>
                   <th>Channel</th>
                   <th>Measurement period</th>
-                  <th>Percentage of data with acceptable latency</th>
+                  <th>Percentage of data with acceptable latency (<98%)</th>
                   <th>Percent completeness</th>
-                  <th>Percent completeness incl. gap penalties</th>
-                  <th>Number of gaps per hour</th>
+                  <th>Percent completeness incl. gap penalties (<98%)</th>
+                  <th>Number of gaps per hour (<1)</th>
               </tr>
               {% if latency_metrics|length > 0 %}
                 {% for nscl in latency_metrics %}
@@ -147,8 +148,8 @@
             <table class="table">
               <tr>
                   <th>Channel</th>
-                  <th>Number of noise glitches per hour</th>
-                  <th>Acceptable RMS exceded in s per hour</th>
+                  <th>Number of noise glitches per hour >0.34 cm/s^2 (<1)</th>
+                  <th>RMS exceeding 0.07cm/s^2 in s per hour (<60)</th>
               </tr>
               {% for nscl in metrics %}
               <tr>
