@@ -197,9 +197,10 @@ if __name__ == "__main__":
         except Exception as e:
             print("Error creating list of sniffwave_tally output files: {}".format(e))
     if len(filelist) > 0:
-        all_latency_metrics = latency_gaps_completeness(filelist)            
+        all_latency_metrics = latency_gaps_completeness(filelist,starttime,endtime) 
     else:
         all_latency_metrics = None
+
 
     #----- Set up the FDSN client
     Tdc0 = timeit.default_timer()
