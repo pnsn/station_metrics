@@ -69,6 +69,7 @@ Metrics calculated are:
 -*RMS*  This metric is derived from an RMS function based on the gain-corrected acceleration traces from each channel filtered between 0.075 - 15 Hz.  The RMS function is calculated using a sliding 5 second window at each point.  The metric is computed by determining the total duration (in sec) of the RMS function exceeding the threshold of 0.07 cm/s^2.  Passing is no more than 60 sec per hour on average.
 
 *Percent data with latency < 3.5 sec*  This is measured using sniffwave on local earthworm machines at the various contributing institutions.  <a href="https://github.com/pnsn/sniffwave_tally">sniffwave_tally</a> runs sniffwave and tallies the results.  Passing is at least 98% of the data have latency < 3.5 sec.  
+Note: that only sniffwave_tally results are considered if the entire measurement period falls within the requested time period.  So if sniffwave_tally runs for 600 seconds (10min) at minutes 0,10,20... and the request is for T00:05:00 to T00:25:00, then only one sniffwave_tally run (from T00:10:00 to T00:19:59.99) will be considered.
 
 *Percent completeness*  This is the percent of waveform data returned in the time that sniffwave sniffs.  Passing is at least 98% completeness.
 
