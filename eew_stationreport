@@ -204,6 +204,7 @@ if __name__ == "__main__":
     else:
         all_latency_metrics = None
 
+
     #----- Set up the FDSN client
     Tdc0 = timeit.default_timer()
     try:
