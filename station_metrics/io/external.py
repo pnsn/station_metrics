@@ -1,7 +1,8 @@
 from __future__ import print_function
 from datetime import datetime
+import pytz
 
-def latency_gaps_completeness(filelist, penalty=30):
+def latency_gaps_completeness(filelist, starttime0, endtime0, penalty=30):
     """
         Reads output files from sniffwave_tally and produces eew_stationreport metrics 
         percent_latency_good, gaps_per_hour, percent_completeness, percent_completeness_w_penalty
@@ -10,6 +11,8 @@ def latency_gaps_completeness(filelist, penalty=30):
             filelist ([string]): list of filenames, output files from sniffwave_tally, 
                                  they have to be in time order:
                                  i.e. filelist[i] created earlier than filelist[i+1]
+            starttime (datetime obj): start date + time of requested window
+            endtime (datetime obj): end date + time of requested window
             penalty (float): number of seconds that get added per gap in completeness_w_penalty
                              calculation (default=30s)
         Returns:
@@ -28,7 +31,9 @@ def latency_gaps_completeness(filelist, penalty=30):
     totaldict = {}
     if type(filelist) != list:
         filelist = [filelist]
-
+    starttime0 = pytz.utc.localize(starttime0)   #--- starttime0 passed through is PST :-/
+    startUtime = starttime0.timestamp()  #--- use Unix time, more direct comparison = faster
+    endUtime = endtime0.timestamp()
     for filename in filelist:
         scnldict = {}
         with open(filename,"r") as input:
@@ -41,55 +46,58 @@ def latency_gaps_completeness(filelist, penalty=30):
                     else:
                         fields = line.split(sep)
                         scnl = fields[0].strip()
-                        if scnl not in totaldict:
-                            #first time we see this channel
-                            scnldict[scnl] = {}
-                            totaldict[scnl] = {}
-                            # populate the dict
-                            i = 1
-                            for name in field_names[1:]:
-                                scnldict[scnl][name] = fields[i].strip('\n')
-                                i += 1
-                            totaldict[scnl]['nmeasurements'] = 1
-                            totaldict[scnl]['no_data'] = 0.
-                            totaldict[scnl]['first'] = float(scnldict[scnl]['starttime'])
-                            # in case there's only one measurement period for this channe also set lastl
-                            totaldict[scnl]['last'] = float(scnldict[scnl]['endtime'])
-                            totaldict[scnl]['prev_starttime'] = float(scnldict[scnl]['starttime'])
-                            totaldict[scnl]['prev_endtime'] = float(scnldict[scnl]['endtime'])
-                            totaldict[scnl]['total_duration'] = float(scnldict[scnl]['duration'])
-                            totaldict[scnl]['total_packets'] = int(scnldict[scnl]['npackets'])
-                            totaldict[scnl]['total_late'] = int(scnldict[scnl]['nlate'])
-                            totaldict[scnl]['total_gaps'] = int(scnldict[scnl]['ngap'])
-                            totaldict[scnl]['total_gap_dur'] = float(scnldict[scnl]['gap_dur'])
-                            totaldict[scnl]['total_overlaps'] = int(scnldict[scnl]['noverlap'])
-                            totaldict[scnl]['total_overlap_dur'] = float(scnldict[scnl]['overlap_dur'])
-                            totaldict[scnl]['total_oo'] = int(scnldict[scnl]['n_oo'])
-                            totaldict[scnl]['total_oo_dur'] = float(scnldict[scnl]['oo_dur'])
-                        else:
-                            if scnl not in scnldict:
-                                # if the scnl in totaldict but not in scnldict, it means the channel was available
-                                # for an earlier sniffwave run, but not this one.
+                        sniffstartUtime = float(fields[1])
+                        sniffendUtime = float(fields[2])
+                        if ( sniffstartUtime >= startUtime and sniffendUtime <= endUtime ):
+                            if scnl not in totaldict:
+                                #first time we see this channel
                                 scnldict[scnl] = {}
-                            i = 1
-                            for name in field_names[1:]:
-                                scnldict[scnl][name] = fields[i].strip("\n")
-                                i += 1
-                            totaldict[scnl]['nmeasurements'] += 1
-                            totaldict[scnl]['no_data'] += float(scnldict[scnl]['starttime'])-float(totaldict[scnl]['prev_endtime'])
-                            totaldict[scnl]['last'] = float(scnldict[scnl]['endtime'])
-                            totaldict[scnl]['total_duration'] += float(scnldict[scnl]['duration'])
-                            totaldict[scnl]['total_packets'] += int(scnldict[scnl]['npackets'])
-                            totaldict[scnl]['total_late'] += int(scnldict[scnl]['nlate'])
-                            totaldict[scnl]['total_gaps'] += int(scnldict[scnl]['ngap'])
-                            totaldict[scnl]['total_gap_dur'] += float(scnldict[scnl]['gap_dur'])
-                            totaldict[scnl]['total_overlaps'] += int(scnldict[scnl]['noverlap'])
-                            totaldict[scnl]['total_overlap_dur'] += float(scnldict[scnl]['overlap_dur'])
-                            totaldict[scnl]['total_oo'] += int(scnldict[scnl]['n_oo'])
-                            totaldict[scnl]['total_oo_dur'] += float(scnldict[scnl]['oo_dur'])
-                            totaldict[scnl]['prev_starttime'] = float(scnldict[scnl]['starttime'])
-                            totaldict[scnl]['prev_endtime'] = float(scnldict[scnl]['endtime'])
-
+                                totaldict[scnl] = {}
+                                # populate the dict
+                                i = 1
+                                for name in field_names[1:]:
+                                    scnldict[scnl][name] = fields[i].strip('\n')
+                                    i += 1
+                                totaldict[scnl]['nmeasurements'] = 1
+                                totaldict[scnl]['no_data'] = 0.
+                                totaldict[scnl]['first'] = float(scnldict[scnl]['starttime'])
+                                # in case there's only one measurement period for this channe also set lastl
+                                totaldict[scnl]['last'] = float(scnldict[scnl]['endtime'])
+                                totaldict[scnl]['prev_starttime'] = float(scnldict[scnl]['starttime'])
+                                totaldict[scnl]['prev_endtime'] = float(scnldict[scnl]['endtime'])
+                                totaldict[scnl]['total_duration'] = float(scnldict[scnl]['duration'])
+                                totaldict[scnl]['total_packets'] = int(scnldict[scnl]['npackets'])
+                                totaldict[scnl]['total_late'] = int(scnldict[scnl]['nlate'])
+                                totaldict[scnl]['total_gaps'] = int(scnldict[scnl]['ngap'])
+                                totaldict[scnl]['total_gap_dur'] = float(scnldict[scnl]['gap_dur'])
+                                totaldict[scnl]['total_overlaps'] = int(scnldict[scnl]['noverlap'])
+                                totaldict[scnl]['total_overlap_dur'] = float(scnldict[scnl]['overlap_dur'])
+                                totaldict[scnl]['total_oo'] = int(scnldict[scnl]['n_oo'])
+                                totaldict[scnl]['total_oo_dur'] = float(scnldict[scnl]['oo_dur'])
+                            else:
+                                if scnl not in scnldict:
+                                    # if the scnl in totaldict but not in scnldict, it means the channel was available
+                                    # for an earlier sniffwave run, but not this one.
+                                    scnldict[scnl] = {}
+                                i = 1
+                                for name in field_names[1:]:
+                                    scnldict[scnl][name] = fields[i].strip("\n")
+                                    i += 1
+                                totaldict[scnl]['nmeasurements'] += 1
+                                totaldict[scnl]['no_data'] += float(scnldict[scnl]['starttime'])-float(totaldict[scnl]['prev_endtime'])
+                                totaldict[scnl]['last'] = float(scnldict[scnl]['endtime'])
+                                totaldict[scnl]['total_duration'] += float(scnldict[scnl]['duration'])
+                                totaldict[scnl]['total_packets'] += int(scnldict[scnl]['npackets'])
+                                totaldict[scnl]['total_late'] += int(scnldict[scnl]['nlate'])
+                                totaldict[scnl]['total_gaps'] += int(scnldict[scnl]['ngap'])
+                                totaldict[scnl]['total_gap_dur'] += float(scnldict[scnl]['gap_dur'])
+                                totaldict[scnl]['total_overlaps'] += int(scnldict[scnl]['noverlap'])
+                                totaldict[scnl]['total_overlap_dur'] += float(scnldict[scnl]['overlap_dur'])
+                                totaldict[scnl]['total_oo'] += int(scnldict[scnl]['n_oo'])
+                                totaldict[scnl]['total_oo_dur'] += float(scnldict[scnl]['oo_dur'])
+                                totaldict[scnl]['prev_starttime'] = float(scnldict[scnl]['starttime'])
+                                totaldict[scnl]['prev_endtime'] = float(scnldict[scnl]['endtime'])
+ 
 
 
     # calculate metrics
