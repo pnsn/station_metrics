@@ -70,9 +70,10 @@ def make_station_figure_eew_stationreport(st1,st2,st3,st4,st5,label1,label2,labe
             t = st3[ii].stats.starttime
             x3 = np.array([datetime.datetime(t.year,t.month,t.day,t.hour,t.minute,t.second,t.microsecond) + datetime.timedelta(seconds=jj) for jj in timearray ])
             iRMSwinlen = int(RMSwinlen/st3[ii].stats.delta)
-            rmsthing = np.sqrt(smooth(((st3[ii].data)**2),iRMSwinlen))
-            ax3.plot(x3,st3[ii].data,color='k',linewidth=0.2)
-            ax3.plot(x3,rmsthing,color='c',linewidth=1)
+            if ( st3[ii].stats.npts > iRMSwinlen ):
+                rmsthing = np.sqrt(smooth(((st3[ii].data)**2),iRMSwinlen))
+                ax3.plot(x3,st3[ii].data,color='k',linewidth=0.2)
+                ax3.plot(x3,rmsthing,color='c',linewidth=1)
             if ( thresh3 > 0 ):
                 ax3.plot([t1,t2],[thresh3,thresh3],color='r',linewidth=0.5)
             ax3.xaxis.set_major_formatter(DateFormatter('%H:%M'))

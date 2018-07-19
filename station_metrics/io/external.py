@@ -1,5 +1,6 @@
 from __future__ import print_function
 from datetime import datetime
+import pytz
 
 def latency_gaps_completeness(filelist, starttime0, endtime0, penalty=30):
     """
@@ -30,6 +31,7 @@ def latency_gaps_completeness(filelist, starttime0, endtime0, penalty=30):
     totaldict = {}
     if type(filelist) != list:
         filelist = [filelist]
+    starttime0 = pytz.utc.localize(starttime0)   #--- starttime0 passed through is PST :-/
     startUtime = starttime0.timestamp()  #--- use Unix time, more direct comparison = faster
     endUtime = endtime0.timestamp()
     for filename in filelist:

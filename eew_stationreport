@@ -123,6 +123,7 @@ if __name__ == "__main__":
     args = parse_args()
     [starttime, endtime, durationinhours, durationinsec] = validate_args_and_get_times(args)
     nowtime = datetime.datetime.now()
+    DateLabel = str(nowtime.strftime('v%Y-%m-%dT%H-%M'))
 
     # get data from a little before starttime to remedy edge effects
     request_starttime = starttime - datetime.timedelta(0,lta+tpadding)
@@ -166,9 +167,9 @@ if __name__ == "__main__":
         network = None
         station = None
     else: 
-        network = args.network
-        station = args.station
-    datacenter = args.datacenter
+        network = args.network.upper()
+        station = args.station.upper()
+    datacenter = args.datacenter.upper()
     institution = args.institution
     email = args.email
     iplot = args.iplot
@@ -187,6 +188,8 @@ if __name__ == "__main__":
                 filelistall = glob.glob(latency_dir + "/*tally.csv")
             else:
                 filelistall = glob.glob(latency_dir + "/*tally." + institution + ".csv")
+#                filelistall.extend(glob.glob(latency_dir + "/*tally." + institution.upper() + ".csv"))
+#                filelistall.extend(glob.glob(latency_dir + "/*tally." + institution.lower() + ".csv"))
             # only read sniffwave_tally files in the timerange being measured
 
             for ifile in range(0,len(filelistall)):
@@ -501,14 +504,14 @@ if __name__ == "__main__":
                     latency_metrics[scnl]["completeness_incl_penalty"] = \
                         (l["percent_completeness_w_penalty"], "pass" if l["percent_completeness_w_penalty"] >= 98 else "fail")
 
-            with open(report_dir + net_obj.code + "." + sta_obj.code + ".html", "w") as fh:
+            with open(report_dir + net_obj.code + "." + sta_obj.code + "." + DateLabel + ".html", "w") as fh:
                 fh.write(template.render(starttime=starttime,endtime=endtime,institution_code=institution, \
                          network_code=net_obj.code,station=sta_obj,allowed=SEISMIC_CHANNELS, \
                          clock_metrics=soh_metrics, latency_metrics=latency_metrics, metrics=channel_metrics, \
 			 nowtime=nowtime, email=email ))
-            HTML(report_dir + net_obj.code + "." + sta_obj.code+".html").write_pdf(report_dir + net_obj.code + "." + sta_obj.code + ".pdf")
+            HTML(report_dir + net_obj.code + "." + sta_obj.code + "." + DateLabel +".html").write_pdf(report_dir + net_obj.code + "." + sta_obj.code + "." + DateLabel + ".pdf")
             # uncomment/include the css bootstrap in the .html file
-            htmlfile = report_dir + net_obj.code + "." + sta_obj.code+".html"
+            htmlfile = report_dir + net_obj.code + "." + sta_obj.code + "." + DateLabel + ".html"
             line1 = '<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">  -->'
             line2 = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">'
             for line in fileinput.input(htmlfile, inplace = True):
