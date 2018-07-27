@@ -23,6 +23,10 @@ These can easily be added via command line using <a href="https://www.anaconda.c
 If running eew_stationreport these are also needed:
 >> conda install -c anaconda jinja2
 >> pip install weasyprint
+
+If running calculate_metrics and writing to a postgreSQL database these are also needed:
+>> pip install psycopg2
+>> pip install pgcopy
 ```
 
 # Files
