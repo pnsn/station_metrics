@@ -33,8 +33,9 @@ def duration_exceed_RMS(x, ampthresh, RMSlen, dt):
         RMS = np.sqrt(smooth((x**2),iRMSwinlen))
         duration = ((RMS > ampthresh).sum())*dt
     else:
-        print ("Error duration_exceed_RMS: len(x)=" + str(len(x)/dt) + " must be greater than RMSlen=" + str(RMSlen))
         duration = []
+        duration = -1
+        print ("Error duration_exceed_RMS: len(x)=" + str(len(x)*dt) + " must be greater than RMSlen=" + str(RMSlen))
 
     return duration
 
@@ -74,7 +75,8 @@ def count_peaks_stalta(x, y, sta, lta, mpd, mph, dt, ampthresh):
         peakcount = (peakamp>ampthresh).sum()
     else:
         peakcount = []
-        print ("Error count_peaks_stalta: len(x)=" + str(len(x)/dt) + " must be > sta+lta=" + str(sta+lta))
+        duration = -1
+        print ("Error count_peaks_stalta: len(x)=" + str(len(x)*dt) + " must be > sta+lta=" + str(sta+lta))
     return peakcount
 
 
