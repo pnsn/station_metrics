@@ -14,8 +14,8 @@ lta: 5.0
 minSTALTAlen: 10.0
 
 #  Frequencies (Hz) for filtering for use in Nspikes, RMS, noisefloor metrics.  freq_min, low_freq_corner, high_freq_corner, freq_max.
-freqBP1: 0.25
-freqBP2: 0.3
+freqBP1: 0.06
+freqBP2: 0.075
 freqBP3: 15.0
 freqBP4: 17.0
 
@@ -34,9 +34,10 @@ GainOrFullResp: "Gain"
 #  The periods at which the power will be measured.
 PSDperiods: [50, 30, 20, 12, 10, 5, 1, 0.2, 0.1, 0.05, 0.02 ]
 
-#  The names of the postgress database and host machine.
-dbname: station_metrics
-hostname: web3.ess.washington.edu
+#  The names of the PostgreSQL database and host machine.
+#  Leave blank if not writing to a database.
+dbname: 
+hostname: 
 
 #  If you want to make a plot, not a good idea when doing many stations as it is slow.
 iplot: 0
