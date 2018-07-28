@@ -87,11 +87,12 @@ except:
 
 #----- Read the database SNCL and METRIC tables to make ID lists
 
-try:
-    [sncl_list,sncl_id_list,metric_list,metric_id_list,dbconnection] = read_database(dbname,hostname,dbuser,dbpass)
-    db = True
-except:
-    db = False
+if ( dbname is not None and dbpass is not None ):
+    try:
+        [sncl_list,sncl_id_list,metric_list,metric_id_list,dbconnection] = read_database(dbname,hostname,dbuser,dbpass)
+        db = True
+    except:
+        db = False
 
 #----- Download waveforms using channel list
 tbuffer = sta + lta
