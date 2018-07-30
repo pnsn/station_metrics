@@ -93,6 +93,8 @@ if ( dbname is not None and dbpass is not None ):
         db = True
     except:
         db = False
+else:
+    db = False
 
 #----- Download waveforms using channel list
 tbuffer = sta + lta
