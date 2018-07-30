@@ -4,7 +4,7 @@ from __future__ import print_function
 import os
 import psycopg2
 import datetime
-from pgcopy import CopyManager
+#from pgcopy import CopyManager
 
 # Find the last inserted ID into the measurements table.
 def last_insert_id(cursor, table_name, pk_name):
@@ -57,37 +57,35 @@ def write_database(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,valuel
 # These functions are me just hacking around... please ignore.
 # UPSERT
 # https://dba.stackexchange.com/questions/167591/postgresql-psycopg2-upsert-syntax-to-update-columns
-def write_database2(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,valuelist,metric_list_db,metric_id_list_db):
-    now = datetime.datetime.utcnow()
-    now = now.replace(microsecond=0)
-    cursor = dbconn.cursor()
+#def write_database2(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,valuelist,metric_list_db,metric_id_list_db):
+#    now = datetime.datetime.utcnow()
+#    now = now.replace(microsecond=0)
+#    cursor = dbconn.cursor()
+#
+#    for idb in range(0,len(metriclist)):
+#        if ( metriclist[idb] in metric_list_db ):
+#            idmetric = metric_list_db.index(metriclist[idb])
+#            metric_id = metric_id_list_db[idmetric]
+#            iid = last_insert_id(dbconn.cursor(),'measurements','id') + 1
+#            cursor.execute('INSERT INTO measurements (id,sncl_id,metric_id,value,starttime,endtime,datasrc_id,created_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (sncl_id,metric_id,value,starttime,endtime,datasrc_id,created_at) = (EXCLUDED.sncl_id,EXCLUDED.metric_id,EXCLUDED.value,EXCLUDED.starttime,EXCLUDED.endtime,EXCLUDED.datasrc_id,EXCLUDED.created_at)', (sncl_id,metric_id,str(valuelist[idb]),starttime,endtime,datasrc_id,now) )
+#            dbconn.commit()
+#
+#    return
 
-    for idb in range(0,len(metriclist)):
-        if ( metriclist[idb] in metric_list_db ):
-            idmetric = metric_list_db.index(metriclist[idb])
-            metric_id = metric_id_list_db[idmetric]
-            iid = last_insert_id(dbconn.cursor(),'measurements','id') + 1
-            cursor.execute('INSERT INTO measurements (id,sncl_id,metric_id,value,starttime,endtime,datasrc_id,created_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (id) DO UPDATE SET (sncl_id,metric_id,value,starttime,endtime,datasrc_id,created_at) = (EXCLUDED.sncl_id,EXCLUDED.metric_id,EXCLUDED.value,EXCLUDED.starttime,EXCLUDED.endtime,EXCLUDED.datasrc_id,EXCLUDED.created_at)', (sncl_id,metric_id,str(valuelist[idb]),starttime,endtime,datasrc_id,now) )
-            dbconn.commit()
 
-    return
-
-
-def write_database3(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,valuelist,metric_list_db,metric_id_list_db):
-    now = datetime.datetime.utcnow()
-    now = now.replace(microsecond=0)
-    cursor = dbconn.cursor()
-
-    for idb in range(0,len(metriclist)):
-        if ( metriclist[idb] in metric_list_db ):
-            idmetric = metric_list_db.index(metriclist[idb])
-            metric_id = metric_id_list_db[idmetric]
-            cursor.execute('INSERT INTO measurements (sncl_id,metric_id,value,starttime,endtime,datasrc_id,created_at) VALUES (%s, %s, %s, %s, %s, %s, %s)', (sncl_id,metric_id,str(valuelist[idb]),starttime,endtime,datasrc_id,now) )
-            dbconn.commit()
-
+#def write_database3(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,valuelist,metric_list_db,metric_id_list_db):
+#    now = datetime.datetime.utcnow()
+#    now = now.replace(microsecond=0)
+#    cursor = dbconn.cursor()
+#
+#    for idb in range(0,len(metriclist)):
+#        if ( metriclist[idb] in metric_list_db ):
+#            idmetric = metric_list_db.index(metriclist[idb])
+#            metric_id = metric_id_list_db[idmetric]
+#            cursor.execute('INSERT INTO measurements (sncl_id,metric_id,value,starttime,endtime,datasrc_id,created_at) VALUES (%s, %s, %s, %s, %s, %s, %s)', (sncl_id,metric_id,str(valuelist[idb]),starttime,endtime,datasrc_id,now) )
+#            dbconn.commit()
 #    execute_values(cursor
-
-    return
+#    return
 
 
 # https://github.com/altaurog/pgcopy
@@ -96,28 +94,27 @@ def write_database3(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,value
 # DETAIL:  Key (id)=(1) already exists.
 # CONTEXT:  COPY measurements, line 1
 #
-def write_database4(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,valuelist,metric_list_db,metric_id_list_db):
-    now = datetime.datetime.utcnow()
-    now = now.replace(microsecond=0)
-    records = []
-    cols = ('id','sncl_id','metric_id','value','starttime','endtime','datasrc_id','created_at')
-    iid = last_insert_id(dbconn.cursor(),'measurements','id') + 1 
-
-    print (("Last ID is " + str(iid) ) + " " + str(type(iid)) )
-
-    for idb in range(0,len(metriclist)):
-        if ( metriclist[idb] in metric_list_db ):
-            idmetric = metric_list_db.index(metriclist[idb])
-            metric_id = metric_id_list_db[idmetric]
-            iid = iid + 1
-            records.append((iid,sncl_id,metric_id,valuelist[idb],starttime,endtime,datasrc_id,now))
-            print (str(iid) + " " + str(valuelist[idb]) + " " + str(metric_id) ) 
-    print ("IID2 : " + str(iid) )
-    print ("RECORED: " + str(records) )
-    mgr = CopyManager(dbconn, 'measurements', cols)
-    mgr.copy(records)
-
-    return
+#def write_database4(dbconn,sncl_id,starttime,endtime,datasrc_id,metriclist,valuelist,metric_list_db,metric_id_list_db):
+#    now = datetime.datetime.utcnow()
+#    now = now.replace(microsecond=0)
+#    records = []
+#    cols = ('id','sncl_id','metric_id','value','starttime','endtime','datasrc_id','created_at')
+#    iid = last_insert_id(dbconn.cursor(),'measurements','id') + 1 
+#
+#    print (("Last ID is " + str(iid) ) + " " + str(type(iid)) )
+#
+#    for idb in range(0,len(metriclist)):
+#        if ( metriclist[idb] in metric_list_db ):
+#            idmetric = metric_list_db.index(metriclist[idb])
+#            metric_id = metric_id_list_db[idmetric]
+#            iid = iid + 1
+#            records.append((iid,sncl_id,metric_id,valuelist[idb],starttime,endtime,datasrc_id,now))
+#            print (str(iid) + " " + str(valuelist[idb]) + " " + str(metric_id) ) 
+#    print ("IID2 : " + str(iid) )
+#    print ("RECORED: " + str(records) )
+#    mgr = CopyManager(dbconn, 'measurements', cols)
+#    mgr.copy(records)
+#    return
 
 # https://stackoverflow.com/questions/8134602/psycopg2-insert-multiple-rows-with-one-query 
 
