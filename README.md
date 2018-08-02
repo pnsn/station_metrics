@@ -1,5 +1,5 @@
 
-<a href="https://drive.google.com/drive/u/1/folders/0B8N_TOtFCLuyOVNUUmVuTzJTNHc">Google drive folder for Station_Metrics</a>
+
 # Overview
 
 These are the collection of scripts to calculate station metrics.  calculate_metrics.py is built to operate in near-real time and is being run hourly at the PNSN and writing results to a PostgreSQL database.  eew_stationreport is a similar script being run on a server at PNSN for one-at-a-time ShakeAlert station acceptance and accessible to select users <a href="http://eewreport.pnsn.org">here</a>.  eew_stationreport includes Pass/Fail criteria set by the ShakeAlert Regional Coordinators group and writes nicely formatted .html and .pdf files for their use.  Summary figures showing the trace analyzed along with derivative traces (e.g. STA/LTA function, filtered versions) are available with both scripts.
