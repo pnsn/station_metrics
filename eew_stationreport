@@ -26,6 +26,7 @@ from datetime import timedelta
 import glob
 import timeit
 import fileinput
+from collections import OrderedDict
 
 # import third party packages
 import numpy as np
@@ -328,7 +329,7 @@ if __name__ == "__main__":
             # This assumes the data are in the stream ordered by net,sta,loc,chan,starttime, 
             # which is OK for the DMC (per Chad) but is NOT guaranteed by the FDSN dataselect 
             # web service standard. 
-            channel_metrics = {}
+            channel_metrics = OrderedDict()
             itrace = 0
             Tsum = 0
             for i in range(0,len(stAll)):
@@ -487,7 +488,7 @@ if __name__ == "__main__":
                         channel_metrics[nslc] = metrics
 
             # add latency, gaps, completeness derived from sniffwave, if requested.
-            latency_metrics = {}
+            latency_metrics = OrderedDict()
             for scnl in channel_metrics:
                 if all_latency_metrics and scnl in all_latency_metrics:
                     l = all_latency_metrics[scnl]
