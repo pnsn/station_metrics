@@ -1,3 +1,9 @@
+inventory.xml
+eew_stationreport_*
+eew_stationreport?
+cmd.sh
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
