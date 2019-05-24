@@ -2,7 +2,6 @@
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
-# May 22, 2019:  changed percent_completeness from 98 to 90 per Mouse's request.
 
 # Generate a lock file in /tmp so that only one instance of eew_stationreport can run.
 
@@ -72,7 +71,7 @@ THRESHOLD = {
              'lcq':60,               # minimum quality=60, read Q330 manual
              'lce':5000,             # maximum phase(drift)=5000 microseconds
              'percent_latency_good':98,          # good=maximum latency 3.5s between now and middle of packet
-             'percent_completeness':90,          
+             'percent_completeness':98,          
              'gaps_per_hour':1,	     # maximum number of gaps per hour
              'rms_noise':0.0007,     # maximum RMS amplitude 0.07 cm/s^2 
              'spikes' : 0.0034       # maximum spike amplitude 0.34 sm/s^2
@@ -399,8 +398,10 @@ if __name__ == "__main__":
                         trPadded = trPadded.detrend(type='polynomial',order=3)
 
                         trVelHighPass = raw_trace_to_ground_motion_filtered_pruned(trPadded, \
-                                     slice_starttime, slice_endtime, "Vel", 0, 0, \
-                                     freqHP, 0, 0, inv)
+#                                     slice_starttime, slice_endtime, "Vel", 0, 0, \
+#                                     freqHPP, 0, 0, inv)
+                                     slice_starttime, slice_endtime, "Vel", 0, 0.06, \
+                                     0.075, 15.0, 17.0, inv)
                         trAccFilt = raw_trace_to_ground_motion_filtered_pruned(trPadded, \
                                     slice_starttime, slice_endtime, "Acc", 0, freqBP1, \
                                     freqBP2, freqBP3, freqBP4, inv)
@@ -523,9 +524,9 @@ if __name__ == "__main__":
                     latency_metrics[scnl]["gaps_per_hour"] = \
                         (l["gaps_per_hour"], "pass" if l["gaps_per_hour"] < 1 else "fail")
                     latency_metrics[scnl]["completeness"] = \
-                        (l["percent_completeness"], "pass" if l["percent_completeness"] >= THRESHOLD['percent_completeness'] else "fail")
+                        (l["percent_completeness"], "pass" if l["percent_completeness"] >= 98 else "fail")
                     latency_metrics[scnl]["completeness_incl_penalty"] = \
-                        (l["percent_completeness_w_penalty"], "pass" if l["percent_completeness_w_penalty"] >= THRESHOLD['percent_completeness'] else "fail")
+                        (l["percent_completeness_w_penalty"], "pass" if l["percent_completeness_w_penalty"] >= 98 else "fail")
 
             with open(report_dir + net_obj.code + "." + sta_obj.code + "." + DateLabel + ".html", "w") as fh:
                 fh.write(template.render(starttime=starttime,endtime=endtime,institution_code=institution, \

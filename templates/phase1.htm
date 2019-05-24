@@ -20,9 +20,9 @@
                  <tr>
                   <th>Station</th>
                   <th>Institution</th>
-                  <th>Latitude (deg N)</th>
-                  <th>Longitude (deg E)</th>
-                  <th>Elevation (m)</th>
+                  <th>Lat. (deg N)</th>
+                  <th>Lon. (deg E)</th>
+                  <th>Elev. (m)</th>
                   <th>Start Date</th>
                  </tr>
               </thead>
@@ -70,8 +70,8 @@
              <caption>Time quality</caption>
              <thead>
              <tr>
-              <th>Percentage of data with acceptable Clock locking/quality (%)</th>
-              <th>Percentage of data with acceptable Clock drift/phase (%)</th>
+              <th>Pct. data w acceptable Clock locking/quality</th>
+              <th>Pct. data w acceptable Clock drift/phase</th>
              </tr>
              </thead>
              <tbody>
@@ -109,16 +109,16 @@
               <tr>
                   <th>Channel</th>
                   <th>Measurement period</th>
-                  <th>Percentage of data with acceptable latency (<98%)</th>
-                  <th>Percent completeness</th>
-                  <th>Percent completeness incl. gap penalties (<98%)</th>
+                  <th>Data with acceptable latency (>98%)</th>
+                  <th>Pct. completeness</th>
+                  <th>Pct. completeness incl. gap penalties (>90%)</th>
                   <th>Number of gaps per hour (<1)</th>
               </tr>
               {% if latency_metrics|length > 0 %}
                 {% for nscl in latency_metrics %}
                 <tr>
                     <td>{{ nscl }}</td>
-                    <td>{{ latency_metrics[nscl]["measurement_start"].strftime("%Y-%m-%dT%H:%M:%S") }} - {{ latency_metrics[nscl]["measurement_end"].strftime("%Y-%m-%dT%H:%M:%S") }} ({{ latency_metrics[nscl]["window_length"] }} seconds)</td>
+                    <td>{{ latency_metrics[nscl]["measurement_start"].strftime("%Y-%m-%dT%H:%M:%S") }} - {{ latency_metrics[nscl]["measurement_end"].strftime("%Y-%m-%dT%H:%M:%S") }} ({{ latency_metrics[nscl]["window_length"] }})</td>
                     <td class="{{ latency_metrics[nscl]["acceptable_latency"][1] }}">{{ latency_metrics[nscl]["acceptable_latency"][0] | round(4,method='common') }}</td>
                     <td class="{{ latency_metrics[nscl]["completeness"][1] }}">{{ latency_metrics[nscl]["completeness"][0] | round(5,method='common') }}</td>
                     <td class="{{ latency_metrics[nscl]["completeness_incl_penalty"][1] }}">{{ latency_metrics[nscl]["completeness_incl_penalty"][0] | round(5,method='common') }}</td>

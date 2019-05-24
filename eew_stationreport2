@@ -2,7 +2,6 @@
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
-# May 22, 2019:  changed percent_completeness from 98 to 90 per Mouse's request.
 
 # Generate a lock file in /tmp so that only one instance of eew_stationreport can run.
 
@@ -12,13 +11,13 @@ import sys
 pid = str(os.getpid())
 pidfile = "/tmp/eew_stationreport.lockfile"
 
-if os.path.isfile(pidfile):
-    print ("%s exists.  Exiting." % pidfile)
-    sys.exit()
-else:
-    file = open(pidfile, 'w')
-    file.write(pid)
-    file.close()
+#if os.path.isfile(pidfile):
+#    print ("%s exists.  Exiting." % pidfile)
+#    sys.exit()
+#else:
+#    file = open(pidfile, 'w')
+#    file.write(pid)
+#    file.close()
 
 # import std packages
 from collections import Counter
@@ -72,7 +71,7 @@ THRESHOLD = {
              'lcq':60,               # minimum quality=60, read Q330 manual
              'lce':5000,             # maximum phase(drift)=5000 microseconds
              'percent_latency_good':98,          # good=maximum latency 3.5s between now and middle of packet
-             'percent_completeness':90,          
+             'percent_completeness':98,          
              'gaps_per_hour':1,	     # maximum number of gaps per hour
              'rms_noise':0.0007,     # maximum RMS amplitude 0.07 cm/s^2 
              'spikes' : 0.0034       # maximum spike amplitude 0.34 sm/s^2
@@ -211,7 +210,7 @@ if __name__ == "__main__":
     #----- Set up the FDSN client
     Tdc0 = timeit.default_timer()
     try:
-        client = Client(datacenter,timeout = FDSNtimeout)
+        client = Client(datacenter,timeout = 300)
     except Exception as error:
         print ("Error: {}, Failed to connect to FDSN client. Used a timeout of {}".format(error, FDSNtimeout))
     Tdc1 = timeit.default_timer()
@@ -246,22 +245,10 @@ if __name__ == "__main__":
                 if location == "":
                     location = "--"
                 if channel in SEISMIC_CHANNELS:
-                    if ( datacenter == "SCEDC" and duration_padded > 691200 ):
-                        request_starttime2 = request_starttime + datetime.timedelta(seconds=(duration_padded/2.))
-                        request_endtime1 = request_starttime2 + datetime.timedelta(seconds=1)
-                        bulkrequest1.append( \
-                            (network, station, location, channel, request_starttime.isoformat(), \
-                            request_endtime1.isoformat()) \
-                            )
-                        bulkrequest2.append( \
-                            (network, station, location, channel, request_starttime2.isoformat(), \
-                            request_endtime.isoformat()) \
-                            )
-                    else:
-                        bulkrequest.append( \
-                            (network, station, location, channel, request_starttime.isoformat(), \
-                            request_endtime.isoformat()) \
-                            )
+                    bulkrequest.append( \
+                        (network, station, location, channel, request_starttime.isoformat(), \
+                        request_endtime.isoformat()) \
+                        )
                 if channel in SOH_CHANNELS:
                     soh_bulkrequest.append( \
                         (network, station, location, channel, request_starttime.isoformat(), \
@@ -270,21 +257,13 @@ if __name__ == "__main__":
 
             timer_start = timeit.default_timer()
             try:
-                if ( datacenter == "SCEDC" and duration_padded > 691200 ):
-                    stAll1 = client.get_waveforms_bulk(bulkrequest1)
-                    time.sleep(5)
-                    stAll2 = client.get_waveforms_bulk(bulkrequest2)
-                    stAll = stAll1 + stAll2
-                    stAll.merge(method=-1)
-                else:
-                    stAll = client.get_waveforms_bulk(bulkrequest)
+                stAll = client.get_waveforms_bulk(bulkrequest)
             except Exception as e:
                 print("Error: Problem requesting waveform data: {}".format(e))
                 # create empty stream
                 stAll = Stream()
             timer_end = timeit.default_timer()
-#            print ("Time to download waveforms from {}: {}".format(datacenter, str(timer_end - timer_start)))
-            print ("Time to download waveforms from {}: {}".format(datacenter, str(timer_end - timer_start)) + "  Nstreams: " + str(len(stAll))  + "  " + str(stAll[0].stats.npts) + " points in first trace" )
+            print ("Time to download waveforms from {}: {}".format(datacenter, str(timer_end - timer_start)) + "  Nstreams: " + str(len(stAll))  + " kb: " + str(sys.getsizeof(stAll)/(1024))  )
 
             # Now request the SOH channels if so desired.
             soh_metrics = {}
@@ -523,9 +502,9 @@ if __name__ == "__main__":
                     latency_metrics[scnl]["gaps_per_hour"] = \
                         (l["gaps_per_hour"], "pass" if l["gaps_per_hour"] < 1 else "fail")
                     latency_metrics[scnl]["completeness"] = \
-                        (l["percent_completeness"], "pass" if l["percent_completeness"] >= THRESHOLD['percent_completeness'] else "fail")
+                        (l["percent_completeness"], "pass" if l["percent_completeness"] >= 98 else "fail")
                     latency_metrics[scnl]["completeness_incl_penalty"] = \
-                        (l["percent_completeness_w_penalty"], "pass" if l["percent_completeness_w_penalty"] >= THRESHOLD['percent_completeness'] else "fail")
+                        (l["percent_completeness_w_penalty"], "pass" if l["percent_completeness_w_penalty"] >= 98 else "fail")
 
             with open(report_dir + net_obj.code + "." + sta_obj.code + "." + DateLabel + ".html", "w") as fh:
                 fh.write(template.render(starttime=starttime,endtime=endtime,institution_code=institution, \
@@ -546,5 +525,5 @@ if __name__ == "__main__":
             print (str(latency_metrics))
 
 # Remove lockfile
-os.remove(pidfile)
+#os.remove(pidfile)
 

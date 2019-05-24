@@ -2,7 +2,6 @@
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
-# May 22, 2019:  changed percent_completeness from 98 to 90 per Mouse's request.
 
 # Generate a lock file in /tmp so that only one instance of eew_stationreport can run.
 
@@ -10,7 +9,7 @@ import os
 import sys
 
 pid = str(os.getpid())
-pidfile = "/tmp/eew_stationreport.lockfile"
+pidfile = "/tmp/eew_stationreport.lockfile_Mouse"
 
 if os.path.isfile(pidfile):
     print ("%s exists.  Exiting." % pidfile)
@@ -35,10 +34,14 @@ from obspy.clients.fdsn import Client
 from obspy import UTCDateTime
 from obspy.signal.trigger import classic_sta_lta
 from obspy import Stream
+#try:
+#    from ConfigParser import SafeConfigParser
+#except:
+#    from configparser import SafeConfigParser
 try:
-    from ConfigParser import SafeConfigParser
+    from ConfigParser import ConfigParser
 except:
-    from configparser import SafeConfigParser
+    from configparser import ConfigParser
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from weasyprint import HTML
@@ -94,7 +97,8 @@ if __name__ == "__main__":
         
     #----- Read Processing parameters from a config file
     
-    parser = SafeConfigParser()
+#    parser = SafeConfigParser()
+    parser = ConfigParser()
     parser.read("config/config.eew_stationreport")
     
     FDSNtimeout = float(parser.get('SectionOne','FDSNtimeout'))

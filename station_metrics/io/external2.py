@@ -48,7 +48,6 @@ def latency_gaps_completeness(filelist, starttime0, endtime0, penalty=30):
                     else:
                         fields = line.split(sep)
                         scnl = fields[0].strip()
-#                        print ("FIELDS : " + str(fields) )
                         sniffstartUtime = float(fields[1])
                         sniffendUtime = float(fields[2])
                         if ( sniffstartUtime >= startUtime and sniffendUtime <= endUtime ):

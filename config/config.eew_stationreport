@@ -1,7 +1,7 @@
 [SectionOne]
 #  Floats are ok for all numbers.
 #  Set the timeout (sec) for the FDSNWS client.  Less than 5sec is fine for IRIS.  SCEDC might need more time.
-FDSNtimeout: 180
+FDSNtimeout: 900
 
 #  Padding length (sec) on both sides of the trace to avoid edge effects when filtering. Should be > (2/freqBB2).
 tpadding: 120

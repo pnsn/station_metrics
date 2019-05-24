@@ -88,10 +88,13 @@ except:
 
 #----- Read the database SNCL and METRIC tables to make ID lists
 
-try:
-    [sncl_list,sncl_id_list,metric_list,metric_id_list,dbconnection] = read_database(dbname,hostname,dbuser,dbpass)
-    db = True
-except:
+if ( dbname is not None and dbpass is not None ):
+    try:
+        [sncl_list,sncl_id_list,metric_list,metric_id_list,dbconnection] = read_database(dbname,hostname,dbuser,dbpass)
+        db = True
+    except:
+        db = False
+else:
     db = False
 
 #----- Download waveforms using channel list
@@ -174,8 +177,8 @@ for i in range(0,len(stAll)):
             dataVelFilt = np.concatenate((dataVelFilt,trVelFilt.data),axis=0)
 
             if ( npts*dt > tbuffer ):
-                stalta = z_detect(trVelHighPass,int(1.0/dt))                   #--- of order 0.1 sec/trace. changed to VelHP 07/2018
-#                stalta = classic_sta_lta(trVelHighPass,int(sta/dt),int(lta/dt))  #--- of order 0.5 sec/trace
+#                stalta = z_detect(trVelHighPass,int(0.05/dt))                   #--- of order 0.1 sec/trace. changed to VelHP 07/2018
+                stalta = classic_sta_lta(trVelHighPass,int(sta/dt),int(lta/dt))  #--- of order 0.5 sec/trace
                 datastalta = np.concatenate((datastalta,stalta),axis=0)
             else:
                 datastalta = np.concatenate((datastalta,np.zeros(trVelHighPass.stats.npts)),axis=0)
