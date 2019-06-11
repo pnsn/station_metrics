@@ -1,0 +1,15 @@
+name: eew_stationreport-environment
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - obspy
+  - jinja2
+  - pip
+  - pip:
+    - psycopg2
+    - pgcopy
+    - weasyprint
+    - numpy
+    - matplotlib
+
