@@ -36,6 +36,7 @@ def latency_gaps_completeness(filelist, starttime0, endtime0, penalty=30):
     startUtime = starttime0.timestamp()  #--- use Unix time, more direct comparison = faster
     endtime0 = pytz.utc.localize(endtime0)
     endUtime = endtime0.timestamp()
+    endminusstart = endUtime - startUtime
     for filename in filelist:
         scnldict = {}
         with open(filename,"r") as input:
@@ -114,8 +115,10 @@ def latency_gaps_completeness(filelist, starttime0, endtime0, penalty=30):
         d = totaldict[scnl]
         latency_metric = 100 * (d['total_packets']-d['total_late'])/d['total_packets'] # % data good latency
         gap_metric = 3600.0 * d['total_gaps']/d['total_duration'] # gaps/hour
-        completeness = 100 * (d['total_duration'] - d['total_gap_dur'])/d['total_duration'] # % data available
-        completeness_incl_penalty = 100 * (d['total_duration'] - (d['total_gap_dur'] + d['total_gaps']*penalty))/d['total_duration'] # % data available
+        completeness = 100 * (endminusstart - d['total_gap_dur'])/d['total_duration'] # % data available
+        completeness_incl_penalty = 100 * (endminusstart - (d['total_gap_dur'] + d['total_gaps']*penalty))/d['total_duration'] # % data available
+#        completeness = 100 * (d['total_duration'] - d['total_gap_dur'])/d['total_duration'] # % data available
+#        completeness_incl_penalty = 100 * (d['total_duration'] - (d['total_gap_dur'] + d['total_gaps']*penalty))/d['total_duration'] # % data available
         metrics[nslc]["measurement_start"] = datetime.fromtimestamp(d["first"])
         metrics[nslc]["measurement_end"] = datetime.fromtimestamp(d["last"])
         metrics[nslc]["measurement_gap"] = d["no_data"]

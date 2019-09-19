@@ -3,7 +3,10 @@
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
 from __future__ import print_function
+<<<<<<< HEAD
 
+=======
+>>>>>>> babf0317b513c94007f353610fa233464628edbe
 # import std packages
 import os
 import sys
@@ -251,9 +254,15 @@ for i in range(0,len(stAll)):
         metriclist = [ "snr10_0p01cm", "snr20_0p05cm", "snr20_0p17cm", "snr20_0p34cm", "snr20_1cm", "snr20_3cm", "snr20_5cm", "pow50sec", "pow30sec", "pow20sec", "pow12sec", "pow10sec", "pow5sec", "pow1Hz", "pow5Hz", "pow10Hz", "pow20Hz", "pow50Hz", "NoiseFloorAcc", "NoiseFloorVel", "rawrange", "rawmean", "rawrms", "rawmin", "rawmax", "segmentshort", "segmentlong", "pctavailable", "ngaps", "RMSduration_0p01cm", "RMSduration_0p035cm", "RMSduration_0p07cm", "RMSduration_0p1cm", "RMSduration_1cm" ] 
         valuelist = [ snr10_0p01cm, snr20_0p05cm, snr20_0p17cm, snr20_0p34cm, snr20_1cm, snr20_3cm, snr20_5cm, pow50sec, pow30sec, pow20sec, pow12sec, pow10sec, pow5sec, pow1Hz, pow5Hz, pow10Hz, pow20Hz, pow50Hz, NoiseFloorAcc, NoiseFloorVel, rawrange, rawmean, rawrms, rawmin, rawmax, segmentshort, segmentlong, pctavailable, ngaps, RMSduration_0p01cm, RMSduration_0p035cm, RMSduration_0p07cm, RMSduration_0p1cm, RMSduration_1cm  ]
 
+<<<<<<< HEAD
 #        T1 = timeit.default_timer()
         if ( db == True ):
             write_database(dbconnection,sncl_id,starttime,endtime,datasrc_id,metriclist,valuelist,metric_list,metric_id_list)
+=======
+        if ( db == True ):
+            write_database(dbconnection,sncl_id,starttime,endtime,datasrc_id,metriclist,valuelist,metric_list,metric_id_list)
+
+>>>>>>> babf0317b513c94007f353610fa233464628edbe
         T2 = timeit.default_timer()
         Tsum = Tsum + T2 - T1
 

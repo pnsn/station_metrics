@@ -3,6 +3,7 @@ eew_stationreport_*
 eew_stationreport?
 cmd.sh
 *temp
+run*.csh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
