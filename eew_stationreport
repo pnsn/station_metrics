@@ -2,7 +2,8 @@
 
 # Calculate some station metrics - noise floor, power at different frequencies, Nspikes...
 
-# May 22, 2019:  changed percent_completeness from 98 to 90 per Mouse's request.
+# May 22, 2019:  changed percent_completeness thresh from 98 to 90 per Mouse's request.
+# Oct 9, 2019: changed percent_completeness to use downloaded data and not info in the sniff file.
 
 # Generate a lock file in /tmp so that only one instance of eew_stationreport can run.
 
@@ -489,7 +490,7 @@ if __name__ == "__main__":
                         strnspikes = "nspikes_FAIL: " + str(snr20_0p34cm/durationinhours)
                         strnspikes = str( "nspikes_FAIL: %.3f " % (snr20_0p34cm/durationinhours) )
             
-                    if ( pctavailable > 95. ):
+                    if ( pctavailable > THRESHOLD['percent_completeness'] ):
                         strpctavail = str( "pctavailable_PASS: %.4f " % (100*dt*nptstotal/endminusstarttime) )
                     else:
                         strpctavail = str( "pctavailable_FAIL: %.4f " % (100*dt*nptstotal/endminusstarttime) )
@@ -523,8 +524,10 @@ if __name__ == "__main__":
                         (l["percent_latency_good"], "pass" if l["percent_latency_good"] >= 98 else "fail")
                     latency_metrics[scnl]["gaps_per_hour"] = \
                         (l["gaps_per_hour"], "pass" if l["gaps_per_hour"] < 1 else "fail")
+#                    latency_metrics[scnl]["completeness"] = \
+#                        (l["percent_completeness"], "pass" if l["percent_completeness"] >= THRESHOLD['percent_completeness'] else "fail")
                     latency_metrics[scnl]["completeness"] = \
-                        (l["percent_completeness"], "pass" if l["percent_completeness"] >= THRESHOLD['percent_completeness'] else "fail")
+                        (pctavailable, "pass" if pctavailable >= THRESHOLD['percent_completeness'] else "fail")
                     latency_metrics[scnl]["completeness_incl_penalty"] = \
                         (l["percent_completeness_w_penalty"], "pass" if l["percent_completeness_w_penalty"] >= THRESHOLD['percent_completeness'] else "fail")
 
