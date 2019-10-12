@@ -521,15 +521,15 @@ if __name__ == "__main__":
                     latency_metrics[scnl]["measurement_end"] = l["measurement_end"].replace(microsecond=0)
                     latency_metrics[scnl]["window_length"] = datetime.timedelta(seconds=l["data_timewindow_length"])
                     latency_metrics[scnl]["acceptable_latency"] = \
-                        (l["percent_latency_good"], "pass" if l["percent_latency_good"] >= 98 else "fail")
+                        (l["percent_latency_good"], "pass" if l["percent_latency_good"] >= THRESHOLD["percent_latency_good"] else "fail")
                     latency_metrics[scnl]["gaps_per_hour"] = \
                         (l["gaps_per_hour"], "pass" if l["gaps_per_hour"] < 1 else "fail")
 #                    latency_metrics[scnl]["completeness"] = \
-#                        (l["percent_completeness"], "pass" if l["percent_completeness"] >= THRESHOLD['percent_completeness'] else "fail")
+#                        (l["percent_completeness"], "pass" if l["percent_completeness"] >= THRESHOLD["percent_completeness"] else "fail")
                     latency_metrics[scnl]["completeness"] = \
-                        (pctavailable, "pass" if pctavailable >= THRESHOLD['percent_completeness'] else "fail")
+                        (pctavailable, "pass" if pctavailable >= THRESHOLD["percent_completeness"] else "fail")
                     latency_metrics[scnl]["completeness_incl_penalty"] = \
-                        (l["percent_completeness_w_penalty"], "pass" if l["percent_completeness_w_penalty"] >= THRESHOLD['percent_completeness'] else "fail")
+                        (l["percent_completeness_w_penalty"], "pass" if l["percent_completeness_w_penalty"] >= THRESHOLD["percent_completeness"] else "fail")
 
             with open(report_dir + net_obj.code + "." + sta_obj.code + "." + DateLabel + ".html", "w") as fh:
                 fh.write(template.render(starttime=starttime,endtime=endtime,institution_code=institution, \

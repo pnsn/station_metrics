@@ -128,6 +128,7 @@ def latency_gaps_completeness(filelist, starttime0, endtime0, penalty=30):
         metrics[nslc]["gaps_per_hour"] = gap_metric
         metrics[nslc]["percent_completeness"] = completeness
         metrics[nslc]["percent_completeness_w_penalty"] = completeness_incl_penalty
+        metrics[nslc]["total_duration_of_gaps_incl_penalty"] = d['total_gap_dur'] + d['total_gaps']*penalty
 
     return metrics
 
