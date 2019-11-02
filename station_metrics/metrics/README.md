@@ -16,6 +16,7 @@ Metrics
 - *rawrms*  RMS in counts.
 - *rawmin*  Minimum amplitude in counts.
 - *rawmax*  Maximum amplitude in counts.
+- *accmax*  Peak absolute amplitude of sensitivity-corrected acceleration trace filtered between 0.075 - 15 Hz.
 
 ## metrics of power at different periods
 
@@ -48,6 +49,7 @@ This metric was introduced into the ShakeAlert station acceptance document to id
 All use a 5 sec RMS window and gain corrected acceleration traces filtered 0.075-15 Hz.
 - *RMS0p01cm* Total duration in seconds of RMS function exceeding 0.01 cm/s^2.
 - *RMS0p035cm* Total duration in seconds of RMS function exceeding 0.035 cm/s^2.
+- *RMS0p07cm* Total duration in seconds of RMS function exceeding 0.07 cm/s^2.  (used by ShakeAlert station acceptance)
 - *RMS00p1cm* Total duration in seconds of RMS function exceeding 0.1 cm/s^2.
 - *RMS01cm* Total duration in seconds of RMS function exceeding 1 cm/s^2.
 
@@ -74,4 +76,10 @@ What has been calculating and writing to the database for all of 2018.  Uses Obs
 - *snr20_1cm* Number of spikes with SNR > 20 and amplitude exceeding 1 cm/s^2 using acceleration data filtered 0.075-15 Hz.  Good for looking for bad stations.
 - *snr20_3cm* Number of spikes with SNR > 20 and amplitude exceeding 3 cm/s^2 using acceleration data filtered 0.075-15 Hz.
 - *snr20_5cm* Number of spikes with SNR > 20 and amplitude exceeding 5 cm/s^2 using acceleration data filtered 0.075-15 Hz.  Good for looking for terrible stations.
+
+## FinDer specific metrics
+- *finder_2cm_hp* Number of instances of absolute value of sensitivity-corrected acceleration amplitudes highpass filtered above 0.075 Hz exceeding 2 cm/s^2.  Only instances separated by at least 30 seconds from other instances are counted.
+
+## ElarmS/EPIC specific metrics
+- *NTrigElarmSAlex* My approximation to number of ElarmS3/EPIC triggers using only vertical component data.  All data examined are sensitivity corrected and highpass filtered above 0.075 Hz.  Triggers occur when the STA/LTA exceed 20 on the velocity trace using STA/LTA lengths of 0.05/5.0 sec.  Minimum time between triggers must be at least 10 sec.  Peak amplitude within 4 sec of trigger must greater than 0.0031623 cm/s^2 on the acceleration trace, between 0.000000031623 - 10 m/s on the velocity trace and 0.000000031623 to 31.623 m on the displacement trace.  (A. I. Chung et al., SRL March/April 2019)
 
