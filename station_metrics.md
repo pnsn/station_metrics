@@ -39,4 +39,7 @@ accurately represent what is stored at the respective archives.
 | hourly_mean | Hourly mean of raw data. | once an hour | counts | 1e8 | rawmean |
 | hourly_max_bp_acc | Hourly maximum acceleration bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 2 | accmax |
 | hourly_noise_floor_bp_acc | Approximation of the median envelope amplitude by using the half range of the 2nd to 98th percentile amplitudes.  Uses acceleration data bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 1 | NoiseFloorAcc |
+| power_5Hz | Hourly power in db at 5 Hz. | once an hour | db | 0 | pow5Hz |
+| power_1Hz | Hourly power in db at 1 Hz. | once an hour | db | 0 | pow1Hz |
+| power_0.2Hz | Hourly power in db at 0.2 Hz. | once an hour | db | 0 | pow5sec |
 
