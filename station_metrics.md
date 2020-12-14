@@ -37,7 +37,9 @@ accurately represent what is stored at the respective archives.
 | hourly_max | Hourly max of raw data. | once an hour | counts | 1e9 | rawmax |
 | hourly_range | Hourly range of raw data. | once an hour | counts | 2e9 | rawrange |
 | hourly_mean | Hourly mean of raw data. | once an hour | counts | 1e8 | rawmean |
+| hourly_max_acc | Hourly maximum acceleration highpassed at 0.075 Hz. | once an hour | cm/s^2 | 2 | accmax |
 | hourly_max_bp_acc | Hourly maximum acceleration bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 2 | accmax |
+| hourly_noise_floor_acc | Approximation of the median envelope amplitude by using the half range of the 2nd to 98th percentile amplitudes.  Uses acceleration data highpassed at 0.075 Hz. | once an hour | cm/s^2 | 1 | NoiseFloorAcc |
 | hourly_noise_floor_bp_acc | Approximation of the median envelope amplitude by using the half range of the 2nd to 98th percentile amplitudes.  Uses acceleration data bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 1 | NoiseFloorAcc |
 | power_5Hz | Hourly power in db at 5 Hz. | once an hour | db | 0 | pow5Hz |
 | power_1Hz | Hourly power in db at 1 Hz. | once an hour | db | 0 | pow1Hz |
