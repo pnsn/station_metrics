@@ -41,7 +41,9 @@ accurately represent what is stored at the respective archives.
 | hourly_max_bp_acc | Hourly maximum acceleration bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 2 | accmax |
 | hourly_noise_floor_acc | Approximation of the median envelope amplitude by using the half range of the 2nd to 98th percentile amplitudes.  Uses acceleration data highpassed at 0.075 Hz. | once an hour | cm/s^2 | 1 | NoiseFloorAcc |
 | hourly_noise_floor_bp_acc | Approximation of the median envelope amplitude by using the half range of the 2nd to 98th percentile amplitudes.  Uses acceleration data bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 1 | NoiseFloorAcc |
-| power_5Hz | Hourly power in db at 5 Hz. | once an hour | db | 0 | pow5Hz |
-| power_1Hz | Hourly power in db at 1 Hz. | once an hour | db | 0 | pow1Hz |
-| power_5sec | Hourly power in db at 0.2 Hz. | once an hour | db | 0 | pow5sec |
+| power_10Hz | Hourly power in db at 10 Hz. | once an hour | dB | 0 | N/A |
+| power_5Hz | Hourly power in db at 5 Hz. | once an hour | dB | 0 | pow5Hz |
+| power_1Hz | Hourly power in db at 1 Hz. | once an hour | dB | 0 | pow1Hz |
+| power_5sec | Hourly power in db at 0.2 Hz. | once an hour | dB | 0 | pow5sec |
+| power_40sec | Hourly power in db at 0.025 Hz. | once an hour | dB | 0 | pow40sec |
 
