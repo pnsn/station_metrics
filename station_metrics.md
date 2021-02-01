@@ -45,5 +45,5 @@ accurately represent what is stored at the respective archives.
 | power_5Hz | Hourly power in db at 5 Hz. | once an hour | dB | 0 | pow5Hz |
 | power_1Hz | Hourly power in db at 1 Hz. | once an hour | dB | 0 | pow1Hz |
 | power_5sec | Hourly power in db at 0.2 Hz. | once an hour | dB | 0 | pow5sec |
-| power_40sec | Hourly power in db at 0.025 Hz. | once an hour | dB | 0 | pow40sec |
+| power_40sec | Hourly power in db at 0.025 Hz. | once an hour | dB | 0 | N/A |
 
