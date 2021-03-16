@@ -12,8 +12,8 @@ accurately represent what is stored at the respective archives.
 |-------------|-------------|-----------|------|-----------|----------|
 | dcrequest_pctavailable | Percentage of data returned of 1 hour of data requested via FDSN webservice. | once an hour | percentage | 90.0 | pctavailable |
 | dcrequest_ngaps | Number of gaps in data returned of 1 hour of data requested via FDSN webservice. | once an hour | count | 10 | ngaps |
-| dcrequest_segmentshort | Duration in seconds of the shortest data segment of 1 hour of data requested as returned by FDSN webservice. | once an hour | seconds | 1 | segmentshort |
-| dcrequest_segmentlong | Duration in seconds of the longest data segment of 1 hour of data requested as returned by FDSN webservice. | once an hour | seconds | 1 | segmentlong |
+| dcrequest_segmentshort | Duration in seconds of the shortest data segment in 1 hour of data requested as returned by FDSN webservice. | once an hour | seconds | 1 | segmentshort |
+| dcrequest_segmentlong | Duration in seconds of the longest data segment in 1 hour of data requested as returned by FDSN webservice. | once an hour | seconds | 1 | segmentlong |
 
 ## ShakeAlert Station Quality Metrics
 ### Phase 1
