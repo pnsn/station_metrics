@@ -14,6 +14,23 @@ accurately represent what is stored at the respective archives.
 | dcrequest_segmentshort | Duration in seconds of the shortest data segment in 1 hour of data requested as returned by FDSN webservice. | once an hour | seconds | 1.0 | segmentshort |
 | dcrequest_segmentlong | Duration in seconds of the longest data segment in 1 hour of data requested as returned by FDSN webservice. | once an hour | seconds | 3600.0 | segmentlong |
 
+## General station quality metrics
+| metric name | description | frequency | unit | threshold | old name |
+|-------------|-------------|-----------|------|-----------|----------|
+| hourly_min | Hourly min of raw data. | once an hour | counts | -1e9 | rawmin |
+| hourly_max | Hourly max of raw data. | once an hour | counts | 1e9 | rawmax |
+| hourly_range | Hourly range of raw data. | once an hour | counts | 2e9 | rawrange |
+| hourly_mean | Hourly mean of raw data. | once an hour | counts | 1e8 | rawmean |
+| hourly_max_acc | Hourly maximum acceleration highpassed at 0.075 Hz. | once an hour | cm/s^2 | 2.0 | accmax |
+| hourly_max_bp_acc | Hourly maximum acceleration bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 2.0 | accmax |
+| hourly_noise_floor_acc | Approximation of the median envelope amplitude by using the half range of the 2nd to 98th percentile amplitudes.  Uses acceleration data highpassed at 0.075 Hz. | once an hour | cm/s^2 | 0.2 | NoiseFloorAcc |
+| hourly_noise_floor_bp_acc | Approximation of the median envelope amplitude by using the half range of the 2nd to 98th percentile amplitudes.  Uses acceleration data bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 0.2 | NoiseFloorAcc |
+| power_10Hz | Hourly power in db at 10 Hz. From IRIS MUSTANG. | once an hour | dB | 0 | |
+| power_5Hz | Hourly power in db at 5 Hz. From IRIS MUSTANG. | once an hour | dB | 0 | pow5Hz |
+| power_1Hz | Hourly power in db at 1 Hz. From IRIS MUSTANG. | once an hour | dB | 0 | pow1Hz |
+| power_5sec | Hourly power in db at 0.2 Hz. From IRIS MUSTANG. | once an hour | dB | 0 | pow5sec |
+| power_40sec | Hourly power in db at 0.025 Hz. From IRIS MUSTANG. | once an hour | dB | 0 | |
+
 ## ShakeAlert station quality metrics
 | metric name | description | frequency | unit | threshold | old name |
 |-------------|-------------|-----------|------|-----------|----------|
@@ -33,25 +50,8 @@ accurately represent what is stored at the respective archives.
 | epic_associated_triggers | Hourly number of unassociated (with an event) triggers from EPIC. From eew-bk-dev1. | once an hour | count | 60 | |
 | epic_unassociated_triggers | Hourly number of unassociated (with an event) triggers from EPIC. From eew-bk-dev1. | once an hour | count | 60 | |
 
-## General station quality metrics
-| metric name | description | frequency | unit | threshold | old name |
-|-------------|-------------|-----------|------|-----------|----------|
-| hourly_min | Hourly min of raw data. | once an hour | counts | -1e9 | rawmin |
-| hourly_max | Hourly max of raw data. | once an hour | counts | 1e9 | rawmax |
-| hourly_range | Hourly range of raw data. | once an hour | counts | 2e9 | rawrange |
-| hourly_mean | Hourly mean of raw data. | once an hour | counts | 1e8 | rawmean |
-| hourly_max_acc | Hourly maximum acceleration highpassed at 0.075 Hz. | once an hour | cm/s^2 | 2.0 | accmax |
-| hourly_max_bp_acc | Hourly maximum acceleration bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 2.0 | accmax |
-| hourly_noise_floor_acc | Approximation of the median envelope amplitude by using the half range of the 2nd to 98th percentile amplitudes.  Uses acceleration data highpassed at 0.075 Hz. | once an hour | cm/s^2 | 0.2 | NoiseFloorAcc |
-| hourly_noise_floor_bp_acc | Approximation of the median envelope amplitude by using the half range of the 2nd to 98th percentile amplitudes.  Uses acceleration data bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 0.2 | NoiseFloorAcc |
-| power_10Hz | Hourly power in db at 10 Hz. From IRIS MUSTANG. | once an hour | dB | 0 | |
-| power_5Hz | Hourly power in db at 5 Hz. From IRIS MUSTANG. | once an hour | dB | 0 | pow5Hz |
-| power_1Hz | Hourly power in db at 1 Hz. From IRIS MUSTANG. | once an hour | dB | 0 | pow1Hz |
-| power_5sec | Hourly power in db at 0.2 Hz. From IRIS MUSTANG. | once an hour | dB | 0 | pow5sec |
-| power_40sec | Hourly power in db at 0.025 Hz. From IRIS MUSTANG. | once an hour | dB | 0 | |
-
 ## Latency and gap metrics from sniffwave_tally
-These latency and gap metrics are from sniffwave_tally (https://github.com/pnsn/sniffwave_tally) run at the different EEW institutions.  "prefix" varies by institution: export = PNSN export server (ewserver), ci = SCSN server pine, ucb = UCB server eew-bk-dev1, menlo = MENLO server.  Note: most channels are sniffwave_tally-ed at only one institution though a few are sniffed at more than one; either way, they will be unique measurements because of the unique prefix in the metric name.
+These latency and gap metrics are from sniffwave_tally (https://github.com/pnsn/sniffwave_tally) run at the four different EEW institutions.  "prefix" varies by institution: export = PNSN export server (ewserver), ci = SCSN server pine, ucb = UCB server eew-bk-dev1, menlo = MENLO server.  Note: most channels are sniffwave_tally-ed at only one institution though a few are sniffed at more than one; either way, they will be unique measurements because of the unique prefix in the metric name.
 | metric name | description | frequency | unit | threshold | old name |
 |-------------|-------------|-----------|------|-----------|----------|
 | prefix_ring_latency | latency as defined by time between measurement end of packet plus half of packet length, measured on ewserver1 for 10 minutes and averaged. | once every 10 minutes | seconds | 5.0 | |
