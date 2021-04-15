@@ -54,9 +54,9 @@ accurately represent what is stored at the respective archives.
 These latency and gap metrics are from sniffwave_tally (https://github.com/pnsn/sniffwave_tally) run at the four different EEW institutions.  "prefix" varies by institution: export = PNSN export server (ewserver), ci = SCSN server pine, ucb = UCB server eew-bk-dev1, menlo = MENLO server.  Note: most channels are sniffwave_tally-ed at only one institution though a few are sniffed at more than one; either way, they will be unique measurements because of the unique prefix in the metric name.
 | metric name | description | frequency | unit | threshold | old name |
 |-------------|-------------|-----------|------|-----------|----------|
-| prefix_ring_latency | latency as defined by time between measurement end of packet plus half of packet length, measured on ewserver1 for 10 minutes and averaged. | once every 10 minutes | seconds | 5.0 | |
-| prefix_ring_latency_le_3.5 | Percentage of packets with data latency less than 3.5s. | once every 10 minutes | percent | 98.0 | pct_gt_3.5sec_late |
+| prefix_ring_latency | Latency as defined by time between measurement end of packet plus half of packet length, measured for 10 minutes and averaged. | once every 10 minutes | seconds | 5.0 | |
+| prefix_ring_latency_le_3.5 | Percentage of packets with data latency less than 3.5s. | once every 10 minutes | percent | 90.0 | pct_gt_3.5sec_late |
 | prefix_ring_gaps_per_hour | Number of gaps in WAVE_RING on server during time window, normalized to per hour. | once every 10 minutes | count | 1 | |
-| prefix_ring_packet_length | Length of Tracebuf2 packet. | once every 10 minutes | seconds | 2.0 | |
-| prefix_ring_completeness | Percentage of measurement time window for which data exists. | once every 10 minutes | percent | 98.0 | |
-| prefix_ring_completeness_incl_gap_penalty | Percentage of measurement time window for which data exists, subtracting extra 30s for each data gap. | once every 10 minutes | percent | 98.0 | |
+| prefix_ring_packet_length | Average length of Tracebuf2 packet. | once every 10 minutes | seconds | 2.0 | |
+| prefix_ring_completeness | Percentage of measurement time window for which data exists. | once every 10 minutes | percent | 90.0 | |
+| prefix_ring_completeness_incl_gap_penalty | Percentage of measurement time window for which data exists, subtracting extra 30s for each data gap. | once every 10 minutes | percent | 90.0 | |
