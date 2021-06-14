@@ -49,6 +49,11 @@ accurately represent what is stored at the respective archives.
 | daily_aqms_p_arrivals | Daily number of P-arrivals used for events in AQMS at SCSN. From https://service.scedc.caltech.edu/station/triggerreport.php. | once a day | count | 24 | |
 | epic_associated_triggers | Hourly number of unassociated (with an event) triggers from EPIC. From eew-bk-dev1. | once an hour | count | 60 | |
 | epic_unassociated_triggers | Hourly number of unassociated (with an event) triggers from EPIC. From eew-bk-dev1. | once an hour | count | 60 | |
+| distance_nearest_shakealert_station | Distance to nearest other ShakeAlert station (either SMA or BB). Uses latest chanfile from eew-ci-cd. Only uses Z channel. | once a day | km | 100 | |
+| distance_second_nearest_shakealert_station | Distance to second nearest other ShakeAlert station (either SMA or BB). Uses latest chanfile from eew-ci-cd. Only uses Z channel. | once a day | km | 100 | |
+| distance_third_nearest_shakealert_station | Distance to third nearest other ShakeAlert station (either SMA or BB). Uses latest chanfile from eew-ci-cd. Only uses Z channel. | once a day | km | 100 | |
+| distance_fourth_nearest_shakealert_station | Distance to fourth nearest other ShakeAlert station (either SMA or BB). Uses latest chanfile from eew-ci-cd. Only uses Z channel. | once a day | km | 100 | |
+| distance_fifth_nearest_shakealert_station | Distance to fifth nearest other ShakeAlert station (either SMA or BB). Uses latest chanfile from eew-ci-cd. Only uses Z channel. | once a day | km | 100 | |
 
 ## Latency and gap metrics from sniffwave_tally
 These latency and gap metrics are from sniffwave_tally (https://github.com/pnsn/sniffwave_tally) run at the four different EEW institutions.  "prefix" varies by institution: export = PNSN export server (ewserver), ci = SCSN server pine, ucb = UCB server eew-bk-dev1, menlo = MENLO server.  Note: most channels are sniffwave_tally-ed at only one institution though a few are sniffed at more than one; either way, they will be unique measurements because of the unique prefix in the metric name.
