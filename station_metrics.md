@@ -69,4 +69,4 @@ These latency and gap metrics are from sniffwave_tally (https://github.com/pnsn/
 ## State of Health metrics
 | metric name | description | frequency | unit | threshold | old name |
 |-------------|-------------|-----------|------|-----------|----------|
-| water_pump_time_per_hour | Number of seconds each hour that the water pump is on as measured on the VE2 (SP2) channel. | once an hour | seconds | 0 | |
+| water_pump_time_per_hour | Number of seconds each hour that the water pump is on as recorded on the VE2 (SP2) channel. Measurements applied to HHZ channel. | once an hour | seconds | 0 | |
