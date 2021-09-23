@@ -65,3 +65,8 @@ These latency and gap metrics are from sniffwave_tally (https://github.com/pnsn/
 | prefix_ring_packet_length | Average length of Tracebuf2 packet. | once every 10 minutes | seconds | 5.0 | |
 | prefix_ring_completeness | Percentage of measurement time window for which data exists. | once every 10 minutes | percent | 90.0 | |
 | prefix_ring_completeness_incl_gap_penalty | Percentage of measurement time window for which data exists, subtracting extra 30s for each data gap. | once every 10 minutes | percent | 90.0 | |
+
+## State of Health metrics
+| metric name | description | frequency | unit | threshold | old name |
+|-------------|-------------|-----------|------|-----------|----------|
+| water_pump_time_per_hour | Number of seconds each hour that the water pump is on as measured on the VE2 (SP2) channel. | once an hour | seconds | 0 | |
