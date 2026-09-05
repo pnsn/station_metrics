@@ -162,7 +162,7 @@ filled in by whoever owns the producing code.
 | [prefix_ring_n_oo](station_metrics/metrics/prefix_ring_n_oo.md) | Number of out-of-order packets seen in the wave ring. | once every 10 minutes | count | TODO |
 | [prefix_ring_oo_dur](station_metrics/metrics/prefix_ring_oo_dur.md) | Total duration of out-of-order packets seen in the wave ring. | once every 10 minutes | seconds | TODO |
 
-The following metrics also exist in SQUAC and are documented only by the rows
+The following metrics exist in SQUAC, but are not yet being measured/uploaded and are documented only by the rows
 below. They are produced entirely outside this repository and have no detail
 pages.
 
