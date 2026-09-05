@@ -53,7 +53,7 @@ and these metrics are meant to resemble what the production system sees.
   0.075 - 15 Hz. Metrics with `bp` in their name use the bandpass; the rest
   use the highpass.
 
-## August 2026 changes
+## September 5 2026 changes
 
 * Processing order changed. Slicing to the analysis window now happens after
   filtering rather than before, so filter and integration transients land in
