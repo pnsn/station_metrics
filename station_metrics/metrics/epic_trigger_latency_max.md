@@ -43,7 +43,7 @@ channel - the channel analyzed.
 
 ## Threshold
 
-TODO.
+5.0 seconds.
 
 ## Contact
 

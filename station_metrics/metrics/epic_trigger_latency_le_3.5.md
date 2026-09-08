@@ -44,7 +44,7 @@ channel - the channel analyzed.
 
 ## Threshold
 
-TODO.
+90 percent.
 
 ## Contact
 

@@ -57,7 +57,7 @@ channel - the channel analyzed, as N.S.L.C.
 
 ## Threshold
 
-2e9 counts.
+25000 counts.
 
 ## Notes
 

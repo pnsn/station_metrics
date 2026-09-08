@@ -51,7 +51,7 @@ sniffwave_tally's channel filter.
    packet_length = endtime - starttime
    latency       = feed_latency + 0.5 * packet_length
 
-4. Keep a running maximum of the latency for each channel, initialised from the
+4. Keep a running maximum of the latency for each channel, initialized from the
    first packet seen.
 5. At the end of the run report that maximum:
 

@@ -16,7 +16,7 @@ average latency describes typical performance and maximum latency describes the
 worst case, this metric describes reliability: what fraction of the data
 actually arrived in time to be used. A station can have an acceptable average
 while failing this metric badly if its latency distribution has a long tail,
-which is exactly the behaviour a stalling telemetry link produces.
+which is exactly the behavior a stalling telemetry link produces.
 
 ## Data Analyzed
 
@@ -66,7 +66,7 @@ channel - the channel analyzed.
 
 ## Threshold
 
-90.0 percent.
+98.0 percent.
 
 ## Notes
 

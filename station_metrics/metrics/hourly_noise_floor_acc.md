@@ -73,7 +73,7 @@ channel - the channel analyzed, as N.S.L.C.
 
 ## Threshold
 
-0.2 cm/s^2.
+0.02 cm/s^2.
 
 ## Notes
 

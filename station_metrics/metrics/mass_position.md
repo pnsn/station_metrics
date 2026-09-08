@@ -15,10 +15,10 @@ channel.
 
 Mass position drifts as a seismometer's springs age, with temperature, and with
 ground tilt. A mass that has walked close to one end of its range will clip on
-real ground motion and needs recentring, so tracking the position hour to hour
+real ground motion and needs recentering, so tracking the position hour to hour
 gives advance warning before the channel starts producing bad data. A mass
 position that jumps abruptly usually means the instrument was disturbed or has
-been recentred.
+been recentered.
 
 ## Data Analyzed
 

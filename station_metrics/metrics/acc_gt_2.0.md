@@ -19,7 +19,7 @@ all: a slow build-up to a large amplitude counts here but would not trigger an
 onset detector. Because 2 cm/s^2 is well above ordinary background noise, a non
 zero value on a quiet day means either a real, felt earthquake or an instrument
 that is badly misbehaving, and hours with double digit counts on a single
-station while its neighbours read zero are almost always the latter.
+station while its neighbors read zero are almost always the latter.
 
 ## Data Analyzed
 
@@ -70,7 +70,7 @@ channel - the channel analyzed, as N.S.L.C.
 
 ## Threshold
 
-10 counts.
+5 counts.
 
 ## Notes
 

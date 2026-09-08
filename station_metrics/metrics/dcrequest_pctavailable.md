@@ -15,7 +15,7 @@ percentage.
 This is the first thing to look at when any other metric for a channel looks
 strange, because a low value means the other metrics were computed on partial
 data. Sustained low values point at a channel that is failing to reach the
-archive, at telemetry that drops data, or at a data centre request that is
+archive, at telemetry that drops data, or at a data center request that is
 being truncated. Note the distinction between the archive's contents and the
 request's success: a channel that is complete at the archive can still read low
 here if the web service request timed out or returned early.

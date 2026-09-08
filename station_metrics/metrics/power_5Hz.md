@@ -48,7 +48,7 @@ listed in the ShakeAlert channel file.
    input into one hour pieces, and returns power in dB relative to
    1 (m/s^2)^2/Hz on its standard octave-fraction period binning. Because the
    input is exactly one hour long, exactly one segment is produced.
-5. Find the period bin whose centre is closest to 0.2 s and report the power in
+5. Find the period bin whose center is closest to 0.2 s and report the power in
    that bin:
 
    power_5Hz = psd_power[argmin(|psd_periods - 0.2|)]
@@ -69,7 +69,7 @@ channel - the channel analyzed, as N.S.L.C.
 
 ## Threshold
 
-0 dB.
+-180, -70 dB.
 
 ## Notes
 

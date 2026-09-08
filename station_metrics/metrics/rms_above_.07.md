@@ -50,7 +50,7 @@ listed in the ShakeAlert channel file.
 5. Cut the trace to the analysis window, discarding the padding along with the
    filter start-up transient, and remove the mean again.
 6. Pool the samples from all segments into one series a, in m/s^2.
-7. Square the series, smooth it with a centred boxcar 5 s long, and take the
+7. Square the series, smooth it with a centered boxcar 5 s long, and take the
    square root to give a sliding window RMS at every sample:
 
    RMS(n) = sqrt( mean( a[n - 2.5s : n + 2.5s]^2 ) )
@@ -77,7 +77,7 @@ channel - the channel analyzed, as N.S.L.C.
 
 ## Notes
 
-The RMS window is centred on each sample rather than trailing it, so the
+The RMS window is centered on each sample rather than trailing it, so the
 reported duration is symmetric about the noisy interval and extends
 approximately 2.5 s either side of it.
 

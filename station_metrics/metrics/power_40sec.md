@@ -14,7 +14,7 @@ PPSD segment at the period bin nearest 40 s.
 At 40 s the record is dominated by long period noise sources rather than by
 seismic signal: temperature swings in the vault, barometric pressure changes,
 ground tilt, and mass position drift. On a broadband sensor a rising value
-often precedes a mass that needs recentring or points at a vault whose
+often precedes a mass that needs recentering or points at a vault whose
 insulation has failed. On a strong motion accelerometer this band is
 essentially all instrument self noise and the value carries little information
 about the site.
@@ -49,7 +49,7 @@ listed in the ShakeAlert channel file.
    input into one hour pieces, and returns power in dB relative to
    1 (m/s^2)^2/Hz on its standard octave-fraction period binning. Because the
    input is exactly one hour long, exactly one segment is produced.
-5. Find the period bin whose centre is closest to 40 s and report the power in
+5. Find the period bin whose center is closest to 40 s and report the power in
    that bin:
 
    power_40sec = psd_power[argmin(|psd_periods - 40.0|)]
@@ -71,7 +71,7 @@ channel - the channel analyzed, as N.S.L.C.
 
 ## Threshold
 
-0 dB.
+-180, -70 dB.
 
 ## Notes
 

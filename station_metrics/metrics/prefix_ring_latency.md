@@ -16,7 +16,7 @@ This is the headline number for whether a station is fast enough to be useful
 for earthquake early warning. ShakeAlert needs data within a few seconds of
 real time, and a station whose average latency sits well above that contributes
 little no matter how clean its waveforms are or how complete its archive
-coverage is. Being an average it hides bursty behaviour, so it should always be
+coverage is. Being an average it hides bursty behavior, so it should always be
 read together with the maximum latency and the percentage of packets under
 3.5 s.
 

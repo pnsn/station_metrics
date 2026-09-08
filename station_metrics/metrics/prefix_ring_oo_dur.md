@@ -51,7 +51,7 @@ channel - the channel analyzed.
 
 ## Threshold
 
-TODO.
+0.01 seconds.
 
 ## Contact
 

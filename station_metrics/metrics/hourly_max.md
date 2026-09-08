@@ -15,7 +15,7 @@ digitizer. A value pinned at the positive end of the digitizer's range, for
 example near 2^23 for a 24 bit system, means the channel clipped during the
 hour, and any ground motion metric computed for that hour is suspect. A value
 that is identically zero across many consecutive hours usually means a dead
-channel. Read alongside hourly_min it shows whether the signal sits centred in
+channel. Read alongside hourly_min it shows whether the signal sits centered in
 the digitizer's range or rides near one rail.
 
 ## Data Analyzed
@@ -57,7 +57,7 @@ channel - the channel analyzed, as N.S.L.C.
 
 ## Threshold
 
-1e9 counts.
+abs(25000) counts.
 
 ## Notes
 

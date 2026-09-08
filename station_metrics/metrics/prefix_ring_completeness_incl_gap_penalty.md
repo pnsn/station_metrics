@@ -68,7 +68,7 @@ channel - the channel analyzed.
 
 ## Threshold
 
-90.0 percent.
+98.0 percent.
 
 ## Notes
 

@@ -15,7 +15,7 @@ Requiring both a sharp onset and a large amplitude makes this a good detector
 of impulsive events. On a healthy station in an ordinary hour it should be zero.
 A station producing several every hour is generating impulsive spikes that
 would waste the early warning system's attention, and the cause is usually
-mechanical: a sensor component that is not pivoting freely, a mass recentring,
+mechanical: a sensor component that is not pivoting freely, a mass recentering,
 a loose cable, or animals and machinery at the site. A count that jumps on all
 channels of an instrument and at several nearby stations at the same time is
 much more likely to be a real earthquake.

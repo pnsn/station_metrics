@@ -45,7 +45,7 @@ channel - the channel analyzed.
 
 ## Threshold
 
-TODO.
+10 count.
 
 ## Contact
 

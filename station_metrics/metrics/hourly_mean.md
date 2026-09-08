@@ -13,7 +13,7 @@ filtering or detrending applied.
 On a well behaved seismometer and digitizer the mean sits at a stable offset
 characteristic of that instrument. Tracking it hour to hour catches problems
 that amplitude metrics miss entirely: a slow drift usually means a mass that
-needs recentring or a sensor whose electronics are aging, while an abrupt jump
+needs recentering or a sensor whose electronics are aging, while an abrupt jump
 between hours usually means a digitizer offset change, a configuration change,
 or a hardware swap that nobody logged.
 
@@ -57,7 +57,7 @@ channel - the channel analyzed, as N.S.L.C.
 
 ## Threshold
 
-1e8 counts.
+abs(25000) counts.
 
 ## Notes
 
