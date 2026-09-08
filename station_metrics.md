@@ -26,23 +26,23 @@ length.
 
 Waveforms are requested with a further 120 s of padding either side of the
 analysis window. The padding is never measured; it exists so that integration
-drift and filter start-up transients fall outside the measured window.
+drift and filter edge effects fall outside the measured window.
 
 ## Processing chain
 
 Raw counts to filtered ground motion, in this order:
 
-1. detrend with a third-order polynomial (on the padded trace)
+1. detrend, ObsPy default- simple linear function from first & last samples (on the padded trace)
 2. remove the mean
 3. divide out the overall sensitivity from the station metadata (gain only,
    not the full response)
 4. integrate or differentiate to the requested ground-motion type
-5. filter, causal Butterworth, 2 corners
+5. filter, ObsPy default- Butterworth, 4 corners, zerophase=False
 6. cut to the analysis window
 7. remove the mean again
 
-Filtering is causal on purpose: ShakeAlert's real-time processing is causal,
-and these metrics are meant to resemble what the production system sees.
+Filtering is causal on purpose: AQMS and ShakeAlert's real-time processing is
+causal and these metrics are meant to resemble what the production system sees.
 
 ## Filter bands
 
@@ -56,7 +56,7 @@ and these metrics are meant to resemble what the production system sees.
 ## September 5 2026 changes
 
 * Processing order changed. Slicing to the analysis window now happens after
-  filtering rather than before, so filter and integration transients land in
+  filtering rather than before, so filter and integration edge effects land in
   the discarded padding.
 * `dcrequest_pctavailable`, `dcrequest_ngaps`, `dcrequest_segmentshort` and
   `dcrequest_segmentlong` are now measured over the clean hour rather than the
