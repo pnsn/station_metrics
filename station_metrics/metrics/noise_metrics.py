@@ -1,199 +1,423 @@
-#!/usr/bin/env python
+#!/home/seis/miniconda3/envs/squac/bin/python
 
-from __future__ import print_function
+"""
+Time-domain station-quality metric functions.
+
+These are the low-level calculations used by calculate_station_metrics.py.
+Each function takes plain numpy arrays (already sensitivity-corrected,
+integrated/differentiated and filtered) plus the sample interval, and returns a
+single number.
+
+Amplitude units follow whatever was handed in.  calculate_station_metrics.py
+works in SI (m/s^2, m/s, m) here and converts to cm at the very end, so the
+thresholds below are in SI.
+
+Sentinel values
+---------------
+A return value of -1 means "the trace was too short to make this measurement".
+That is deliberately distinct from "no value uploaded", which would be
+ambiguous between "no data existed", "channel not analyzed" and "trace short".
+
+Change log
+----------
+Aug 2026: count_peaks_stalta_new renamed to count_peaks_stalta; the older
+          count_peaks_stalta and the unused detect_peaks helper were removed.
+Aug 2026: the ElarmS/EPIC boxcar rejection test was measured on rectified data,
+          i.e. max(|x|) - min(|x|).  It is now measured on the signed trace,
+          max(x) - min(x), which is what a boxcar (DC step) test should be.
+          Rectifying collapses a symmetric boxcar toward zero range, so the old
+          test rejected more triggers than intended.
+Aug 2026: count_peaks_stalta_Elarms_times folded back into
+          count_peaks_stalta_Elarms; trigger sample indices are no longer
+          returned (nothing consumed them).
+"""
+
+import math
+
 import numpy as np
+
+
+# ---------------------------------------------------------------------------
+# ElarmS3/EPIC amplitude gates (Chung et al., SRL March/April 2019).
+# A candidate trigger is kept only if the peak amplitude in the measurement
+# window falls inside all three of these ranges.  Units are SI.
+# ---------------------------------------------------------------------------
+ELARMS_ACC_MIN = 0.000031623      # m/s^2   (0.0031623 cm/s^2)
+ELARMS_VEL_MIN = 0.000000031623   # m/s
+ELARMS_VEL_MAX = 10.0             # m/s
+ELARMS_DIS_MIN = 0.000000031623   # m
+ELARMS_DIS_MAX = 31.623           # m
+
+# Minimum peak-to-peak range required just after a trigger.  A digitizer glitch
+# or telemetry boxcar is a DC step: it trips the STA/LTA but has essentially no
+# wiggle behind it, so it fails this test and is thrown out.
+ELARMS_BOXCAR_ACC = 0.000022      # m/s^2, applied to ?N? (accelerometer) channels
+ELARMS_BOXCAR_VEL = 0.000000022   # m/s,   applied to ?H? (broadband) channels
+ELARMS_BOXCAR_WINDOW = 0.1        # s, length of the boxcar test window
+
 
 def noise_floor(x):
     """
-    Quick and dirty approximation of median envelope amplitude 
-    aka "noise floor" which uses the half range of the 2nd to 
-    98th percentile amplitudes.
-    x: np array or list of numbers
+    Quick approximation of the median envelope amplitude, a.k.a. the noise
+    floor: half the range between the 2nd and 98th percentile of the samples.
+
+    Trimming at the 2nd/98th percentile keeps earthquakes, calibration pulses
+    and one-off spikes from dominating what is meant to be a background-noise
+    number.
+
+    :type x: :class:`numpy.ndarray`
+    :param x: Signed (not rectified) time series.
+    :rtype: float
+    :return: Half range of the 2nd to 98th percentile amplitudes, same units
+        as ``x``.
     """
     xsort = np.sort(x)
-    x2 = xsort[int(len(x)*0.02)]
-    x98 = xsort[int(len(x)*0.98)]
-    noisefloor = (x98-x2)/2.
-    return noisefloor
+    x2 = xsort[int(len(x) * 0.02)]
+    x98 = xsort[int(len(x) * 0.98)]
+
+    return (x98 - x2) / 2.
 
 
 def duration_exceed_RMS(x, ampthresh, RMSlen, dt):
     """
-    Noise level metric that calcualtes the total duration of the RMS
-    function above a theshold (ampthresh).
-    RMSlen = window length used to calculate RMS (sec)
-    x: np array or list of numbers
-    st = an ObsPy stream
-    dt = timeseries increment (sec)
+    Total time that a sliding-window RMS of the trace stays above a threshold.
+
+    The RMS is computed by smoothing the squared trace with a centred boxcar
+    ``RMSlen`` seconds long and taking the square root, then simply counting
+    how many samples of that RMS function exceed ``ampthresh``.  This is a
+    duration, not a count of excursions: one long noisy episode and many short
+    ones can give the same answer.
+
+    :type x: :class:`numpy.ndarray`
+    :param x: Time series, normally sensitivity-corrected acceleration.
+    :type ampthresh: float
+    :param ampthresh: RMS amplitude threshold, same units as ``x``.
+    :type RMSlen: float
+    :param RMSlen: Length of the RMS sliding window in seconds.
+    :type dt: float
+    :param dt: Sample interval in seconds.
+    :rtype: float
+    :return: Seconds above threshold, or -1 if the trace is shorter than the
+        RMS window.
     """
     from obspy.signal.util import smooth
-    duration = 0
-    if ( len(x) > int(RMSlen/dt) ):
-        iRMSwinlen = int(RMSlen/dt)
-        RMS = np.sqrt(smooth((x**2),iRMSwinlen))
-        duration = ((RMS > ampthresh).sum())*dt
-    else:
-        duration = []
-        duration = -1
-        print ("Error duration_exceed_RMS: len(x)=" + str(len(x)*dt) + " must be greater than RMSlen=" + str(RMSlen))
 
-    return duration
+    if len(x) <= int(RMSlen / dt):
+        return -1
+
+    iRMSwinlen = int(RMSlen / dt)
+    RMS = np.sqrt(smooth((x ** 2), iRMSwinlen))
+
+    return ((RMS > ampthresh).sum()) * dt
 
 
-def count_peaks_stalta(x, y, sta, lta, mpd, mph, dt, ampthresh):
+def _stalta_onsets(stalta, mph):
     """
-    Counts peaks of a passed-through STA/LTA function (y) where 
-       the absolute amplitude of the original timeseries (x) exceeds 
-       an amplitude (ampthresh).
-    x: np array or list of numbers of original time series
-    y: np array or list of numbers of STA/LTA function of x
-    sta: short term average used (sec)
-    lta: long term average used (sec)
-    mpd: minimum distance between peaks should be > sta+lta (sec)
-    mph: minimum peak height of the stalta function
-    ampthresh: absolute amplitude of the biggest local peak
-    dt: timeseries increment (sec)
+    Sample indices where an STA/LTA function crosses up through a threshold.
+
+    The STA/LTA trace is first squashed to a two-state function (0 below the
+    threshold, 1 at or above it).  Every upward step in that function is one
+    trigger onset, so a single long excursion above the threshold produces one
+    onset rather than one per sample.
+
+    :type stalta: :class:`numpy.ndarray`
+    :param stalta: STA/LTA function.
+    :type mph: float
+    :param mph: Minimum peak height, i.e. the STA/LTA trigger threshold.
+    :rtype: :class:`numpy.ndarray`
+    :return: Integer sample indices of the upward crossings.
     """
-    if ( len(y) > int(mpd/dt) and mpd > (sta+lta) ):
-        #  Find peaks
-        indexlocalmax = detect_peaks(y,mpd=int(mpd/dt),mph=mph)
-        # Find the local maxima in x within sta+lta sec of peak
-        peaksnr = np.zeros(len(indexlocalmax))
-        peakamp = np.zeros(len(indexlocalmax))
-        istalta = int((sta+lta)/dt)
-        impd = int((mpd/dt))
-        for j in range(0,len(indexlocalmax)):
-            ipeak1 = max(0,indexlocalmax[j]-istalta)
-            ipeak2 = min(indexlocalmax[j]+istalta,len(x))
-            peaksnr[j] = max(y[ipeak1:ipeak2])
-            peakamp[j] = max(abs(x[ipeak1:ipeak2]))
-            # In case the x has zero mean but long period noise, use local demeaning.
-            # Not needed if a detrend was applied before calling this.
-#            ilta1 = max(0,indexlocalmax[j]-impd-istalta)
-#            ilta2 = min(indexlocalmax[j]-istalta,len(x))
-#            peakamp[j] = max(abs(x[ipeak1:ipeak2]-np.mean(x[ilta1:ilta2])))
-        peakcount = (peakamp>ampthresh).sum()
-    else:
-        peakcount = []
-        duration = -1
-        print ("Error count_peaks_stalta: len(x)=" + str(len(x)*dt) + " must be > sta+lta=" + str(sta+lta))
+    above = np.where(np.asarray(stalta) >= mph, 1., 0.)
+
+    return np.nonzero(np.diff(above) > 0)[0]
+
+
+def count_peaks_stalta(x, stalta, sta, lta, mpd, mph, dt, twin, ampthresh):
+    """
+    Count STA/LTA triggers that are backed up by a large enough amplitude.
+
+    A trigger is counted when both of the following hold:
+
+    1. the STA/LTA function crosses up through ``mph``, and
+    2. the largest absolute amplitude of ``x`` in a ``twin``-second window,
+       starting ``sta`` seconds before the crossing, exceeds ``ampthresh``.
+
+    Triggers that survive both tests are then thinned with a dead time: any
+    trigger within ``mpd`` seconds of the previous kept trigger is discarded,
+    so one energetic arrival counts once rather than dozens of times.
+
+    Note that ``x`` and ``stalta`` need not come from the same filtered trace.
+    In this project the STA/LTA is computed on velocity highpassed at 3 Hz
+    while the amplitude test is applied to acceleration filtered at 0.075 Hz.
+
+    :type x: :class:`numpy.ndarray`
+    :param x: Amplitude trace to test, normally acceleration.
+    :type stalta: :class:`numpy.ndarray`
+    :param stalta: STA/LTA function, same length and sampling as ``x``.
+    :type sta: float
+    :param sta: Short-term average window in seconds, used here only to back
+        the measurement window up to just before the crossing.
+    :type lta: float
+    :param lta: Long-term average window in seconds.  Kept for documentation
+        of the STA/LTA that was handed in; not used in the arithmetic.
+    :type mpd: float
+    :param mpd: Minimum time between counted triggers (dead time) in seconds.
+    :type mph: float
+    :param mph: STA/LTA trigger threshold.
+    :type dt: float
+    :param dt: Sample interval in seconds.
+    :type twin: float
+    :param twin: Length in seconds of the amplitude measurement window.
+    :type ampthresh: float
+    :param ampthresh: Amplitude the window peak must exceed, units of ``x``.
+    :rtype: int
+    :return: Number of triggers, or -1 if the trace is shorter than the dead
+        time.
+    """
+    if len(stalta) <= int(mpd / dt):
+        return -1
+
+    ax = np.abs(np.asarray(x))
+    istalta = int(sta / dt)
+    itwin = int(twin / dt)
+    impd = int(mpd / dt)
+
+    peakcount = 0
+    ilast = None
+    for ionset in _stalta_onsets(stalta, mph):
+        # Window runs from sta seconds before the crossing to twin seconds
+        # later.  ionset can never be smaller than istalta because ObsPy's
+        # classic_sta_lta zeroes the first lta seconds of its output, so no
+        # onset is reported there and i1 cannot go negative.
+        i1 = ionset - istalta
+        i2 = min(i1 + itwin, len(ax))
+        if max(ax[i1:i2]) < ampthresh:
+            continue
+        if ilast is not None and (ionset - ilast) < impd:
+            continue
+        peakcount = peakcount + 1
+        ilast = ionset
+
     return peakcount
 
 
-def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',kpsh=False, valley=False):
-    """ Detect peaks in data based on their amplitude and other features.
-    Parameters
-    ----------
-    x : 1D array_like
-        data.
-    mph : {None, number}, optional (default = None)
-        detect peaks that are greater than minimum peak height.
-    mpd : positive integer, optional (default = 1)
-        detect peaks that are at least separated by minimum peak distance (in
-        number of data).
-    threshold : positive number, optional (default = 0)
-        detect peaks (valleys) that are greater (smaller) than `threshold`
-        in relation to their immediate neighbors.
-    edge : {None, 'rising', 'falling', 'both'}, optional (default = 'rising')
-        for a flat peak, keep only the rising edge ('rising'), only the
-        falling edge ('falling'), both edges ('both'), or don't detect a
-        flat peak (None).
-    kpsh : bool, optional (default = False)
-        keep peaks with same height even if they are closer than `mpd`.
-    valley : bool, optional (default = False)
-        if True (1), detect valleys (local minima) instead of peaks.
-
-    Returns
-    -------
-    ind : 1D array_like
-        indeces of the peaks in `x`.
-
-    Notes
-    -----
-    The detection of valleys instead of peaks is performed internally by simply
-    negating the data: `ind_valleys = detect_peaks(-x)`
-    
-    The function can handle NaN's 
-    References
-    ----------
-    .. [1] http://nbviewer.ipython.org/github/demotu/BMC/blob/master/notebooks/DetectPeaks.ipynb
-
+def count_peaks_stalta_Elarms(xA, xV, xD, stalta, sta, lta, mpd, mph, dt, twin,
+                              channel):
     """
+    Approximate the number of ElarmS3/EPIC triggers on a vertical channel.
 
-    x = np.atleast_1d(x).astype('float64')
-    if x.size < 3:
-        return np.array([], dtype=int)
-    if valley:
-        x = -x
-    # find indices of all peaks
-    dx = x[1:] - x[:-1]
-    # handle NaN's
-    indnan = np.where(np.isnan(x))[0]
-    if indnan.size:
-        x[indnan] = np.inf
-        dx[np.where(np.isnan(dx))[0]] = np.inf
-    ine, ire, ife = np.array([[], [], []], dtype=int)
-    if not edge:
-        ine = np.where((np.hstack((dx, 0)) < 0) & (np.hstack((0, dx)) > 0))[0]
+    This mimics the EPIC trigger logic described by Chung et al. (SRL
+    March/April 2019).  A candidate is declared where the STA/LTA function
+    crosses up through ``mph``, then has to survive two further tests:
+
+    1. **Amplitude gates.**  In a ``twin``-second window starting ``sta``
+       seconds before the crossing, the peak acceleration must exceed
+       ELARMS_ACC_MIN, the peak velocity must lie between ELARMS_VEL_MIN and
+       ELARMS_VEL_MAX, and the peak displacement must lie between
+       ELARMS_DIS_MIN and ELARMS_DIS_MAX.  These bracket physically plausible
+       ground motion and throw out both dead channels and absurd excursions.
+    2. **Boxcar test.**  A short window just after the crossing must show a
+       peak-to-peak range larger than ELARMS_BOXCAR_ACC (accelerometers) or
+       ELARMS_BOXCAR_VEL (broadbands).  A DC step from a digitizer or telemetry
+       glitch trips the STA/LTA but carries no oscillation behind it, so it
+       fails here.  The range is measured on the signed trace.
+
+    Survivors are then thinned with a ``mpd``-second dead time.
+
+    :type xA: :class:`numpy.ndarray`
+    :param xA: Acceleration trace in m/s^2.
+    :type xV: :class:`numpy.ndarray`
+    :param xV: Velocity trace in m/s, same length and sampling as ``xA``.
+    :type xD: :class:`numpy.ndarray`
+    :param xD: Displacement trace in m, same length and sampling as ``xA``.
+    :type stalta: :class:`numpy.ndarray`
+    :param stalta: STA/LTA function, same length and sampling as ``xA``.
+    :type sta: float
+    :param sta: Short-term average window in seconds.
+    :type lta: float
+    :param lta: Long-term average window in seconds.
+    :type mpd: float
+    :param mpd: Minimum time between counted triggers (dead time) in seconds.
+    :type mph: float
+    :param mph: STA/LTA trigger threshold.
+    :type dt: float
+    :param dt: Sample interval in seconds.
+    :type twin: float
+    :param twin: Length in seconds of the amplitude measurement window.
+    :type channel: str
+    :param channel: SEED channel code.  The second letter picks the boxcar
+        threshold: N for an accelerometer, H for a broadband.
+    :rtype: list
+    :return: ``[peakcount, boxcount]``, the number of triggers kept and the
+        number rejected by the boxcar test, or ``[-1, -1]`` if the trace is
+        shorter than the dead time.
+    """
+    if len(stalta) <= int(mpd / dt):
+        return [-1, -1]
+
+    if channel[1:2] == 'N':
+        boxcar_threshold = ELARMS_BOXCAR_ACC
+        boxcar_trace = np.asarray(xA)                          # signed acceleration
+    elif channel[1:2] == 'H':
+        boxcar_threshold = ELARMS_BOXCAR_VEL
+        boxcar_trace = np.asarray(xV)                          # signed velocity
     else:
-        if edge.lower() in ['rising', 'both']:
-            ire = np.where((np.hstack((dx, 0)) <= 0) & (np.hstack((0, dx)) > 0))[0]
-        if edge.lower() in ['falling', 'both']:
-            ife = np.where((np.hstack((dx, 0)) < 0) & (np.hstack((0, dx)) >= 0))[0]
-    ind = np.unique(np.hstack((ine, ire, ife)))
-    # handle NaN's
-    if ind.size and indnan.size:
-        # NaN's and values close to NaN's cannot be peaks
-        ind = ind[np.in1d(ind, np.unique(np.hstack((indnan, indnan-1, indnan+1))), invert=True)]
-    # first and last values of x cannot be peaks
-    if ind.size and ind[0] == 0:
-        ind = ind[1:]
-    if ind.size and ind[-1] == x.size-1:
-        ind = ind[:-1]
-    # remove peaks < minimum peak height
-    if ind.size and mph is not None:
-        ind = ind[x[ind] >= mph]
-    # remove peaks - neighbors < threshold
-    if ind.size and threshold > 0:
-        dx = np.min(np.vstack([x[ind]-x[ind-1], x[ind]-x[ind+1]]), axis=0)
-        ind = np.delete(ind, np.where(dx < threshold)[0])
-    # detect small peaks closer than minimum peak distance
-    if ind.size and mpd > 1:
-        ind = ind[np.argsort(x[ind])][::-1]  # sort ind by peak height
-        idel = np.zeros(ind.size, dtype=bool)
-        for i in range(ind.size):
-            if not idel[i]:
-                # keep peaks with the same height if kpsh is True
-                idel = idel | (ind >= ind[i] - mpd) & (ind <= ind[i] + mpd) \
-                    & (x[ind[i]] > x[ind] if kpsh else True)
-                idel[i] = 0  # Keep current peak
-        # remove the small peaks and sort back the indices by their occurrence
-        ind = np.sort(ind[~idel])
-    return ind
+        boxcar_threshold = None
+        boxcar_trace = None
+
+    aA = np.abs(np.asarray(xA))
+    aV = np.abs(np.asarray(xV))
+    aD = np.abs(np.asarray(xD))
+
+    istalta = int(sta / dt)
+    itwin = int(twin / dt)
+    impd = int(mpd / dt)
+    ibox = int(ELARMS_BOXCAR_WINDOW / dt)
+
+    peakcount = 0
+    boxcount = 0
+    ilast = None
+    for ionset in _stalta_onsets(stalta, mph):
+        # Amplitude measurement window, as in count_peaks_stalta.
+        i1 = ionset - istalta
+        i2 = min(i1 + itwin, len(aA))
+        maxA = max(aA[i1:i2])
+        maxV = max(aV[i1:i2])
+        maxD = max(aD[i1:i2])
+        if (maxA < ELARMS_ACC_MIN or
+                maxV < ELARMS_VEL_MIN or maxV > ELARMS_VEL_MAX or
+                maxD < ELARMS_DIS_MIN or maxD > ELARMS_DIS_MAX):
+            continue
+
+        # Boxcar window: ELARMS_BOXCAR_WINDOW seconds long, starting one
+        # window length after the crossing.
+        if boxcar_trace is not None:
+            ib1 = min(ionset + 1 + ibox, len(boxcar_trace) - 1)
+            ib2 = min(ib1 + ibox, len(boxcar_trace))
+            boxrange = max(boxcar_trace[ib1:ib2]) - min(boxcar_trace[ib1:ib2])
+            if boxrange < boxcar_threshold:
+                boxcount = boxcount + 1
+                continue
+
+        if ilast is not None and (ionset - ilast) < impd:
+            continue
+
+        #Uncomment to log the sample index of every trigger that is counted.
+        #print("TRIGGER sample index: " + str(ionset), mph)
+        peakcount = peakcount + 1
+        ilast = ionset
+
+    return [peakcount, boxcount]
 
 
-def get_power(trPower,inv,periodlist):
+def count_triggers_FinDer(x, twin, ampthresh, dt):
     """
-    Calculates the PSD using ObsPy PPSD.
-    trPower: input ObsPy trace that must be > 3600. sec long.
-    inv:  ObsPy inventory.  Must be level = 'response'
-    periodlist: a list of periods at which you want the power 
-    returns: power in dB at the periods in periodlist
+    Count separated excursions of the absolute amplitude above a threshold.
+
+    Every sample whose absolute value reaches ``ampthresh`` is a candidate.
+    Walking forward through the candidates, each one that is kept blanks out
+    everything within the following ``twin`` seconds, so a single strong
+    arrival is counted once instead of once per sample.  This approximates how
+    often FinDer would see the channel exceed its amplitude threshold.
+
+    :type x: :class:`numpy.ndarray`
+    :param x: Sensitivity-corrected acceleration in m/s^2.
+    :type twin: float
+    :param twin: Minimum time in seconds between counted excursions.
+    :type ampthresh: float
+    :param ampthresh: Amplitude threshold in m/s^2.
+    :type dt: float
+    :param dt: Sample interval in seconds.
+    :rtype: int
+    :return: Number of separated excursions above the threshold.
+    """
+    xA = np.abs(np.copy(x))
+    xA[xA < ampthresh] = 0
+    xA[xA >= ampthresh] = 1
+    iXA = np.nonzero(xA)[0]
+
+    if len(iXA) == 0:
+        return 0
+
+    # Blank every candidate that falls within twin seconds of a kept one.
+    itwin = int(twin / dt)
+    i = 0
+    while i < len(iXA):
+        j1 = iXA[i]
+        j2 = iXA[i] + itwin - 1
+        if iXA[i] > 0:
+            iXA[(iXA > j1) & (iXA < j2)] = 0
+        i = i + 1
+    iXA = np.nonzero(iXA)[0]
+
+    return len(iXA)
+
+
+def get_power(trace, inventory, periodlist):
+    """
+    Power spectral density at a list of periods, from ObsPy's PPSD.
+
+    The trace is run through :class:`obspy.signal.spectral_estimation.PPSD`
+    with its default settings, which segment the input into one-hour pieces.
+    The trace handed in is therefore cut to just over one hour so that exactly
+    one segment is produced, and the power reported is that of a single hour
+    rather than an average over many.  The value at each requested period is
+    taken from the nearest PPSD period bin, so it is not interpolated.
+
+    :type trace: :class:`obspy.core.trace.Trace`
+    :param trace: Raw (uncorrected, counts) trace, at least 3600 s long.
+    :type inventory: :class:`obspy.core.inventory.inventory.Inventory`
+    :param inventory: Station metadata at ``level='response'``.
+    :type periodlist: list
+    :param periodlist: Periods in seconds at which power is wanted.
+    :rtype: list or None
+    :return: Power in dB at each requested period, or None if the trace was too
+        short or PPSD produced no segment.
     """
     from obspy.signal import PPSD
+
+    # PPSD's default segment length is 3600 s.  npts includes both endpoints,
+    # so the span of the trace is (npts - 1) * delta.
+    if (trace.stats.npts - 1) * trace.stats.delta < 3600.:
+        return None
+
+    ppsd = PPSD(trace.stats, metadata=inventory)
+    ppsd.add(trace)
+    if len(ppsd._binned_psds) == 0:
+        return None
+
+    psd_periods = ppsd._period_binning[2]
+    psd_power = ppsd._binned_psds[0]
+
     powers_at_periods = []
-    if ( trPower.stats.delta * trPower.stats.npts > 3600. ):
-        ppsd = PPSD(trPower.stats, metadata = inv)
-        ppsd.add(trPower)
-        if ( len(ppsd._binned_psds) > 0 ):
-            psd_periods = ppsd._period_binning[2]
-            psd_power = []
-            psd_power = ppsd._binned_psds[0]
-            for i in range(0,len(periodlist)):
-                powers_at_periods.append(psd_power[np.argmin(abs(psd_periods-periodlist[i]))])
-        else:
-            for i in range(0,len(periodlist)):
-                powers_at_periods.append(-1)
+    for period in periodlist:
+        powers_at_periods.append(
+            psd_power[np.argmin(abs(psd_periods - period))])
 
     return powers_at_periods
+
+
+def average_stdev(x, x2, n):
+    """
+    Running-sum average and approximate standard deviation.
+
+    :type x: float
+    :param x: Sum of the values.
+    :type x2: float
+    :param x2: Sum of the squared values.
+    :type n: int
+    :param n: Number of values.
+    :rtype: tuple
+    :return: ``(average, standard deviation)``.
+    """
+    if n == 0:
+        return x, n
+
+    squared = (x2 / n) - (x / n) * (x / n)
+    if squared >= 0:
+        stdev = math.sqrt(squared)
+    else:
+        stdev = 0.
+
+    return x / n, stdev
 
