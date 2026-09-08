@@ -122,9 +122,9 @@ named measurements. Prefixes currently in SQUAC:
 | export | PNSN export server (ewserver) Note: was UW ewserver2 (ATG) then ews02-prd-jb075 (Jhn) then as of 2026.07.28 ews02-sea-prd (TierPoint). |
 | scsn | SCSN server eew-ci-dev1 |
 | ucb | UC Berkeley server eew-bk-dev1 |
-| menlo | eew-nc-dev1 |
-| eewdev1 | eew-uw-dev1 |
-| eewdev2 | eew-uw-dev2 (was the first uw eewdev server to move to TierPoint in April? 2026)|
+| menlo | Menlo server eew-nc-dev1 |
+| eewdev1 | PNSN server eew-uw-dev1 |
+| eewdev2 | PNSN server eew-uw-dev2 (was the first uw eewdev server to move to TierPoint in April? 2026)|
 
 All seven require sniffwave_tally to be run with the `--all` flag, which is set
 automatically when `--squac` is given.
@@ -138,46 +138,48 @@ automatically when `--squac` is given.
 | [prefix_ring_packet_length](station_metrics/metrics/prefix_ring_packet_length.md) | Average length of the Tracebuf2 packets seen. | once every 10 minutes | seconds | 5.0 | |
 | [prefix_ring_completeness](station_metrics/metrics/prefix_ring_completeness.md) | Percentage of the measurement window for which data arrived. | once every 10 minutes | percent | 98.0 | |
 | [prefix_ring_completeness_incl_gap_penalty](station_metrics/metrics/prefix_ring_completeness_incl_gap_penalty.md) | Percentage of the measurement window for which data arrived, subtracting an extra 30 s per gap. | once every 10 minutes | percent | 98.0 | |
+| [prefix_ring_n_oo](station_metrics/metrics/prefix_ring_n_oo.md) | Number of out-of-order packets seen in the wave ring. | once every 10 minutes | count | 1 |
+| [prefix_ring_oo_dur](station_metrics/metrics/prefix_ring_oo_dur.md) | Total duration of out-of-order packets seen in the wave ring. | once every 10 minutes | seconds | 0.01 |
+| [prefix_ring_noverlap](station_metrics/metrics/prefix_ring_noverlap.md) | Number of packets starting before the previous in-order packet. | once every 10 minutes | count | 1 |
+| [prefix_ring_overlap_dur](station_metrics/metrics/prefix_ring_overlap_dur.md) | Total duration of overlapping in-order packets | once every 10 minutes | seconds | 0.01 |
 
 ## Metrics calculated outside this repository
 
-These metrics exist in SQUAC but are produced by other software. Placeholder
-pages exist for them; the algorithm sections are marked TODO and need to be
-filled in by whoever owns the producing code.
+These metrics of epic trigger counts exist in SQUAC but are produced by other software. 
+They are currently being measured only on eew-uw-rei, but the plan is to expand 
+them to other eew rei machines.  Pages are currently placeholders.
+
+| metric name | description | frequency | unit | threshold |
+|-------------|-------------|-----------|------|-----------|
+| [epic_candidate_triggers](station_metrics/metrics/epic_candidate_triggers.md) | Number of hourly triggers from EPIC, including those eventually rejected or unassociated. Currently only measured on eew-uw-rei. | once an hour | count | 10 |
+| [epic_rejected_triggers](station_metrics/metrics/epic_rejected_triggers.md) | Number of hourly EPIC triggers rejected for any reason. Currently only measured on eew-uw-rei. | once an hour | count | 10 |
+| [epic_temporary_3sec_triggers](station_metrics/metrics/epic_temporary_3sec_triggers.md) | Number of hourly EPIC triggers valid for at least 3 s before being rejected. Currently only measured on eew-uw-rei. | once an hour | count | 10 |
+| [epic_associated_triggers](station_metrics/metrics/epic_associated_triggers.md) | Hourly number of EPIC triggers associated with an event. Currently only measured on eew-uw-rei. | once an hour | count | 10 |
+| [epic_unassociated_triggers](station_metrics/metrics/epic_unassociated_triggers.md) | Hourly number of EPIC triggers not associated with an event. Currently only measured on eew-uw-rei. | once an hour | count | 10 |
+| [epic_trigger_latency_median](station_metrics/metrics/epic_trigger_latency_median.md) | Median latency of EPIC triggers. Measured on eew-uw-rei. | once an hour | seconds | 5.0 |
+| [epic_trigger_latency_le_3.5](station_metrics/metrics/epic_trigger_latency_le_3.5.md) | Percentage of EPIC triggers with latency of 3.5 s or less. Currently only measured on eew-uw-rei. | TODO | percent | 90 |
+| [epic_trigger_latency_max](station_metrics/metrics/epic_trigger_latency_max.md) | Maximum latency of EPIC triggers. Currently only measured on eew-uw-rei. | once an hour | seconds | 5.0 |
+
+
+The following metrics exist in SQUAC, but have no measurements and are documented only by the rows
+below. They have no detail pages.
 
 | metric name | description | frequency | unit | threshold |
 |-------------|-------------|-----------|------|-----------|
 | [water_pump_time_per_hour](station_metrics/metrics/water_pump_time_per_hour.md) | Seconds each hour that the water pump is on, as recorded on the VE1/VE2 (SP1/SP2) channels. | once an hour | seconds | 0 |
 | [mass_position](station_metrics/metrics/mass_position.md) | Sensor mass position state of health channel. | TODO | TODO | TODO |
 | [system_temperature](station_metrics/metrics/system_temperature.md) | Datalogger or vault temperature state of health channel. | TODO | TODO | TODO |
-| [epic_candidate_triggers](station_metrics/metrics/epic_candidate_triggers.md) | Number of hourly triggers from EPIC, including those eventually rejected or unassociated. | once an hour | count | 10 |
-| [epic_rejected_triggers](station_metrics/metrics/epic_rejected_triggers.md) | Number of hourly EPIC triggers rejected for any reason. | once an hour | count | 10 |
-| [epic_temporary_3sec_triggers](station_metrics/metrics/epic_temporary_3sec_triggers.md) | Number of hourly EPIC triggers valid for at least 3 s before being rejected. | once an hour | count | 10 |
-| [epic_associated_triggers](station_metrics/metrics/epic_associated_triggers.md) | Hourly number of EPIC triggers associated with an event. | once an hour | count | 10 |
-| [epic_unassociated_triggers](station_metrics/metrics/epic_unassociated_triggers.md) | Hourly number of EPIC triggers not associated with an event. | once an hour | count | 10 |
-| [epic_trigger_latency_median](station_metrics/metrics/epic_trigger_latency_median.md) | Median latency of EPIC triggers. | TODO | seconds | 5.0 |
-| [epic_trigger_latency_le_3.5](station_metrics/metrics/epic_trigger_latency_le_3.5.md) | Percentage of EPIC triggers with latency of 3.5 s or less. | TODO | percent | 90 |
-| [epic_trigger_latency_max](station_metrics/metrics/epic_trigger_latency_max.md) | Maximum latency of EPIC triggers. | TODO | seconds | 5.0 |
-| [prefix_ring_n_oo](station_metrics/metrics/prefix_ring_n_oo.md) | Number of out-of-order packets seen in the wave ring. | once every 10 minutes | count | 1 |
-| [prefix_ring_oo_dur](station_metrics/metrics/prefix_ring_oo_dur.md) | Total duration of out-of-order packets seen in the wave ring. | once every 10 minutes | seconds | 0.01 |
-
-The following metrics exist in SQUAC, but are not yet being measured/uploaded and are documented only by the rows
-below. They are produced entirely outside this repository and have no detail
-pages.
-
-| metric name | description | frequency | unit | threshold |
-|-------------|-------------|-----------|------|-----------|
 | daily_ci_finder_triggers | Daily number of FinDer triggers from eew-ci-test1. From https://service.scedc.caltech.edu/station/triggerreport.php. | once a day | count | 10 |
 | daily_ci_l2z | L2Z latency from eew-ci-test1. From https://service.scedc.caltech.edu/station/triggerreport.php. | once a day | seconds | 5.0 |
 | daily_ci_paclen | Packet lengths from eew-ci-test1. From https://service.scedc.caltech.edu/station/triggerreport.php. | once a day | seconds | 5.0 |
 | daily_ci_epic_associated_triggers | Daily number of associated EPIC triggers from eew-ci-test1. | once a day | count | 240 |
 | daily_ci_epic_unassociated_triggers | Daily number of unassociated EPIC triggers from eew-ci-test1. | once a day | count | 240 |
 | daily_aqms_p_arrivals | Daily number of P arrivals used for events in AQMS at SCSN. | once a day | count | 20 |
-| distance_nearest_shakealert_station | Distance to the nearest other ShakeAlert station. Z channels only. | once a day | km | 100 |
-| distance_second_nearest_shakealert_station | Distance to the second nearest other ShakeAlert station. Z channels only. | once a day | km | 100 |
-| distance_third_nearest_shakealert_station | Distance to the third nearest other ShakeAlert station. Z channels only. | once a day | km | 100 |
-| distance_fourth_nearest_shakealert_station | Distance to the fourth nearest other ShakeAlert station. Z channels only. | once a day | km | 100 |
-| distance_fifth_nearest_shakealert_station | Distance to the fifth nearest other ShakeAlert station. Z channels only. | once a day | km | 100 |
+| distance_nearest_shakealert_station | Distance to the nearest other ShakeAlert station. | once a day | km | 100 |
+| distance_second_nearest_shakealert_station | Distance to the second nearest other ShakeAlert station. | once a day | km | 100 |
+| distance_third_nearest_shakealert_station | Distance to the third nearest other ShakeAlert station. | once a day | km | 100 |
+| distance_fourth_nearest_shakealert_station | Distance to the fourth nearest other ShakeAlert station. | once a day | km | 100 |
+| distance_fifth_nearest_shakealert_station | Distance to the fifth nearest other ShakeAlert station. | once a day | km | 100 |
 | broadband_sensor_supply_current | Broadband sensor supply current state of health channel. | TODO | TODO | TODO |
 | Multipath L1 | GNSS L1 multipath. | TODO | TODO | TODO |
 | Multipath L2 | GNSS L2 multipath. | TODO | TODO | TODO |
