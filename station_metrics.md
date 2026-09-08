@@ -16,16 +16,16 @@ length.
 
 * **Analysis window** — runs from `starttime - 5.05 s` to `starttime + 3600 s`,
   i.e. 3605.05 s. The 5.05 s lead-in is the STA (0.05 s) plus LTA (5.0 s) of
-  the trigger function, present so the STA/LTA has converged before the hour
-  begins. Every time-domain metric (amplitudes, noise floors, RMS durations,
+  the trigger function, present so the STA/LTA starts at the top of the hour
+  Every time-domain metric (amplitudes, noise floors, RMS durations,
   spike and trigger counts) is measured over this window.
 * **Reporting window** — the clean hour, `starttime` to `starttime + 3600 s`.
-  This is what is written to SQUAC as the measurement start and end time. The
-  four `dcrequest_*` completeness metrics and the five `power_*` PSD metrics
-  are measured over this window only.
+  This is what is written to SQUAC as the measurement start and end time and
+  starts at hour:00:00. The four `dcrequest_*` completeness metrics and the 
+  five `power_*` PSD metrics are measured over this window only.
 
-Waveforms are requested with a further 120 s of padding either side of the
-analysis window. The padding is never measured; it exists so that integration
+Waveforms are initially requested with 120 s of padding on either side of the
+analysis window. The padding gets cut and is never measured; it exists so that integration
 drift and filter edge effects fall outside the measured window.
 
 ## Processing chain
@@ -65,7 +65,7 @@ causal and these metrics are meant to resemble what the production system sees.
 * `power_*` PSDs are now measured on the clean hour. They were previously
   measured on the hour starting 5.05 s before the top of the hour.
 * PSD failures no longer reach SQUAC as -1.
-* The ElarmS/EPIC boxcar rejection test now uses the signed range
+* The (approximate_epic\*triggers) ElarmS/EPIC boxcar rejection test now uses the signed range
   `max(x) - min(x)` rather than `max(|x|) - min(|x|)`.
 * `rms__bp_above_.07` corrected to `rms_bp_above_.07` (single underscore).
 * `prefix_ring_latency_max` added to this document.
@@ -119,13 +119,12 @@ named measurements. Prefixes currently in SQUAC:
 
 | prefix | server |
 |--------|--------|
-| export | PNSN export server (ewserver) Note: was UW ewserver2 (ATG) then ews02-prd-jb075 (Jhn) then as of 2026.07.20 ews02-sea-prd (TierPoint). |
-| scsn | SCSN server pine |
+| export | PNSN export server (ewserver) Note: was UW ewserver2 (ATG) then ews02-prd-jb075 (Jhn) then as of 2026.07.28 ews02-sea-prd (TierPoint). |
+| scsn | SCSN server eew-ci-dev1 |
 | ucb | UC Berkeley server eew-bk-dev1 |
-| menlo | USGS Menlo Park server |
-| eewdev1 | ShakeAlert development server 1 |
-| eewdev2 | ShakeAlert development server 2 (was the first uw eewdev server to move to TierPoint in April? 2026)|
-| ews02 | ShakeAlert production server ews02 |
+| menlo | eew-nc-dev1 |
+| eewdev1 | eew-uw-dev1 |
+| eewdev2 | eew-uw-dev2 (was the first uw eewdev server to move to TierPoint in April? 2026)|
 
 All seven require sniffwave_tally to be run with the `--all` flag, which is set
 automatically when `--squac` is given.
