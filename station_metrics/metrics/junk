@@ -1,0 +1,4617 @@
+# acc_bp_spikes_gt_.34
+
+Bandpassed Acceleration Spikes Above 0.34 cm/s^2
+
+## Summary
+
+This metric counts the number of times during the analysis window that an
+STA/LTA trigger function crosses a ratio of 20 and is backed up by an absolute
+ground acceleration above 0.34 cm/s^2 on data bandpassed between 0.075 Hz and
+15 Hz. 0.34 cm/s^2 is the 2018 ShakeAlert station acceptance threshold.
+
+## Uses
+
+Requiring both a sharp onset and a large amplitude makes this a good detector
+of impulsive events, and restricting the amplitude test to 0.075 - 15 Hz keeps
+it in the band the early warning algorithms actually work in. On a healthy
+station in an ordinary hour it should be zero. Comparing against the highpassed
+version is diagnostic: spikes whose energy lies mostly above 15 Hz are counted
+there but not here, which points at electronics or digitizer trouble rather
+than genuine broadband ground motion.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement, plus a
+separately filtered copy of the same channel used to build the trigger
+function. Where the channel has gaps, each segment is processed separately and
+the resulting samples are pooled into one series.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. The 5.05 s lead-in is the STA plus LTA
+of the trigger function and exists so the STA/LTA has converged before the hour
+begins. Waveforms are requested with a further 120 s of padding on each side,
+which is used during processing and then discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Build the amplitude trace. Detrend the padded trace with a third-order
+   polynomial, remove the mean, divide by the channel's overall sensitivity,
+   convert to acceleration, apply a causal Butterworth bandpass from 0.075 Hz
+   to 15 Hz with 2 corners, cut to the analysis window and remove the mean
+   again. Call the resulting series a, in m/s^2.
+3. Build the trigger trace independently from the same raw data: same
+   preparation, but converted to velocity and highpassed at 3 Hz. The higher
+   corner keeps microseism and long period noise out of the trigger function.
+4. Run a classic STA/LTA over the trigger trace with a short term window of
+   0.05 s and a long term window of 5.0 s.
+5. Reduce the STA/LTA function to a two-state series, 1 where it reaches 20 and
+   0 elsewhere, and take every upward step as one trigger onset.
+6. For each onset, measure the largest absolute acceleration in a 4 s window
+   beginning 0.05 s before the onset sample. Discard the onset if that peak
+   does not exceed 0.0034 m/s^2, which is 0.34 cm/s^2.
+7. Apply a dead time: discard any surviving onset that falls within 10 s of the
+   previous onset that was counted.
+8. Report the number of onsets that survive both tests.
+
+## Metric Values Returned
+
+value - number of qualifying spikes in the window, or -1 if the returned trace
+was shorter than the 10 s dead time.
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+1 count.
+
+## Notes
+
+On channels sampled at or below 30 samples per second the 15 Hz upper corner
+sits at or above the Nyquist frequency, so ObsPy clamps the filter and this
+metric becomes equivalent to the highpassed version.
+
+The trigger function and the amplitude test deliberately use different filter
+bands. The trigger function is always velocity highpassed at 3 Hz regardless of
+which band the amplitude test uses, so this metric and the highpassed version
+share exactly the same set of candidate onsets and differ only in which ones
+pass the amplitude test.
+
+A value of -1 means the trace was shorter than the 10 s dead time. It is
+uploaded rather than withheld, because withholding would be ambiguous between
+"no data existed", "the channel was not analyzed" and "the trace was too
+short".
+
+## Change Log
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before differentiation and filtering, so the filter start-up
+transient fell inside the measured window.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+acc_spikes_gt_.34, acc_gt_2.0, approximate_epic_bp_triggers
+
+## Updated
+
+2026-08-28
+# acc_gt_2.0
+
+Acceleration Exceedances Above 2 cm/s^2
+
+## Summary
+
+This metric counts the number of separated times during the analysis window
+that the absolute ground acceleration, highpassed at 0.075 Hz, exceeds
+2 cm/s^2. Each exceedance that is counted blanks out the following 30 s, so a
+single strong arrival contributes once. 2 cm/s^2 is the amplitude threshold
+used by the FinDer algorithm.
+
+## Uses
+
+This approximates how often FinDer would see the channel cross its amplitude
+threshold, so it estimates a station's contribution to FinDer's workload
+without running FinDer. Unlike the spike metrics there is no STA/LTA test at
+all: a slow build-up to a large amplitude counts here but would not trigger an
+onset detector. Because 2 cm/s^2 is well above ordinary background noise, a non
+zero value on a quiet day means either a real, felt earthquake or an instrument
+that is badly misbehaving, and hours with double digit counts on a single
+station while its neighbors read zero are almost always the latter.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, each segment is processed separately and the resulting
+samples are pooled into one series.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. Waveforms are requested with a further
+120 s of padding on each side, which is used during processing and then
+discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Detrend the padded trace with a third-order polynomial, remove the mean, and
+   divide by the channel's overall sensitivity from the metadata.
+3. Convert to acceleration. A channel whose second SEED code letter is N is
+   already an accelerometer; anything else is differentiated from velocity.
+4. Apply a causal Butterworth highpass at 0.075 Hz with 2 corners.
+5. Cut the trace to the analysis window and remove the mean again. Pool the
+   samples from all segments into one series a, in m/s^2.
+6. Mark every sample whose absolute value reaches the threshold:
+
+   candidate(n) = 1 if |a(n)| >= 0.02 m/s^2, else 0
+
+7. Walk forward through the candidates. Each candidate that is kept blanks out
+   every other candidate within the following 30 s.
+8. Report the number of candidates that survive.
+
+## Metric Values Returned
+
+value - number of separated exceedances of 2 cm/s^2 in the window (count).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+10 counts.
+
+## Notes
+
+There is no STA/LTA or waveform shape test of any kind. A DC step, a
+calibration pulse and a genuine earthquake all count equally if they cross the
+amplitude threshold, which is deliberate: FinDer's own threshold test is
+similarly blind, and the purpose here is to estimate what FinDer would see.
+
+The 30 s blanking is applied forward only, from each kept exceedance, so the
+count depends on the order the samples are examined. In practice this matters
+only for sustained shaking above threshold, which is counted once every 30 s
+for as long as it lasts.
+
+Because the measurement window is 3605.05 s rather than 3600 s, an hour of
+continuous above-threshold shaking would produce 121 counts rather than 120.
+
+## Change Log
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before differentiation and filtering, so the filter start-up
+transient fell inside the measured window.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+hourly_max_acc, acc_spikes_gt_.34
+
+## Updated
+
+2026-08-28
+# acc_spikes_gt_.34
+
+Highpassed Acceleration Spikes Above 0.34 cm/s^2
+
+## Summary
+
+This metric counts the number of times during the analysis window that an
+STA/LTA trigger function crosses a ratio of 20 and is backed up by an absolute
+ground acceleration above 0.34 cm/s^2 on data highpassed at 0.075 Hz.
+0.34 cm/s^2 is the 2018 ShakeAlert station acceptance threshold.
+
+## Uses
+
+Requiring both a sharp onset and a large amplitude makes this a good detector
+of impulsive events. On a healthy station in an ordinary hour it should be zero.
+A station producing several every hour is generating impulsive spikes that
+would waste the early warning system's attention, and the cause is usually
+mechanical: a sensor component that is not pivoting freely, a mass recentring,
+a loose cable, or animals and machinery at the site. A count that jumps on all
+channels of an instrument and at several nearby stations at the same time is
+much more likely to be a real earthquake.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement, plus a
+separately filtered copy of the same channel used to build the trigger
+function. Where the channel has gaps, each segment is processed separately and
+the resulting samples are pooled into one series.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. The 5.05 s lead-in is the STA plus LTA
+of the trigger function and exists so the STA/LTA has converged before the hour
+begins. Waveforms are requested with a further 120 s of padding on each side,
+which is used during processing and then discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Build the amplitude trace. Detrend the padded trace with a third-order
+   polynomial, remove the mean, divide by the channel's overall sensitivity,
+   convert to acceleration, apply a causal Butterworth highpass at 0.075 Hz
+   with 2 corners, cut to the analysis window and remove the mean again. Call
+   the resulting series a, in m/s^2.
+3. Build the trigger trace independently from the same raw data: same
+   preparation, but converted to velocity and highpassed at 3 Hz rather than
+   0.075 Hz. The higher corner keeps microseism and long period noise out of
+   the trigger function.
+4. Run a classic STA/LTA over the trigger trace with a short term window of
+   0.05 s and a long term window of 5.0 s.
+5. Reduce the STA/LTA function to a two-state series, 1 where it reaches 20 and
+   0 elsewhere, and take every upward step as one trigger onset. A single long
+   excursion above the threshold therefore produces one onset rather than one
+   per sample.
+6. For each onset, measure the largest absolute acceleration in a 4 s window
+   beginning 0.05 s before the onset sample. Discard the onset if that peak
+   does not exceed 0.0034 m/s^2, which is 0.34 cm/s^2.
+7. Apply a dead time: discard any surviving onset that falls within 10 s of the
+   previous onset that was counted.
+8. Report the number of onsets that survive both tests.
+
+## Metric Values Returned
+
+value - number of qualifying spikes in the window, or -1 if the returned trace
+was shorter than the 10 s dead time.
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+1 count.
+
+## Notes
+
+The trigger function and the amplitude test deliberately use different filter
+bands. The trigger function is built from velocity highpassed at 3 Hz to make
+it sensitive to sharp onsets, while the amplitude test uses acceleration
+highpassed at 0.075 Hz so that the amplitude being compared to the ShakeAlert
+threshold is the full broadband ground motion.
+
+The 4 s measurement window begins slightly before the onset, by the length of
+the short term average, because the STA/LTA reports a crossing after the energy
+has already begun to rise.
+
+A value of -1 means the trace was shorter than the 10 s dead time. It is
+uploaded rather than withheld, because withholding would be ambiguous between
+"no data existed", "the channel was not analyzed" and "the trace was too
+short".
+
+Where a channel has gaps, samples from separate segments are concatenated
+before the STA/LTA is applied, so an artificial step exists at each join. The
+STA/LTA is computed per segment and zeroed for segments shorter than the STA
+plus LTA, which limits but does not entirely remove spurious triggers at joins.
+
+## Change Log
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before differentiation and filtering, so the filter start-up
+transient fell inside the measured window and could trigger at the start of
+every hour.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+acc_bp_spikes_gt_.34, acc_gt_2.0, approximate_epic_triggers
+
+## Updated
+
+2026-08-28
+# approximate_epic_bp_triggers
+
+Approximate ElarmS3/EPIC Trigger Count, Bandpassed
+
+## Summary
+
+This metric approximates the number of triggers the ElarmS3/EPIC early warning
+algorithm would have declared on a channel during the analysis window, using
+archived data. Candidate triggers come from an STA/LTA on velocity highpassed
+at 3 Hz, and are then filtered by amplitude gates on acceleration, velocity and
+displacement bandpassed between 0.075 Hz and 15 Hz, and by a boxcar test that
+rejects DC steps. The implementation follows A. I. Chung et al., SRL
+March/April 2019.
+
+## Uses
+
+This estimates a station's contribution to EPIC's trigger load using amplitudes
+measured in the 0.075 - 15 Hz band rather than the full band above 0.075 Hz.
+Comparing it against the highpassed version shows how much of a station's
+trigger production is driven by energy above 15 Hz, which is rarely genuine
+ground motion and usually indicates electronics or digitizer trouble. It is
+deliberately an approximation: it uses a single channel's archived data and
+knows nothing about the state of the running EPIC system, so it should be read
+as a station health indicator rather than a prediction of EPIC's actual output.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement, from
+which four separately filtered series are derived: a trigger function, and
+acceleration, velocity and displacement for the amplitude gates. Where the
+channel has gaps, each segment is processed separately and the resulting
+samples are pooled.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. The 5.05 s lead-in is the STA plus LTA
+of the trigger function and exists so the STA/LTA has converged before the hour
+begins. Waveforms are requested with a further 120 s of padding on each side,
+which is used during processing and then discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer),
+vertical components, as listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Build three amplitude traces from the same raw data. For each of
+   acceleration, velocity and displacement: detrend the padded trace with a
+   third-order polynomial, remove the mean, divide by the channel's overall
+   sensitivity, integrate or differentiate to the required ground motion type,
+   apply a causal Butterworth bandpass from 0.075 Hz to 15 Hz with 2 corners,
+   cut to the analysis window, and remove the mean again. Call these a (m/s^2),
+   v (m/s) and d (m).
+3. Build the trigger trace independently: same preparation, converted to
+   velocity and highpassed at 3 Hz.
+4. Run a classic STA/LTA over the trigger trace with a short term window of
+   0.05 s and a long term window of 5.0 s.
+5. Reduce the STA/LTA function to a two-state series, 1 where it reaches 20 and
+   0 elsewhere, and take every upward step as one candidate trigger.
+6. Apply the amplitude gates. In a 4 s window beginning 0.05 s before the
+   candidate, measure the peak absolute acceleration, velocity and
+   displacement. Discard the candidate unless all of the following hold:
+
+   peak |a| > 3.1623e-5 m/s^2                  (0.0031623 cm/s^2)
+   3.1623e-8 m/s   < peak |v| < 10 m/s
+   3.1623e-8 m     < peak |d| < 31.623 m
+
+7. Apply the boxcar test. In a 0.1 s window beginning 0.1 s after the
+   candidate, measure the signed peak to peak range max(x) - min(x) of the
+   channel's native ground motion: acceleration for a channel whose second
+   SEED code letter is N, velocity for one whose second letter is H. Discard
+   the candidate if that range is below 2.2e-5 m/s^2 for an accelerometer or
+   2.2e-8 m/s for a broadband.
+8. Apply a dead time: discard any surviving candidate that falls within 10 s of
+   the previous candidate that was counted.
+9. Report the number of candidates that survive all three tests.
+
+## Metric Values Returned
+
+value - approximate number of EPIC triggers in the window, or -1 if the
+returned trace was shorter than the 10 s dead time.
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+60 counts.
+
+## Notes
+
+On channels sampled at or below 30 samples per second the 15 Hz upper corner
+sits at or above the Nyquist frequency, so ObsPy clamps the filter and this
+metric becomes equivalent to the highpassed version.
+
+The trigger function is identical to the one used by the highpassed version, so
+both metrics examine exactly the same set of candidate onsets and differ only
+in which candidates pass the amplitude gates and the boxcar test.
+
+The number of candidates rejected by the boxcar test is calculated alongside
+this metric and printed to the run log, but is not uploaded to SQUAC.
+
+A value of -1 means the trace was shorter than the 10 s dead time. It is
+uploaded rather than withheld, because withholding would be ambiguous.
+
+## Change Log
+
+Aug 2026: the boxcar test was previously applied to rectified data, measuring
+max(|x|) - min(|x|), and now measures the signed range max(x) - min(x). Counts
+from before and after this change are not directly comparable and should be
+expected to rise.
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before integration, differentiation and filtering.
+
+Aug 2026: the previous documentation stated that the STA/LTA trigger trace was
+highpassed at 0.075 Hz. The STA/LTA trigger trace is highpassed at 3 Hz; only
+the amplitude gates use the 0.075 - 15 Hz band.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+approximate_epic_triggers, acc_bp_spikes_gt_.34
+
+## Updated
+
+2026-08-28
+# approximate_epic_triggers
+
+Approximate ElarmS3/EPIC Trigger Count, Highpassed
+
+## Summary
+
+This metric approximates the number of triggers the ElarmS3/EPIC early warning
+algorithm would have declared on a channel during the analysis window, using
+archived data. Candidate triggers come from an STA/LTA on velocity highpassed
+at 3 Hz, and are then filtered by amplitude gates on acceleration, velocity and
+displacement highpassed at 0.075 Hz, and by a boxcar test that rejects DC
+steps. The implementation follows A. I. Chung et al., SRL March/April 2019.
+
+## Uses
+
+This is the closest thing available to a direct estimate of a station's
+contribution to EPIC's trigger load, calculated from archived data without
+needing access to the running system. A station producing large numbers every
+hour is feeding EPIC noise that has to be associated and rejected, which costs
+processing and can degrade solutions. It is also useful before a station is
+brought into ShakeAlert, to estimate what it would contribute. It is
+deliberately an approximation: it uses a single channel's archived data and
+knows nothing about the state of the real EPIC system, so it should be read as
+a station health indicator rather than a prediction of EPIC's actual output.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement, from
+which four separately filtered series are derived: a trigger function, and
+acceleration, velocity and displacement for the amplitude gates. Where the
+channel has gaps, each segment is processed separately and the resulting
+samples are pooled.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. The 5.05 s lead-in is the STA plus LTA
+of the trigger function and exists so the STA/LTA has converged before the hour
+begins. Waveforms are requested with a further 120 s of padding on each side,
+which is used during processing and then discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer),
+vertical components, as listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Build three amplitude traces from the same raw data. For each of
+   acceleration, velocity and displacement: detrend the padded trace with a
+   third-order polynomial, remove the mean, divide by the channel's overall
+   sensitivity, integrate or differentiate to the required ground motion type,
+   apply a causal Butterworth highpass at 0.075 Hz with 2 corners, cut to the
+   analysis window, and remove the mean again. Call these a (m/s^2), v (m/s)
+   and d (m).
+3. Build the trigger trace independently: same preparation, converted to
+   velocity and highpassed at 3 Hz rather than 0.075 Hz.
+4. Run a classic STA/LTA over the trigger trace with a short term window of
+   0.05 s and a long term window of 5.0 s.
+5. Reduce the STA/LTA function to a two-state series, 1 where it reaches 20 and
+   0 elsewhere, and take every upward step as one candidate trigger.
+6. Apply the amplitude gates. In a 4 s window beginning 0.05 s before the
+   candidate, measure the peak absolute acceleration, velocity and
+   displacement. Discard the candidate unless all of the following hold:
+
+   peak |a| > 3.1623e-5 m/s^2                  (0.0031623 cm/s^2)
+   3.1623e-8 m/s   < peak |v| < 10 m/s
+   3.1623e-8 m     < peak |d| < 31.623 m
+
+7. Apply the boxcar test. In a 0.1 s window beginning 0.1 s after the
+   candidate, measure the signed peak to peak range max(x) - min(x) of the
+   channel's native ground motion: acceleration for a channel whose second
+   SEED code letter is N, velocity for one whose second letter is H. Discard
+   the candidate if that range is below 2.2e-5 m/s^2 for an accelerometer or
+   2.2e-8 m/s for a broadband. A digitizer or telemetry glitch is a DC step: it
+   trips the STA/LTA but carries no oscillation behind it, so it fails here.
+8. Apply a dead time: discard any surviving candidate that falls within 10 s of
+   the previous candidate that was counted.
+9. Report the number of candidates that survive all three tests.
+
+## Metric Values Returned
+
+value - approximate number of EPIC triggers in the window, or -1 if the
+returned trace was shorter than the 10 s dead time.
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+60 counts.
+
+## Notes
+
+The amplitude gate values are expressed as log10 amplitudes in the original
+EPIC formulation; the SI values quoted above are their decimal equivalents.
+
+The number of candidates rejected by the boxcar test is calculated alongside
+this metric and printed to the run log, but is not uploaded to SQUAC.
+
+A value of -1 means the trace was shorter than the 10 s dead time. It is
+uploaded rather than withheld, because withholding would be ambiguous between
+"no data existed", "the channel was not analyzed" and "the trace was too
+short".
+
+Only vertical component channels are analyzed, matching EPIC's own use of
+vertical data for triggering.
+
+## Change Log
+
+Aug 2026: the boxcar test was previously applied to rectified data, measuring
+max(|x|) - min(|x|). Rectifying collapses a symmetric oscillation toward zero
+range, so the old test rejected more candidates than intended. It now measures
+the signed range max(x) - min(x). Counts from before and after this change are
+not directly comparable and should be expected to rise.
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before integration, differentiation and filtering, so the
+filter start-up transient and the integration drift fell inside the measured
+window.
+
+Aug 2026: the previous documentation stated that the STA/LTA trigger trace was
+highpassed at 0.075 Hz. The STA/LTA trigger trace is highpassed at 3 Hz; only
+the amplitude gates use 0.075 Hz.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+approximate_epic_bp_triggers, acc_spikes_gt_.34
+
+## Updated
+
+2026-08-28
+# dcrequest_ngaps
+
+Number of Gaps in the Hour Returned by the Datacenter
+
+## Summary
+
+This metric counts the gaps between consecutive data segments returned by the
+archive's FDSN dataselect service for one hour of a single channel. A channel
+returned as one continuous segment scores zero.
+
+## Uses
+
+Gaps are the most common symptom of telemetry trouble. For earthquake early
+warning a channel that gaps repeatedly can be worse than one cleanly off the
+air, because the system continues to expect data that does not arrive. Read
+together with dcrequest_pctavailable, this metric distinguishes a channel that
+is missing a lot of data in one piece from one that is missing the same amount
+shredded into fragments.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement.
+
+Window - the reporting hour, from the requested start time to one hour later.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request one hour of data plus lead-in and padding for a single N.S.L.C from
+   the archive's FDSN dataselect service.
+2. Cut every returned trace to the reporting hour and collect the cut traces
+   into a single ObsPy Stream.
+3. Call Stream.get_gaps on that stream. Each entry it returns describes the
+   discontinuity between two consecutive segments, with a positive delta for a
+   gap and a negative delta for an overlap.
+4. Count only the entries with a positive delta:
+
+   dcrequest_ngaps = number of get_gaps entries with delta > 0
+
+## Metric Values Returned
+
+value - number of gaps inside the reporting hour (unitless count).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+1 gap.
+
+## Notes
+
+Overlaps are not counted. They are reported separately by ObsPy with a negative
+delta and are not expected from an archive request.
+
+A gap that begins before the hour or ends after it is not counted, because only
+the portion of the data inside the reporting hour is examined. A channel that
+is entirely absent for the hour produces no segments and therefore no gaps, and
+reads zero here; dcrequest_pctavailable is what identifies that case.
+
+## Change Log
+
+Aug 2026: this was previously the number of returned trace segments minus one,
+counted over the 3605.05 s analysis window. That count also included overlaps
+and any segment split caused by a change of sample rate or encoding, and it
+counted discontinuities in the 5.05 s of lead-in that falls outside the
+reporting hour.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+dcrequest_pctavailable, dcrequest_segmentshort, dcrequest_segmentlong
+
+## Updated
+
+2026-08-28
+# dcrequest_pctavailable
+
+Percentage of Requested Hour Returned by the Datacenter
+
+## Summary
+
+This metric reports what fraction of a one hour data request was actually
+satisfied by the archive's FDSN dataselect service. The number of samples
+returned inside the reporting hour is divided by the number a complete hour
+would contain at the channel's nominal sample rate, and expressed as a
+percentage.
+
+## Uses
+
+This is the first thing to look at when any other metric for a channel looks
+strange, because a low value means the other metrics were computed on partial
+data. Sustained low values point at a channel that is failing to reach the
+archive, at telemetry that drops data, or at a data center request that is
+being truncated. Note the distinction between the archive's contents and the
+request's success: a channel that is complete at the archive can still read low
+here if the web service request timed out or returned early.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement.
+
+Window - the reporting hour, from the requested start time to one hour later.
+The channel's other time-domain metrics use a longer 3605.05 s analysis window,
+but this metric deliberately uses the clean hour so that the percentage means
+what it says.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request one hour of data plus 5.05 s of lead-in and 120 s of padding on each
+   side, for a single N.S.L.C, from the archive's FDSN dataselect service.
+2. Cut each returned trace to the reporting hour, from the start time to the
+   start time plus 3600 s. The cut is inclusive of both endpoints and one extra
+   sample is taken at the end.
+3. Sum the number of samples in all the cut traces:
+
+   npts_in_hour = sum over segments of npts
+
+4. Divide by the number of samples a complete hour would hold and express as a
+   percentage:
+
+   dcrequest_pctavailable = 100 * npts_in_hour / (3600 / delta)
+
+   where delta is the channel's sample interval in seconds.
+
+## Metric Values Returned
+
+value - percentage of the reporting hour returned.
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+90.0 percent.
+
+## Notes
+
+Because the cut is inclusive of both endpoints and takes one additional sample,
+a perfectly complete channel returns very slightly more than 3600 s of data and
+reads a few thousandths of a percent above 100. The extra sample is there so
+that the PSD metrics always receive a segment of at least 3600 s; a cut of
+exactly 3600.000 s can come back a fraction of a sample short and be rejected
+by ObsPy's PPSD.
+
+If the channel has gaps, several segments are returned and their sample counts
+are summed. Overlapping segments would double count, but overlaps are not
+expected from an archive request.
+
+## Change Log
+
+Aug 2026: the numerator counted samples over the whole 3605.05 s analysis
+window while the denominator used an integer 3605 s, so a complete hour read
+about 100.14 percent. Both are now the clean hour.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+dcrequest_ngaps, dcrequest_segmentshort, dcrequest_segmentlong
+
+## Updated
+
+2026-08-28
+# dcrequest_segmentlong
+
+Longest Continuous Data Segment in the Hour
+
+## Summary
+
+This metric reports the duration in seconds of the longest continuous data
+segment returned by the archive's FDSN dataselect service for one hour of a
+single channel.
+
+## Uses
+
+On a healthy channel the hour arrives as a single continuous segment and this
+value is approximately 3600 s. A value well below 3600 while
+dcrequest_pctavailable remains high means the data is nearly all present but
+arrived in pieces, which points at telemetry that is dropping short intervals
+rather than at a station that is down. It is the natural companion to
+dcrequest_segmentshort: together they bracket how the hour was divided up.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement.
+
+Window - the reporting hour, from the requested start time to one hour later.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request one hour of data plus lead-in and padding for a single N.S.L.C from
+   the archive's FDSN dataselect service.
+2. Cut every returned trace to the reporting hour, from the start time to the
+   start time plus 3600 s.
+3. For each cut segment compute its duration as the number of samples times the
+   sample interval:
+
+   segment duration = npts * delta
+
+4. Report the largest of those durations:
+
+   dcrequest_segmentlong = max(segment durations)
+
+## Metric Values Returned
+
+value - duration in seconds of the longest segment in the reporting hour.
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+3600.0 seconds.
+
+## Notes
+
+Segments are clipped to the reporting hour before being measured, so this value
+cannot exceed roughly 3600 s no matter how long the underlying archived segment
+is. Because the cut is inclusive of both endpoints and takes one extra sample,
+a complete hour reads a fraction of a sample interval above 3600.
+
+A channel with no data at all in the hour produces no segments; the value
+reported in that case is 0, which should be read as "not measured".
+
+## Change Log
+
+Aug 2026: previously measured over the 3605.05 s analysis window, so a healthy
+channel read about 3605 s rather than 3600 s. Any alerting rule tuned to the
+old value needs revisiting.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+dcrequest_segmentshort, dcrequest_ngaps, dcrequest_pctavailable
+
+## Updated
+
+2026-08-28
+# dcrequest_segmentshort
+
+Shortest Continuous Data Segment in the Hour
+
+## Summary
+
+This metric reports the duration in seconds of the shortest continuous data
+segment returned by the archive's FDSN dataselect service for one hour of a
+single channel.
+
+## Uses
+
+On a healthy channel the hour arrives as a single segment and this value is
+close to 3600 s. A small value means the hour arrived broken into pieces, which
+is characteristic of a marginal telemetry link, a datalogger that is resetting,
+or a buffering problem upstream of the archive. Because it reports the worst
+single fragment rather than an average, it is sensitive to a single bad patch
+in an otherwise good hour.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement.
+
+Window - the reporting hour, from the requested start time to one hour later.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request one hour of data plus lead-in and padding for a single N.S.L.C from
+   the archive's FDSN dataselect service.
+2. Cut every returned trace to the reporting hour, from the start time to the
+   start time plus 3600 s.
+3. For each cut segment compute its duration as the number of samples times the
+   sample interval:
+
+   segment duration = npts * delta
+
+4. Report the smallest of those durations:
+
+   dcrequest_segmentshort = min(segment durations)
+
+## Metric Values Returned
+
+value - duration in seconds of the shortest segment in the reporting hour.
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+1.0 second.
+
+## Notes
+
+Segments are clipped to the reporting hour before being measured, so the first
+and last segments of an hour are shortened by the clip. On a channel returned
+as one continuous piece, that clipping means this metric and the longest
+segment metric are both approximately 3600 s rather than the full length of the
+underlying archived segment.
+
+Segments with a single sample or fewer are discarded before this measurement is
+made, so a stray one-sample record does not drive the value to near zero.
+
+A channel with no data at all in the hour produces no segments; the value
+reported in that case is the sentinel 9e6, which should be read as "not
+measured".
+
+## Change Log
+
+Aug 2026: previously measured over the 3605.05 s analysis window rather than
+the reporting hour.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+dcrequest_segmentlong, dcrequest_ngaps, dcrequest_pctavailable
+
+## Updated
+
+2026-08-28
+# epic_associated_triggers
+
+EPIC Associated Triggers Per Hour
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports the number of hourly triggers from EPIC for a channel that
+were associated with an event.
+
+## Uses
+
+These are the triggers that did their job: they were produced by the channel
+and were successfully tied to a real event by the associator. Watched against
+the unassociated count, the ratio describes how useful a channel's trigger
+output actually is. An abrupt drop to zero at a station that normally
+contributes is a strong signal that something has broken in the path between
+the sensor and EPIC.
+
+## Data Analyzed
+
+Traces - one channel per measurement.
+
+Window - one hour.
+
+Data Source - the ShakeAlert server eew-bk-dev1. TODO: confirm the logfile and
+the extraction method.
+
+## Algorithm
+
+TODO. Document how associated triggers are identified and attributed to a
+channel and an hour.
+
+## Metric Values Returned
+
+value - number of associated triggers in the hour (count).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+60 counts.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+epic_unassociated_triggers, epic_candidate_triggers
+
+## Updated
+
+2026-08-28
+# epic_candidate_triggers
+
+EPIC Candidate Triggers Per Hour
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports the number of hourly triggers from EPIC for a channel,
+counting every trigger regardless of whether it was eventually rejected or was
+never associated with an event.
+
+## Uses
+
+This is the raw trigger production rate of a channel before any of EPIC's
+quality filtering is applied, so it measures the total load the channel places
+on the system. Read against the rejected and associated counts, it shows what
+fraction of a channel's output is useful: a channel with a high candidate count
+and almost no associated triggers is feeding EPIC noise.
+
+## Data Analyzed
+
+Traces - one channel per measurement.
+
+Window - one hour.
+
+Data Source - EPIC logfiles. TODO: confirm which server and which logfile.
+
+## Algorithm
+
+TODO. Document how triggers are extracted from the EPIC logfiles and how a
+trigger is attributed to an hour.
+
+## Metric Values Returned
+
+value - number of candidate triggers in the hour (count).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+TODO.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+epic_rejected_triggers, epic_temporary_3sec_triggers,
+epic_associated_triggers, epic_unassociated_triggers
+
+## Updated
+
+2026-08-28
+# epic_rejected_triggers
+
+EPIC Rejected Triggers Per Hour
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports the number of hourly triggers from EPIC for a channel that
+were rejected for any reason. The final update in the EPIC logfile for a
+rejected trigger carries a reason of LARGE, SMALL or RANGE.
+
+## Uses
+
+Every rejected trigger is work EPIC did that produced nothing, so a channel
+with a high rejection count is costing the system processing without
+contributing. Broken down by rejection reason, the counts also diagnose the
+cause: RANGE rejections point at amplitudes outside physically plausible
+bounds, which usually means an instrument or metadata problem rather than site
+noise.
+
+## Data Analyzed
+
+Traces - one channel per measurement.
+
+Window - one hour.
+
+Data Source - EPIC logfiles. TODO: confirm which server and which logfile.
+
+## Algorithm
+
+TODO. Document how rejected triggers are identified in the EPIC logfiles,
+including how the final update for a trigger is located and how the LARGE,
+SMALL and RANGE reasons are parsed.
+
+## Metric Values Returned
+
+value - number of rejected triggers in the hour (count).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+TODO.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+epic_candidate_triggers, epic_temporary_3sec_triggers
+
+## Updated
+
+2026-08-28
+# epic_temporary_3sec_triggers
+
+EPIC Triggers Valid For At Least 3 Seconds Before Rejection
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports the number of hourly triggers from EPIC for a channel that
+remained valid for at least three seconds before being rejected, where the
+final logfile update carries a rejection reason of LARGE, SMALL or RANGE.
+
+## Uses
+
+A trigger that survives three seconds has already had time to influence EPIC's
+solution before being thrown out, so these cost considerably more than triggers
+rejected immediately. This metric therefore isolates the most damaging subset
+of a channel's bad triggers, and is the right one to watch when a station is
+suspected of degrading alerts rather than merely wasting processing.
+
+## Data Analyzed
+
+Traces - one channel per measurement.
+
+Window - one hour.
+
+Data Source - EPIC logfiles. TODO: confirm which server and which logfile.
+
+## Algorithm
+
+TODO. Document how the lifetime of a trigger is measured from the EPIC
+logfiles, and how the three second threshold is applied.
+
+## Metric Values Returned
+
+value - number of triggers valid for at least 3 s before rejection (count).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+TODO.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+epic_candidate_triggers, epic_rejected_triggers
+
+## Updated
+
+2026-08-28
+# epic_trigger_latency_le_3.5
+
+Percentage of EPIC Triggers Within 3.5 Seconds
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports the percentage of EPIC triggers from a channel that had a
+latency of 3.5 seconds or less.
+
+## Uses
+
+3.5 s is the working threshold for a measurement being useful to ShakeAlert.
+Where the median trigger latency describes typical performance, this describes
+reliability: what fraction of a channel's triggers actually arrived in time to
+contribute to an alert. A channel with an acceptable median but a poor
+percentage here has a long tail in its latency distribution.
+
+## Data Analyzed
+
+Traces - one channel per measurement.
+
+Window - TODO.
+
+Data Source - EPIC logfiles. TODO: confirm which server and which logfile.
+
+## Algorithm
+
+TODO. Document how trigger latency is defined, from what reference time it is
+measured, and whether the comparison at exactly 3.5 s is inclusive.
+
+## Metric Values Returned
+
+value - percentage of triggers with latency of 3.5 s or less.
+
+starttime - TODO.
+
+endtime - TODO.
+
+channel - the channel analyzed.
+
+## Threshold
+
+TODO.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+epic_trigger_latency_median, epic_trigger_latency_max
+
+## Updated
+
+2026-08-28
+# epic_trigger_latency_max
+
+Maximum EPIC Trigger Latency
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports the largest EPIC trigger latency observed for a channel.
+
+## Uses
+
+This exposes the worst case that the median trigger latency hides. A channel
+with a good median but a large maximum is producing triggers in bursts, which
+typically means processing or telemetry that stalls and then catches up, and
+those late triggers arrive too late to contribute to an alert even though they
+eventually arrive.
+
+## Data Analyzed
+
+Traces - one channel per measurement.
+
+Window - TODO.
+
+Data Source - EPIC logfiles. TODO: confirm which server and which logfile.
+
+## Algorithm
+
+TODO. Document how trigger latency is defined, from what reference time it is
+measured, and over what window the maximum is taken.
+
+## Metric Values Returned
+
+value - maximum trigger latency (seconds).
+
+starttime - TODO.
+
+endtime - TODO.
+
+channel - the channel analyzed.
+
+## Threshold
+
+TODO.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+epic_trigger_latency_median, epic_trigger_latency_le_3.5
+
+## Updated
+
+2026-08-28
+# epic_trigger_latency_median
+
+Median EPIC Trigger Latency
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports the median latency of the EPIC triggers produced by a
+channel.
+
+## Uses
+
+Where wave ring latency describes how fast a channel's raw data arrives, this
+describes how fast the resulting triggers become available to the associator,
+which includes the processing time on top of the telemetry time. A median
+rather than a mean is used so that a single very late trigger does not distort
+the picture of typical performance.
+
+## Data Analyzed
+
+Traces - one channel per measurement.
+
+Window - TODO.
+
+Data Source - EPIC logfiles. TODO: confirm which server and which logfile.
+
+## Algorithm
+
+TODO. Document how trigger latency is defined, from what reference time it is
+measured, and over what window the median is taken.
+
+## Metric Values Returned
+
+value - median trigger latency (seconds).
+
+starttime - TODO.
+
+endtime - TODO.
+
+channel - the channel analyzed.
+
+## Threshold
+
+TODO.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+epic_trigger_latency_le_3.5, epic_trigger_latency_max
+
+## Updated
+
+2026-08-28
+# epic_unassociated_triggers
+
+EPIC Unassociated Triggers Per Hour
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports the number of hourly triggers from EPIC for a channel that
+were not associated with any event.
+
+## Uses
+
+An unassociated trigger is one the channel produced that no event could be
+found for, so a high rate means the channel is feeding EPIC noise. This is the
+most direct measure of a station's nuisance contribution to the early warning
+system, and a sustained rise is usually grounds for investigating the station
+or removing it from the trigger stream.
+
+## Data Analyzed
+
+Traces - one channel per measurement.
+
+Window - one hour.
+
+Data Source - the ShakeAlert server eew-bk-dev1. TODO: confirm the logfile and
+the extraction method.
+
+## Algorithm
+
+TODO. Document how unassociated triggers are identified and attributed to a
+channel and an hour.
+
+## Metric Values Returned
+
+value - number of unassociated triggers in the hour (count).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+60 counts.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+epic_associated_triggers, epic_candidate_triggers
+
+## Updated
+
+2026-08-28
+# hourly_max_acc
+
+Maximum Highpassed Ground Acceleration
+
+## Summary
+
+This metric reports the largest absolute ground acceleration observed on a
+channel during the analysis window, from data that has been sensitivity
+corrected, converted to acceleration, and highpassed at 0.075 Hz. The result is
+in cm/s^2.
+
+## Uses
+
+Being a single peak, this value is set by whatever the largest excursion in the
+hour was: a real earthquake, a calibration pulse, a vehicle passing the vault,
+or an instrument glitch. It is used both to spot felt shaking and, more often,
+to spot channels producing implausibly large accelerations hour after hour,
+which indicates an instrument or metadata problem rather than ground motion. A
+value much larger than the same channel's bandpassed peak means the energy sits
+above 15 Hz, which is rarely genuine ground motion.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, each segment is processed separately and the resulting
+samples are pooled before the peak is taken.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. Waveforms are requested with a further
+120 s of padding on each side, which is used during processing and then
+discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Detrend the padded trace with a third-order polynomial. This removes slow
+   instrument drift that differentiation or integration would otherwise
+   amplify.
+3. Remove the mean.
+4. Divide by the channel's overall sensitivity from the metadata. Only the gain
+   is removed; the full instrument response is not deconvolved.
+5. Convert to acceleration. A channel whose second SEED code letter is N is
+   already an accelerometer and is left alone; anything else is treated as a
+   velocity sensor and is differentiated.
+6. Apply a causal Butterworth highpass at 0.075 Hz with 2 corners. The filter
+   is causal because ShakeAlert's real time processing is causal.
+7. Cut the trace to the analysis window, discarding the padding along with the
+   filter start-up transient it absorbed.
+8. Remove the mean again.
+9. Pool the samples from all segments into one series a, in m/s^2, and report
+   the largest absolute value converted to cm/s^2:
+
+   hourly_max_acc = 100 * max(|a|)
+
+## Metric Values Returned
+
+value - largest absolute acceleration in the window (cm/s^2).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+5.0 cm/s^2.
+
+## Notes
+
+The order of operations matters and is deliberate. Filtering before cutting
+means the filter's start-up transient lands in the 120 s of padding and is
+thrown away, rather than contaminating the first seconds of the measured
+window. The same is true of the drift introduced when a velocity channel is
+differentiated or an accelerometer is integrated for other metrics.
+
+Only the sensitivity is removed, not the full response, so the conversion to
+physical units is accurate in the passband of the instrument and progressively
+less accurate towards its corners. For the frequencies these metrics care about
+that approximation is acceptable and is far faster than a full deconvolution.
+
+A channel with no metadata available is skipped entirely rather than reported
+with an uncorrected value.
+
+## Change Log
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before integration or differentiation and before filtering, so
+the filter transient fell inside the measured window. Cutting is now the last
+step before the final demean.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+hourly_max_bp_acc, hourly_noise_floor_acc, acc_gt_2.0
+
+## Updated
+
+2026-08-28
+# hourly_max_bp_acc
+
+Maximum Bandpassed Ground Acceleration
+
+## Summary
+
+This metric reports the largest absolute ground acceleration observed on a
+channel during the analysis window, from data that has been sensitivity
+corrected, converted to acceleration, and bandpassed between 0.075 Hz and
+15 Hz. The result is in cm/s^2.
+
+## Uses
+
+The 15 Hz upper corner suppresses high frequency spikes, making this the more
+conservative of the two peak acceleration metrics and the one closest to the
+band that ShakeAlert algorithms actually operate in. It is used to spot felt
+shaking and, more often, to identify channels producing implausibly large
+accelerations hour after hour. A channel whose highpassed peak is much larger
+than this value has most of its energy above 15 Hz, which is characteristic of
+electronic noise or a digitizer problem rather than ground motion.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, each segment is processed separately and the resulting
+samples are pooled before the peak is taken.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. Waveforms are requested with a further
+120 s of padding on each side, which is used during processing and then
+discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Detrend the padded trace with a third-order polynomial.
+3. Remove the mean.
+4. Divide by the channel's overall sensitivity from the metadata. Only the gain
+   is removed; the full instrument response is not deconvolved.
+5. Convert to acceleration. A channel whose second SEED code letter is N is
+   already an accelerometer and is left alone; anything else is treated as a
+   velocity sensor and is differentiated.
+6. Apply a causal Butterworth bandpass from 0.075 Hz to 15 Hz with 2 corners.
+7. Cut the trace to the analysis window, discarding the padding along with the
+   filter start-up transient it absorbed.
+8. Remove the mean again.
+9. Pool the samples from all segments into one series a, in m/s^2, and report
+   the largest absolute value converted to cm/s^2:
+
+   hourly_max_bp_acc = 100 * max(|a|)
+
+## Metric Values Returned
+
+value - largest absolute acceleration in the window (cm/s^2).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+5.0 cm/s^2.
+
+## Notes
+
+On channels sampled at or below 30 samples per second the 15 Hz upper corner
+sits at or above the Nyquist frequency. ObsPy warns about this and clamps the
+filter, so on those channels the measurement is effectively a highpass at
+0.075 Hz and this metric will read the same as hourly_max_acc.
+
+Only the sensitivity is removed, not the full response, so the conversion to
+physical units is accurate in the instrument's passband and progressively less
+accurate towards its corners.
+
+A channel with no metadata available is skipped entirely rather than reported
+with an uncorrected value.
+
+## Change Log
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before integration or differentiation and before filtering, so
+the filter transient fell inside the measured window. Cutting is now the last
+step before the final demean.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+hourly_max_acc, hourly_noise_floor_bp_acc
+
+## Updated
+
+2026-08-28
+# hourly_max
+
+Maximum Raw Sample Value
+
+## Summary
+
+This metric reports the largest raw sample value seen on a channel during the
+analysis window, in digital counts, with no gain correction, filtering or
+detrending applied.
+
+## Uses
+
+Because the value is uncorrected it speaks directly to the state of the
+digitizer. A value pinned at the positive end of the digitizer's range, for
+example near 2^23 for a 24 bit system, means the channel clipped during the
+hour, and any ground motion metric computed for that hour is suspect. A value
+that is identically zero across many consecutive hours usually means a dead
+channel. Read alongside hourly_min it shows whether the signal sits centered in
+the digitizer's range or rides near one rail.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, the samples from all segments in the window are pooled
+into a single series before the maximum is taken.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. The 5.05 s lead-in is the STA (0.05 s)
+plus LTA (5.0 s) of the trigger function used by other metrics.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side for a single
+   N.S.L.C from the archive's FDSN dataselect service.
+2. Cut each returned trace to the analysis window. No detrending, gain removal
+   or filtering is applied.
+3. Concatenate the samples from all segments in the window into one series x.
+4. Report the maximum:
+
+   hourly_max = max(x)
+
+## Metric Values Returned
+
+value - largest raw sample value in the window (digital counts).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+abs(25000) counts.
+
+## Notes
+
+The measurement window is 3605.05 s while the start and end times reported to
+SQUAC are the clean hour. The 5.05 s of extra data at the front can in
+principle contribute the extreme value.
+
+Where a channel has gaps, samples from separate segments are concatenated
+without regard for the time between them. That is harmless for a maximum, which
+does not depend on sample ordering.
+
+## Change Log
+
+Aug 2026: no change to the calculation. This metric has always been taken from
+the untouched raw trace.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+hourly_min, hourly_mean, hourly_range
+
+## Updated
+
+2026-08-28
+# hourly_mean
+
+Mean Raw Sample Value
+
+## Summary
+
+This metric reports the arithmetic mean of the raw sample values on a channel
+during the analysis window, in digital counts, with no gain correction,
+filtering or detrending applied.
+
+## Uses
+
+On a well behaved seismometer and digitizer the mean sits at a stable offset
+characteristic of that instrument. Tracking it hour to hour catches problems
+that amplitude metrics miss entirely: a slow drift usually means a mass that
+needs recentring or a sensor whose electronics are aging, while an abrupt jump
+between hours usually means a digitizer offset change, a configuration change,
+or a hardware swap that nobody logged.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, the samples from all segments in the window are pooled
+into a single series before the mean is taken.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. The 5.05 s lead-in is the STA (0.05 s)
+plus LTA (5.0 s) of the trigger function used by other metrics.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side for a single
+   N.S.L.C from the archive's FDSN dataselect service.
+2. Cut each returned trace to the analysis window. No detrending, gain removal
+   or filtering is applied.
+3. Concatenate the samples from all segments in the window into one series x of
+   length n.
+4. Report the arithmetic mean:
+
+   hourly_mean = (1/n) * sum(x)
+
+## Metric Values Returned
+
+value - mean raw sample value in the window (digital counts).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+abs(25000) counts.
+
+## Notes
+
+The mean is taken over all samples present, so on a channel with gaps it is
+weighted by how much data each segment contributed rather than by how much wall
+clock time each covered. On a badly gapped hour the value therefore describes
+the data that arrived rather than the hour as a whole.
+
+The measurement window is 3605.05 s while the start and end times reported to
+SQUAC are the clean hour.
+
+## Change Log
+
+Aug 2026: no change to the calculation. This metric has always been taken from
+the untouched raw trace.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+hourly_min, hourly_max, hourly_range
+
+## Updated
+
+2026-08-28
+# hourly_min
+
+Minimum Raw Sample Value
+
+## Summary
+
+This metric reports the smallest raw sample value seen on a channel during the
+analysis window, in digital counts, with no gain correction, filtering or
+detrending applied.
+
+## Uses
+
+Because the value is uncorrected it is the most direct check available on the
+digitizer itself. A value pinned at the negative end of the digitizer's range,
+for example near -2^23 for a 24 bit system, means the channel clipped during
+the hour. A value that is identically zero across many consecutive hours
+usually means a dead channel rather than a very quiet one. Read alongside
+hourly_max it shows whether the signal sits centered in the digitizer's range or
+rides near one rail.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, the samples from all segments in the window are pooled
+into a single series before the minimum is taken.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. The 5.05 s lead-in is the STA (0.05 s)
+plus LTA (5.0 s) of the trigger function used by other metrics.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side for a single
+   N.S.L.C from the archive's FDSN dataselect service.
+2. Cut each returned trace to the analysis window. No detrending, gain removal
+   or filtering is applied.
+3. Concatenate the samples from all segments in the window into one series x.
+4. Report the minimum:
+
+   hourly_min = min(x)
+
+## Metric Values Returned
+
+value - smallest raw sample value in the window (digital counts).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+abs(25000) counts.
+
+## Notes
+
+The measurement window is 3605.05 s while the start and end times reported to
+SQUAC are the clean hour. The 5.05 s of extra data at the front can in
+principle contribute the extreme value.
+
+Where a channel has gaps, samples from separate segments are concatenated
+without regard for the time between them. That is harmless for a minimum, which
+does not depend on sample ordering.
+
+## Change Log
+
+Aug 2026: no change to the calculation. The processing chain applied to the
+filtered metrics changed in this release, but this metric has always been taken
+from the untouched raw trace.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+hourly_max, hourly_mean, hourly_range
+
+## Updated
+
+2026-08-28
+# hourly_noise_floor_acc
+
+Noise Floor of Highpassed Acceleration
+
+## Summary
+
+This metric approximates the median envelope amplitude, or noise floor, of a
+channel's ground acceleration over the analysis window, using data that has
+been sensitivity corrected, converted to acceleration and highpassed at
+0.075 Hz. It is computed as half the range between the 2nd and 98th percentile
+of the samples, and reported in cm/s^2.
+
+## Uses
+
+This is the workhorse metric for identifying a station that has become noisy.
+Trimming the distribution at the 2nd and 98th percentile keeps earthquakes,
+calibration pulses and one-off spikes from dominating a number that is meant to
+describe the quiet background, so the value tracks the persistent noise level
+rather than the loudest thing that happened. A gradual rise over days or weeks
+usually means a failing sensor, a loose or corroding connection, or a change in
+the site environment such as new construction. A sudden step usually means a
+hardware or configuration change.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, each segment is processed separately and the resulting
+samples are pooled before the percentiles are taken.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. Waveforms are requested with a further
+120 s of padding on each side, which is used during processing and then
+discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Detrend the padded trace with a third-order polynomial.
+3. Remove the mean.
+4. Divide by the channel's overall sensitivity from the metadata.
+5. Convert to acceleration. A channel whose second SEED code letter is N is
+   already an accelerometer; anything else is differentiated from velocity.
+6. Apply a causal Butterworth highpass at 0.075 Hz with 2 corners.
+7. Cut the trace to the analysis window and remove the mean again.
+8. Pool the samples from all segments into one series a of length n, in m/s^2,
+   and sort it ascending.
+9. Take the values at the 2nd and 98th percentile positions:
+
+   a2  = sorted_a[int(0.02 * n)]
+   a98 = sorted_a[int(0.98 * n)]
+
+10. Report half their difference, converted to cm/s^2:
+
+   hourly_noise_floor_acc = 100 * (a98 - a2) / 2
+
+## Metric Values Returned
+
+value - approximate noise floor of the highpassed acceleration (cm/s^2).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+0.02 cm/s^2.
+
+## Notes
+
+The percentiles are taken on the signed trace, not on its absolute value. For a
+demeaned, roughly symmetric noise record the 2nd percentile is negative and the
+98th is positive, so half their difference is a sensible amplitude scale. On a
+badly asymmetric record, for instance one with a large one-sided glitch, the
+number is less meaningful.
+
+The percentile positions are found by integer indexing into the sorted array
+rather than by interpolation, which is adequate given the hundreds of thousands
+of samples in an hour.
+
+This is not a true median envelope and should not be compared numerically
+against one; it is a fast approximation that behaves consistently for the same
+channel over time, which is what matters for trend detection.
+
+Because this uses a highpass rather than a bandpass, it includes all energy
+above 0.075 Hz, which makes it more sensitive than hourly_noise_floor_bp_acc to
+high frequency instrument noise.
+
+## Change Log
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before integration or differentiation and before filtering, so
+the filter transient fell inside the measured window. Cutting is now the last
+step before the final demean.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+hourly_noise_floor_bp_acc, hourly_max_acc, power_1Hz
+
+## Updated
+
+2026-08-28
+# hourly_noise_floor_bp_acc
+
+Noise Floor of Bandpassed Acceleration
+
+## Summary
+
+This metric approximates the median envelope amplitude, or noise floor, of a
+channel's ground acceleration over the analysis window, using data that has
+been sensitivity corrected, converted to acceleration and bandpassed between
+0.075 Hz and 15 Hz. It is computed as half the range between the 2nd and 98th
+percentile of the samples, and reported in cm/s^2.
+
+## Uses
+
+Restricting the measurement to 0.075 - 15 Hz makes this the better indicator of
+noise in the band that earthquake early warning actually uses. Trimming the
+distribution at the 2nd and 98th percentile keeps earthquakes, calibration
+pulses and one-off spikes from dominating a number meant to describe the quiet
+background. A gradual rise over days or weeks usually means a failing sensor, a
+loose connection, or a change in the site environment; a sudden step usually
+means a hardware or configuration change.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, each segment is processed separately and the resulting
+samples are pooled before the percentiles are taken.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. Waveforms are requested with a further
+120 s of padding on each side, which is used during processing and then
+discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Detrend the padded trace with a third-order polynomial.
+3. Remove the mean.
+4. Divide by the channel's overall sensitivity from the metadata.
+5. Convert to acceleration. A channel whose second SEED code letter is N is
+   already an accelerometer; anything else is differentiated from velocity.
+6. Apply a causal Butterworth bandpass from 0.075 Hz to 15 Hz with 2 corners.
+7. Cut the trace to the analysis window and remove the mean again.
+8. Pool the samples from all segments into one series a of length n, in m/s^2,
+   and sort it ascending.
+9. Take the values at the 2nd and 98th percentile positions:
+
+   a2  = sorted_a[int(0.02 * n)]
+   a98 = sorted_a[int(0.98 * n)]
+
+10. Report half their difference, converted to cm/s^2:
+
+   hourly_noise_floor_bp_acc = 100 * (a98 - a2) / 2
+
+## Metric Values Returned
+
+value - approximate noise floor of the bandpassed acceleration (cm/s^2).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+0.02 cm/s^2.
+
+## Notes
+
+The percentiles are taken on the signed trace, not on its absolute value. For a
+demeaned, roughly symmetric noise record the 2nd percentile is negative and the
+98th is positive, so half their difference is a sensible amplitude scale.
+
+On channels sampled at or below 30 samples per second the 15 Hz upper corner
+sits at or above the Nyquist frequency. ObsPy warns about this and clamps the
+filter, so on those channels the measurement is effectively a highpass at
+0.075 Hz.
+
+This is not a true median envelope and should not be compared numerically
+against one; it is a fast approximation that behaves consistently for the same
+channel over time.
+
+## Change Log
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before integration or differentiation and before filtering, so
+the filter transient fell inside the measured window. Cutting is now the last
+step before the final demean.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+hourly_noise_floor_acc, hourly_max_bp_acc, power_5Hz
+
+## Updated
+
+2026-08-28
+# hourly_range
+
+Range of Raw Sample Values
+
+## Summary
+
+This metric reports the difference between the largest and smallest raw sample
+values seen on a channel during the analysis window, in digital counts, with no
+gain correction, filtering or detrending applied.
+
+## Uses
+
+This is the simplest available measure of how much of the digitizer's dynamic
+range a channel is actually using. A value approaching the digitizer's full
+range, for example 2^24 for a 24 bit system, means the channel clipped during
+the hour and every ground motion metric for that hour should be treated with
+suspicion. A value of zero means the channel is flatlined, producing a constant
+value rather than no data at all, which is a failure mode that completeness
+metrics will not catch.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, the samples from all segments in the window are pooled
+into a single series before the range is taken.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. The 5.05 s lead-in is the STA (0.05 s)
+plus LTA (5.0 s) of the trigger function used by other metrics.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side for a single
+   N.S.L.C from the archive's FDSN dataselect service.
+2. Cut each returned trace to the analysis window. No detrending, gain removal
+   or filtering is applied.
+3. Concatenate the samples from all segments in the window into one series x.
+4. Report the peak to peak range:
+
+   hourly_range = max(x) - min(x)
+
+## Metric Values Returned
+
+value - peak to peak range of the raw samples in the window (digital counts).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+25000 counts.
+
+## Notes
+
+Because the range includes any DC offset excursion as well as genuine ground
+motion, a station whose mean is drifting will show a larger range than one that
+is stable at the same noise level. hourly_mean is what separates those two
+cases.
+
+The measurement window is 3605.05 s while the start and end times reported to
+SQUAC are the clean hour.
+
+## Change Log
+
+Aug 2026: no change to the calculation. This metric has always been taken from
+the untouched raw trace.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+hourly_min, hourly_max, hourly_mean
+
+## Updated
+
+2026-08-28
+# mass_position
+
+Sensor Mass Position
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports a seismometer's mass position, read from a state of health
+channel.
+
+## Uses
+
+Mass position drifts as a seismometer's springs age, with temperature, and with
+ground tilt. A mass that has walked close to one end of its range will clip on
+real ground motion and needs recentring, so tracking the position hour to hour
+gives advance warning before the channel starts producing bad data. A mass
+position that jumps abruptly usually means the instrument was disturbed or has
+been recentered.
+
+## Data Analyzed
+
+Traces - a mass position state of health channel. TODO: confirm the channel
+codes and which seismic channel the measurement is attached to in SQUAC.
+
+Window - TODO.
+
+Data Source - TODO.
+
+## Algorithm
+
+TODO. Document how the raw state of health samples are converted to a reported
+mass position, including any scaling from counts to volts or to a percentage of
+full range, and whether the value reported is a mean, a median or an extreme
+over the window.
+
+## Metric Values Returned
+
+value - mass position. Units TODO.
+
+starttime - TODO.
+
+endtime - TODO.
+
+channel - TODO.
+
+## Threshold
+
+TODO.
+
+## Contact
+
+squac-help@uw.edu
+
+## Updated
+
+2026-08-28
+#!/usr/bin/env python
+
+from __future__ import print_function
+import numpy as np
+
+def noise_floor(x):
+    """
+    Quick and dirty approximation of median envelope amplitude 
+    aka "noise floor" which uses the half range of the 2nd to 
+    98th percentile amplitudes.
+    x: np array or list of numbers
+    """
+    xsort = np.sort(x)
+    x2 = xsort[int(len(x)*0.02)]
+    x98 = xsort[int(len(x)*0.98)]
+    noisefloor = (x98-x2)/2.
+    return noisefloor
+
+
+def duration_exceed_RMS(x, ampthresh, RMSlen, dt):
+    """
+    Noise level metric that calcualtes the total duration of the RMS
+    function above a theshold (ampthresh).
+    RMSlen = window length used to calculate RMS (sec)
+    x: np array or list of numbers
+    st = an ObsPy stream
+    dt = timeseries increment (sec)
+    """
+    from obspy.signal.util import smooth
+    duration = 0
+    if ( len(x) > int(RMSlen/dt) ):
+        iRMSwinlen = int(RMSlen/dt)
+        RMS = np.sqrt(smooth((x**2),iRMSwinlen))
+        duration = ((RMS > ampthresh).sum())*dt
+    else:
+        duration = []
+        duration = -1
+        print ("Error duration_exceed_RMS: len(x)=" + str(len(x)*dt) + " must be greater than RMSlen=" + str(RMSlen))
+
+    return duration
+
+
+def count_peaks_stalta(x, y, sta, lta, mpd, mph, dt, ampthresh):
+    """
+    Counts peaks of a passed-through STA/LTA function (y) where 
+       the absolute amplitude of the original timeseries (x) exceeds 
+       an amplitude (ampthresh).
+    x: np array or list of numbers of original time series
+    y: np array or list of numbers of STA/LTA function of x
+    sta: short term average used (sec)
+    lta: long term average used (sec)
+    mpd: minimum distance between peaks should be > sta+lta (sec)
+    mph: minimum peak height of the stalta function
+    ampthresh: absolute amplitude of the biggest local peak
+    dt: timeseries increment (sec)
+    """
+    if ( len(y) > int(mpd/dt) and mpd > (sta+lta) ):
+        #  Find peaks
+        indexlocalmax = detect_peaks(y,mpd=int(mpd/dt),mph=mph)
+        # Find the local maxima in x within sta+lta sec of peak
+        peaksnr = np.zeros(len(indexlocalmax))
+        peakamp = np.zeros(len(indexlocalmax))
+        istalta = int((sta+lta)/dt)
+        impd = int((mpd/dt))
+        for j in range(0,len(indexlocalmax)):
+            ipeak1 = max(0,indexlocalmax[j]-istalta)
+            ipeak2 = min(indexlocalmax[j]+istalta,len(x))
+            peaksnr[j] = max(y[ipeak1:ipeak2])
+            peakamp[j] = max(abs(x[ipeak1:ipeak2]))
+            # In case the x has zero mean but long period noise, use local demeaning.
+            # Not needed if a detrend was applied before calling this.
+#            ilta1 = max(0,indexlocalmax[j]-impd-istalta)
+#            ilta2 = min(indexlocalmax[j]-istalta,len(x))
+#            peakamp[j] = max(abs(x[ipeak1:ipeak2]-np.mean(x[ilta1:ilta2])))
+        peakcount = (peakamp>ampthresh).sum()
+    else:
+        peakcount = []
+        duration = -1
+        print ("Error count_peaks_stalta: len(x)=" + str(len(x)*dt) + " must be > sta+lta=" + str(sta+lta))
+    return peakcount
+
+
+def detect_peaks(x, mph=None, mpd=1, threshold=0, edge='rising',kpsh=False, valley=False):
+    """ Detect peaks in data based on their amplitude and other features.
+    Parameters
+    ----------
+    x : 1D array_like
+        data.
+    mph : {None, number}, optional (default = None)
+        detect peaks that are greater than minimum peak height.
+    mpd : positive integer, optional (default = 1)
+        detect peaks that are at least separated by minimum peak distance (in
+        number of data).
+    threshold : positive number, optional (default = 0)
+        detect peaks (valleys) that are greater (smaller) than `threshold`
+        in relation to their immediate neighbors.
+    edge : {None, 'rising', 'falling', 'both'}, optional (default = 'rising')
+        for a flat peak, keep only the rising edge ('rising'), only the
+        falling edge ('falling'), both edges ('both'), or don't detect a
+        flat peak (None).
+    kpsh : bool, optional (default = False)
+        keep peaks with same height even if they are closer than `mpd`.
+    valley : bool, optional (default = False)
+        if True (1), detect valleys (local minima) instead of peaks.
+
+    Returns
+    -------
+    ind : 1D array_like
+        indeces of the peaks in `x`.
+
+    Notes
+    -----
+    The detection of valleys instead of peaks is performed internally by simply
+    negating the data: `ind_valleys = detect_peaks(-x)`
+    
+    The function can handle NaN's 
+    References
+    ----------
+    .. [1] http://nbviewer.ipython.org/github/demotu/BMC/blob/master/notebooks/DetectPeaks.ipynb
+
+    """
+
+    x = np.atleast_1d(x).astype('float64')
+    if x.size < 3:
+        return np.array([], dtype=int)
+    if valley:
+        x = -x
+    # find indices of all peaks
+    dx = x[1:] - x[:-1]
+    # handle NaN's
+    indnan = np.where(np.isnan(x))[0]
+    if indnan.size:
+        x[indnan] = np.inf
+        dx[np.where(np.isnan(dx))[0]] = np.inf
+    ine, ire, ife = np.array([[], [], []], dtype=int)
+    if not edge:
+        ine = np.where((np.hstack((dx, 0)) < 0) & (np.hstack((0, dx)) > 0))[0]
+    else:
+        if edge.lower() in ['rising', 'both']:
+            ire = np.where((np.hstack((dx, 0)) <= 0) & (np.hstack((0, dx)) > 0))[0]
+        if edge.lower() in ['falling', 'both']:
+            ife = np.where((np.hstack((dx, 0)) < 0) & (np.hstack((0, dx)) >= 0))[0]
+    ind = np.unique(np.hstack((ine, ire, ife)))
+    # handle NaN's
+    if ind.size and indnan.size:
+        # NaN's and values close to NaN's cannot be peaks
+        ind = ind[np.in1d(ind, np.unique(np.hstack((indnan, indnan-1, indnan+1))), invert=True)]
+    # first and last values of x cannot be peaks
+    if ind.size and ind[0] == 0:
+        ind = ind[1:]
+    if ind.size and ind[-1] == x.size-1:
+        ind = ind[:-1]
+    # remove peaks < minimum peak height
+    if ind.size and mph is not None:
+        ind = ind[x[ind] >= mph]
+    # remove peaks - neighbors < threshold
+    if ind.size and threshold > 0:
+        dx = np.min(np.vstack([x[ind]-x[ind-1], x[ind]-x[ind+1]]), axis=0)
+        ind = np.delete(ind, np.where(dx < threshold)[0])
+    # detect small peaks closer than minimum peak distance
+    if ind.size and mpd > 1:
+        ind = ind[np.argsort(x[ind])][::-1]  # sort ind by peak height
+        idel = np.zeros(ind.size, dtype=bool)
+        for i in range(ind.size):
+            if not idel[i]:
+                # keep peaks with the same height if kpsh is True
+                idel = idel | (ind >= ind[i] - mpd) & (ind <= ind[i] + mpd) \
+                    & (x[ind[i]] > x[ind] if kpsh else True)
+                idel[i] = 0  # Keep current peak
+        # remove the small peaks and sort back the indices by their occurrence
+        ind = np.sort(ind[~idel])
+    return ind
+
+
+def get_power(trPower,inv,periodlist):
+    """
+    Calculates the PSD using ObsPy PPSD.
+    trPower: input ObsPy trace that must be > 3600. sec long.
+    inv:  ObsPy inventory.  Must be level = 'response'
+    periodlist: a list of periods at which you want the power 
+    returns: power in dB at the periods in periodlist
+    """
+    from obspy.signal import PPSD
+    powers_at_periods = []
+    if ( trPower.stats.delta * trPower.stats.npts > 3600. ):
+        ppsd = PPSD(trPower.stats, metadata = inv)
+        ppsd.add(trPower)
+        if ( len(ppsd._binned_psds) > 0 ):
+            psd_periods = ppsd._period_binning[2]
+            psd_power = []
+            psd_power = ppsd._binned_psds[0]
+            for i in range(0,len(periodlist)):
+                powers_at_periods.append(psd_power[np.argmin(abs(psd_periods-periodlist[i]))])
+        else:
+            for i in range(0,len(periodlist)):
+                powers_at_periods.append(-1)
+
+    return powers_at_periods
+
+# power_10Hz
+
+Hourly Acceleration Power Spectral Density at 10 Hz
+
+## Summary
+
+This metric reports the acceleration power spectral density of a channel at a
+period of 0.1 s, that is 10 Hz, for the reporting hour. The value is in decibels
+relative to 1 (m/s^2)^2/Hz and is read from a single one hour ObsPy PPSD
+segment at the period bin nearest 0.1 s.
+
+## Uses
+
+At 10 Hz the seismic spectrum is dominated by local sources: traffic,
+machinery, wind coupling through trees and structures, and the instrument's own
+self noise. This makes the metric a good discriminator between a quiet vault
+and a noisy roadside or urban site, and a sensitive detector of new local noise
+sources appearing near a station. Because instrument self noise sets a floor at
+high frequency, an unusually low value can also indicate a channel that has
+gone dead rather than one that is exceptionally quiet, so it should be read
+together with the raw counts metrics.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Only a
+single continuous segment spanning the whole reporting hour is used; a channel
+whose hour is broken by a gap produces no value.
+
+Window - the reporting hour, from the requested start time to one hour later.
+This differs from the 3605.05 s analysis window used by the time-domain
+metrics.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the reporting hour plus lead-in and padding for a single N.S.L.C,
+   along with the channel's response level metadata.
+2. Cut the raw, uncorrected counts trace to the reporting hour, taking one
+   extra sample at the end so the segment always spans at least 3600 s.
+3. Confirm the segment spans at least 3600 s. If it does not, no value is
+   produced.
+4. Hand the raw trace and the response level metadata to ObsPy's PPSD with its
+   default settings. PPSD removes the full instrument response, segments the
+   input into one hour pieces, and returns power in dB relative to
+   1 (m/s^2)^2/Hz on its standard octave-fraction period binning. Because the
+   input is exactly one hour long, exactly one segment is produced.
+5. Find the period bin whose center is closest to 0.1 s and report the power in
+   that bin:
+
+   power_10Hz = psd_power[argmin(|psd_periods - 0.1|)]
+
+6. Discard the result if it is not below -1 dB. Real values run roughly -180 to
+   -50 dB, so anything at or above -1 dB indicates a failed calculation rather
+   than a measurement, and is not uploaded.
+
+## Metric Values Returned
+
+value - acceleration power spectral density at 10 Hz (dB rel. 1 (m/s^2)^2/Hz).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+-180, -70.
+
+## Notes
+
+Unlike the time-domain metrics on this channel, PPSD removes the full
+instrument response rather than just the sensitivity, so these values are
+properly corrected across the whole band.
+
+The value is taken from the nearest available period bin, not interpolated to
+exactly 0.1 s. The bin center may therefore be a few percent away from the
+nominal period, consistently for a given sample rate.
+
+This is a single hour measurement read out of a PPSD object, not a probabilistic
+density over many hours as PPSD is normally used. There is no averaging over
+days.
+
+Requesting one extra sample at the end of the cut is deliberate: a segment of
+exactly 3600.000 s can come back a fraction of a sample short and be rejected by
+PPSD, which would silently produce no value.
+
+## Change Log
+
+Aug 2026: the PSD was previously computed on the 3605.05 s analysis window.
+PPSD's one hour segmenting then measured the hour beginning 5.05 s before the
+top of the hour, so the reported start time was wrong by that amount. It now
+runs on the clean hour.
+
+Aug 2026: a failed PPSD calculation used to reach SQUAC as a value of -1. It is
+now discarded.
+
+Aug 2026: previously documented as coming from IRIS MUSTANG. It has always been
+calculated locally with ObsPy PPSD.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+power_5Hz, power_1Hz, power_5sec, power_40sec, hourly_noise_floor_acc
+
+## Updated
+
+2026-08-28
+# power_1Hz
+
+Hourly Acceleration Power Spectral Density at 1 Hz
+
+## Summary
+
+This metric reports the acceleration power spectral density of a channel at a
+period of 1 s, that is 1 Hz, for the reporting hour. The value is in decibels
+relative to 1 (m/s^2)^2/Hz and is read from a single one hour ObsPy PPSD
+segment at the period bin nearest 1 s.
+
+## Uses
+
+1 s sits between the secondary microseism peak and the cultural noise band, and
+at a well sited station it is often the quietest part of the spectrum. That
+makes it unusually sensitive: because there is little natural noise to hide
+behind, a developing instrument or installation problem shows up here before it
+shows up at higher or lower frequencies. It is also close to the frequencies
+that matter for moderate regional earthquakes.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Only a
+single continuous segment spanning the whole reporting hour is used; a channel
+whose hour is broken by a gap produces no value.
+
+Window - the reporting hour, from the requested start time to one hour later.
+This differs from the 3605.05 s analysis window used by the time-domain
+metrics.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the reporting hour plus lead-in and padding for a single N.S.L.C,
+   along with the channel's response level metadata.
+2. Cut the raw, uncorrected counts trace to the reporting hour, taking one
+   extra sample at the end so the segment always spans at least 3600 s.
+3. Confirm the segment spans at least 3600 s. If it does not, no value is
+   produced.
+4. Hand the raw trace and the response level metadata to ObsPy's PPSD with its
+   default settings. PPSD removes the full instrument response, segments the
+   input into one hour pieces, and returns power in dB relative to
+   1 (m/s^2)^2/Hz on its standard octave-fraction period binning. Because the
+   input is exactly one hour long, exactly one segment is produced.
+5. Find the period bin whose center is closest to 1 s and report the power in
+   that bin:
+
+   power_1Hz = psd_power[argmin(|psd_periods - 1.0|)]
+
+6. Discard the result if it is not below -1 dB. Real values run roughly -180 to
+   -50 dB, so anything at or above -1 dB indicates a failed calculation rather
+   than a measurement, and is not uploaded.
+
+## Metric Values Returned
+
+value - acceleration power spectral density at 1 Hz (dB rel. 1 (m/s^2)^2/Hz).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+-180, -70 dB.
+
+## Notes
+
+Unlike the time-domain metrics on this channel, PPSD removes the full
+instrument response rather than just the sensitivity, so these values are
+properly corrected across the whole band.
+
+The value is taken from the nearest available period bin, not interpolated to
+exactly 1 s.
+
+This is a single hour measurement read out of a PPSD object, not a probabilistic
+density over many hours as PPSD is normally used.
+
+Requesting one extra sample at the end of the cut is deliberate: a segment of
+exactly 3600.000 s can come back a fraction of a sample short and be rejected by
+PPSD.
+
+## Change Log
+
+Aug 2026: the PSD was previously computed on the 3605.05 s analysis window, so
+the hour actually measured began 5.05 s before the top of the hour. It now runs
+on the clean hour.
+
+Aug 2026: a failed PPSD calculation used to reach SQUAC as a value of -1. It is
+now discarded. This metric was also used as the validity test for the whole PSD
+group; that test is now applied to all five values together.
+
+Aug 2026: previously documented as coming from IRIS MUSTANG. It has always been
+calculated locally with ObsPy PPSD.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+power_10Hz, power_5Hz, power_5sec, power_40sec
+
+## Updated
+
+2026-08-28
+# power_40sec
+
+Hourly Acceleration Power Spectral Density at 40 Seconds
+
+## Summary
+
+This metric reports the acceleration power spectral density of a channel at a
+period of 40 s, that is 0.025 Hz, for the reporting hour. The value is in
+decibels relative to 1 (m/s^2)^2/Hz and is read from a single one hour ObsPy
+PPSD segment at the period bin nearest 40 s.
+
+## Uses
+
+At 40 s the record is dominated by long period noise sources rather than by
+seismic signal: temperature swings in the vault, barometric pressure changes,
+ground tilt, and mass position drift. On a broadband sensor a rising value
+often precedes a mass that needs recentring or points at a vault whose
+insulation has failed. On a strong motion accelerometer this band is
+essentially all instrument self noise and the value carries little information
+about the site.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Only a
+single continuous segment spanning the whole reporting hour is used; a channel
+whose hour is broken by a gap produces no value.
+
+Window - the reporting hour, from the requested start time to one hour later.
+This differs from the 3605.05 s analysis window used by the time-domain
+metrics.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the reporting hour plus lead-in and padding for a single N.S.L.C,
+   along with the channel's response level metadata.
+2. Cut the raw, uncorrected counts trace to the reporting hour, taking one
+   extra sample at the end so the segment always spans at least 3600 s.
+3. Confirm the segment spans at least 3600 s. If it does not, no value is
+   produced.
+4. Hand the raw trace and the response level metadata to ObsPy's PPSD with its
+   default settings. PPSD removes the full instrument response, segments the
+   input into one hour pieces, and returns power in dB relative to
+   1 (m/s^2)^2/Hz on its standard octave-fraction period binning. Because the
+   input is exactly one hour long, exactly one segment is produced.
+5. Find the period bin whose center is closest to 40 s and report the power in
+   that bin:
+
+   power_40sec = psd_power[argmin(|psd_periods - 40.0|)]
+
+6. Discard the result if it is not below -1 dB. Real values run roughly -180 to
+   -50 dB, so anything at or above -1 dB indicates a failed calculation rather
+   than a measurement, and is not uploaded.
+
+## Metric Values Returned
+
+value - acceleration power spectral density at 40 s period
+(dB rel. 1 (m/s^2)^2/Hz).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+-180, -70 dB.
+
+## Notes
+
+A one hour segment contains only 90 cycles at this period, so the estimate is
+statistically poorer here than at the shorter period metrics. Judge it on
+multi-day trends rather than on individual hours.
+
+Interpretation differs sharply between broadband and strong motion channels and
+they should not be compared directly.
+
+Unlike the time-domain metrics on this channel, PPSD removes the full
+instrument response rather than just the sensitivity.
+
+Requesting one extra sample at the end of the cut is deliberate: a segment of
+exactly 3600.000 s can come back a fraction of a sample short and be rejected by
+PPSD.
+
+## Change Log
+
+Aug 2026: the PSD was previously computed on the 3605.05 s analysis window, so
+the hour actually measured began 5.05 s before the top of the hour. It now runs
+on the clean hour.
+
+Aug 2026: a failed PPSD calculation used to reach SQUAC as a value of -1. It is
+now discarded.
+
+Aug 2026: previously documented as coming from IRIS MUSTANG. It has always been
+calculated locally with ObsPy PPSD.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+power_10Hz, power_5Hz, power_1Hz, power_5sec
+
+## Updated
+
+2026-08-28
+# power_5Hz
+
+Hourly Acceleration Power Spectral Density at 5 Hz
+
+## Summary
+
+This metric reports the acceleration power spectral density of a channel at a
+period of 0.2 s, that is 5 Hz, for the reporting hour. The value is in decibels
+relative to 1 (m/s^2)^2/Hz and is read from a single one hour ObsPy PPSD
+segment at the period bin nearest 0.2 s.
+
+## Uses
+
+5 Hz sits squarely in the band where small local earthquakes carry most of
+their energy, so this measurement speaks fairly directly to whether a station
+can detect the events that early warning cares about. A station whose 5 Hz
+power is high has a poor signal to noise ratio for exactly the arrivals
+ShakeAlert needs, regardless of how good its latency or completeness numbers
+are. Tracked over time it also reveals developing local noise problems.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Only a
+single continuous segment spanning the whole reporting hour is used; a channel
+whose hour is broken by a gap produces no value.
+
+Window - the reporting hour, from the requested start time to one hour later.
+This differs from the 3605.05 s analysis window used by the time-domain
+metrics.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the reporting hour plus lead-in and padding for a single N.S.L.C,
+   along with the channel's response level metadata.
+2. Cut the raw, uncorrected counts trace to the reporting hour, taking one
+   extra sample at the end so the segment always spans at least 3600 s.
+3. Confirm the segment spans at least 3600 s. If it does not, no value is
+   produced.
+4. Hand the raw trace and the response level metadata to ObsPy's PPSD with its
+   default settings. PPSD removes the full instrument response, segments the
+   input into one hour pieces, and returns power in dB relative to
+   1 (m/s^2)^2/Hz on its standard octave-fraction period binning. Because the
+   input is exactly one hour long, exactly one segment is produced.
+5. Find the period bin whose center is closest to 0.2 s and report the power in
+   that bin:
+
+   power_5Hz = psd_power[argmin(|psd_periods - 0.2|)]
+
+6. Discard the result if it is not below -1 dB. Real values run roughly -180 to
+   -50 dB, so anything at or above -1 dB indicates a failed calculation rather
+   than a measurement, and is not uploaded.
+
+## Metric Values Returned
+
+value - acceleration power spectral density at 5 Hz (dB rel. 1 (m/s^2)^2/Hz).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+-180, -70 dB.
+
+## Notes
+
+Unlike the time-domain metrics on this channel, PPSD removes the full
+instrument response rather than just the sensitivity, so these values are
+properly corrected across the whole band.
+
+The value is taken from the nearest available period bin, not interpolated to
+exactly 0.2 s.
+
+This is a single hour measurement read out of a PPSD object, not a probabilistic
+density over many hours as PPSD is normally used.
+
+Requesting one extra sample at the end of the cut is deliberate: a segment of
+exactly 3600.000 s can come back a fraction of a sample short and be rejected by
+PPSD.
+
+## Change Log
+
+Aug 2026: the PSD was previously computed on the 3605.05 s analysis window, so
+the hour actually measured began 5.05 s before the top of the hour. It now runs
+on the clean hour.
+
+Aug 2026: a failed PPSD calculation used to reach SQUAC as a value of -1. It is
+now discarded.
+
+Aug 2026: previously documented as coming from IRIS MUSTANG. It has always been
+calculated locally with ObsPy PPSD.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+power_10Hz, power_1Hz, power_5sec, power_40sec, hourly_noise_floor_bp_acc
+
+## Updated
+
+2026-08-28
+# power_5sec
+
+Hourly Acceleration Power Spectral Density at 5 Seconds
+
+## Summary
+
+This metric reports the acceleration power spectral density of a channel at a
+period of 5 s, that is 0.2 Hz, for the reporting hour. The value is in decibels
+relative to 1 (m/s^2)^2/Hz and is read from a single one hour ObsPy PPSD
+segment at the period bin nearest 5 s.
+
+## Uses
+
+5 s is close to the secondary microseism peak, where ocean waves interacting
+with the coast drive the loudest persistent noise in the seismic spectrum. The
+value therefore rises and falls with sea state and is expected to vary
+seasonally and with individual storms. It should be judged against the same
+station's own history rather than against other stations, and an unusually flat
+seasonal pattern can itself be a sign that a channel is not responding
+properly at long period.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Only a
+single continuous segment spanning the whole reporting hour is used; a channel
+whose hour is broken by a gap produces no value.
+
+Window - the reporting hour, from the requested start time to one hour later.
+This differs from the 3605.05 s analysis window used by the time-domain
+metrics.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the reporting hour plus lead-in and padding for a single N.S.L.C,
+   along with the channel's response level metadata.
+2. Cut the raw, uncorrected counts trace to the reporting hour, taking one
+   extra sample at the end so the segment always spans at least 3600 s.
+3. Confirm the segment spans at least 3600 s. If it does not, no value is
+   produced.
+4. Hand the raw trace and the response level metadata to ObsPy's PPSD with its
+   default settings. PPSD removes the full instrument response, segments the
+   input into one hour pieces, and returns power in dB relative to
+   1 (m/s^2)^2/Hz on its standard octave-fraction period binning. Because the
+   input is exactly one hour long, exactly one segment is produced.
+5. Find the period bin whose center is closest to 5 s and report the power in
+   that bin:
+
+   power_5sec = psd_power[argmin(|psd_periods - 5.0|)]
+
+6. Discard the result if it is not below -1 dB. Real values run roughly -180 to
+   -50 dB, so anything at or above -1 dB indicates a failed calculation rather
+   than a measurement, and is not uploaded.
+
+## Metric Values Returned
+
+value - acceleration power spectral density at 5 s period
+(dB rel. 1 (m/s^2)^2/Hz).
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+-180, -70 dB.
+
+## Notes
+
+On strong motion accelerometers the microseism is often at or below the
+instrument's self noise at this period, so the value reflects instrument noise
+rather than ground motion. Interpretation differs sharply between ?H? and ?N?
+channels and they should not be compared directly.
+
+Unlike the time-domain metrics on this channel, PPSD removes the full
+instrument response rather than just the sensitivity.
+
+The value is taken from the nearest available period bin, not interpolated to
+exactly 5 s.
+
+Requesting one extra sample at the end of the cut is deliberate: a segment of
+exactly 3600.000 s can come back a fraction of a sample short and be rejected by
+PPSD.
+
+## Change Log
+
+Aug 2026: the PSD was previously computed on the 3605.05 s analysis window, so
+the hour actually measured began 5.05 s before the top of the hour. It now runs
+on the clean hour.
+
+Aug 2026: a failed PPSD calculation used to reach SQUAC as a value of -1. It is
+now discarded.
+
+Aug 2026: previously documented as coming from IRIS MUSTANG. It has always been
+calculated locally with ObsPy PPSD.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+power_10Hz, power_5Hz, power_1Hz, power_40sec
+
+## Updated
+
+2026-08-28
+# prefix_ring_completeness_incl_gap_penalty
+
+Wave Ring Data Completeness With Gap Penalty
+
+## Summary
+
+This metric reports the percentage of a measurement window for which a
+channel's data arrived in an Earthworm wave ring, with an additional 30 seconds
+deducted from the numerator for every gap found. It is a completeness measure
+that deliberately punishes fragmentation as well as absence.
+
+## Uses
+
+The penalty encodes an operational reality that plain completeness misses: each
+interruption costs more than the data it swallowed, because algorithms
+downstream have to recover state each time the stream breaks. A channel with a
+single 60 s gap scores far better here than one with twenty 3 s gaps, even
+though both lost the same amount of data, which correctly reflects which of the
+two is more useful for early warning. Used alongside plain completeness, the
+size of the difference between the two identifies channels whose problem is
+fragmentation rather than volume.
+
+## Data Analyzed
+
+Traces - one S.C.N.L (Station.Channel.Network.Location) per measurement, as
+reported by Earthworm's sniffwave.
+
+Window - the sniffwave run duration, normally 600 s. The duration used in the
+calculation is the end time of the last packet minus the start time of the
+first packet seen for that channel.
+
+Data Source - an Earthworm wave ring, normally WAVE_RING, on a live server.
+Nothing is read from an archive; this describes the real time data flow as it
+actually arrived.
+
+Prefix - identifies the server the measurement was made on: export (PNSN
+ewserver), scsn (SCSN pine), ucb (UC Berkeley eew-bk-dev1), menlo (USGS Menlo
+Park), eewdev1, eewdev2, ews02.
+
+SEED Channel Types - ?H? and ?N? with components E, N, Z, 1, 2 or 3, matched by
+sniffwave_tally's channel filter.
+
+## Algorithm
+
+1. Run Earthworm's sniffwave against the wave ring for the requested duration
+   and consume its output line by line.
+2. For each channel, keep the end time of the previous packet seen.
+3. Declare a gap when the next packet's start time is later than the previous
+   packet's end time plus one sample interval, by more than a tolerance of
+   0.01 s. Count the gaps and accumulate their total duration.
+4. At the end of the run, compute the measurement duration as the end time of
+   the last packet minus the start time of the first.
+5. Report the percentage of the duration for which data was present, less a
+   30 second penalty per gap:
+
+   prefix_ring_completeness_incl_gap_penalty =
+       100 * (duration - gap_dur - 30 * ngap) / duration
+
+## Metric Values Returned
+
+value - penalized percentage of the measurement window for which data arrived.
+
+starttime - start time of the first packet seen for the channel (UTC).
+
+endtime - end time of the last packet seen for the channel (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+90.0 percent.
+
+## Notes
+
+The value can go negative, and does so easily. With a typical 600 s measurement
+window, twenty gaps alone deduct 600 s and drive the result to zero or below
+before any gap duration is counted. A large negative value should be read as
+"gapping constantly" rather than as an error.
+
+Because the penalty is a fixed 30 s regardless of window length, results from
+servers running sniffwave_tally with different durations are not directly
+comparable. Plain completeness does not have this problem.
+
+Because the duration is measured from the first to the last packet actually
+seen, absence at the edges of the window is invisible here.
+
+A channel that produced no packets at all during the window does not appear in
+the output and reports nothing rather than reporting zero.
+
+## Change Log
+
+No changes in August 2026.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+prefix_ring_completeness, prefix_ring_gaps_per_hour
+
+## Updated
+
+2026-08-28
+# prefix_ring_completeness
+
+Wave Ring Data Completeness
+
+## Summary
+
+This metric reports the percentage of a measurement window for which a
+channel's data actually arrived in an Earthworm wave ring, taken as the window
+duration minus the total duration of all gaps, divided by the window duration.
+
+## Uses
+
+This is the simplest measure of how much of a station's real time stream is
+present, and it is the real time counterpart of the archive completeness
+metrics. A station can be complete at the archive and incomplete here, because
+archives are backfilled and early warning is not: data that arrives late is
+still archived but is useless in real time. Because the metric counts only the
+wall clock duration swallowed by gaps, a channel with one long gap and a
+channel with many short gaps can score identically, which is why a
+gap-penalized version exists alongside it.
+
+## Data Analyzed
+
+Traces - one S.C.N.L (Station.Channel.Network.Location) per measurement, as
+reported by Earthworm's sniffwave.
+
+Window - the sniffwave run duration, normally 600 s. The duration used in the
+calculation is the end time of the last packet minus the start time of the
+first packet seen for that channel, which is slightly shorter than the
+requested run duration.
+
+Data Source - an Earthworm wave ring, normally WAVE_RING, on a live server.
+Nothing is read from an archive; this describes the real time data flow as it
+actually arrived.
+
+Prefix - identifies the server the measurement was made on: export (PNSN
+ewserver), scsn (SCSN pine), ucb (UC Berkeley eew-bk-dev1), menlo (USGS Menlo
+Park), eewdev1, eewdev2, ews02.
+
+SEED Channel Types - ?H? and ?N? with components E, N, Z, 1, 2 or 3, matched by
+sniffwave_tally's channel filter.
+
+## Algorithm
+
+1. Run Earthworm's sniffwave against the wave ring for the requested duration
+   and consume its output line by line.
+2. For each channel, keep the end time of the previous packet seen.
+3. Declare a gap when the next packet's start time is later than the previous
+   packet's end time plus one sample interval, by more than a tolerance of
+   0.01 s. Accumulate the total duration of those gaps:
+
+   gap_dur = sum of ( starttime - (prev_endtime + delta) ) over all gaps
+
+4. At the end of the run, compute the measurement duration as the end time of
+   the last packet minus the start time of the first.
+5. Report the percentage of the duration for which data was present:
+
+   prefix_ring_completeness = 100 * (duration - gap_dur) / duration
+
+## Metric Values Returned
+
+value - percentage of the measurement window for which data arrived.
+
+starttime - start time of the first packet seen for the channel (UTC).
+
+endtime - end time of the last packet seen for the channel (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+90.0 percent.
+
+## Notes
+
+Because the duration is measured from the first to the last packet actually
+seen, a channel that was silent for the first half of the window and then
+delivered continuously reports 100 percent completeness over the half window it
+was present for. Total or partial absence at the edges of the window is
+therefore invisible here and has to be caught by the channel simply not
+appearing, or by the archive completeness metrics.
+
+A channel that produced no packets at all during the window does not appear in
+the output and reports nothing rather than reporting zero.
+
+The gap detection is sequential and assumes packets arrive in order.
+
+## Change Log
+
+No changes in August 2026.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+prefix_ring_completeness_incl_gap_penalty, prefix_ring_gaps_per_hour
+
+## Updated
+
+2026-08-28
+# prefix_ring_gaps_per_hour
+
+Wave Ring Gaps Per Hour
+
+## Summary
+
+This metric reports the number of gaps found between consecutive Tracebuf2
+packets for a channel in an Earthworm wave ring during a measurement window,
+scaled to a rate per hour.
+
+## Uses
+
+Frequent gaps are the classic signature of a marginal radio or cellular link.
+For earthquake early warning a channel with regular short gaps can be worse
+than one cleanly off the air, because downstream algorithms keep expecting data
+that does not come and have to recover state each time. Because the value is
+normalized to a per hour rate, measurement windows of different lengths can be
+compared directly, and results from servers running sniffwave_tally on
+different schedules are comparable.
+
+## Data Analyzed
+
+Traces - one S.C.N.L (Station.Channel.Network.Location) per measurement, as
+reported by Earthworm's sniffwave.
+
+Window - the sniffwave run duration, normally 600 s. The duration used in the
+normalization is the end time of the last packet minus the start time of the
+first packet seen for that channel, which is slightly shorter than the
+requested run duration.
+
+Data Source - an Earthworm wave ring, normally WAVE_RING, on a live server.
+Nothing is read from an archive; this describes the real time data flow as it
+actually arrived.
+
+Prefix - identifies the server the measurement was made on: export (PNSN
+ewserver), scsn (SCSN pine), ucb (UC Berkeley eew-bk-dev1), menlo (USGS Menlo
+Park), eewdev1, eewdev2, ews02.
+
+SEED Channel Types - ?H? and ?N? with components E, N, Z, 1, 2 or 3, matched by
+sniffwave_tally's channel filter.
+
+## Algorithm
+
+1. Run Earthworm's sniffwave against the wave ring for the requested duration
+   and consume its output line by line.
+2. For each channel, keep the end time of the previous packet seen.
+3. Declare a gap when the next packet's start time is later than the previous
+   packet's end time plus one sample interval, by more than a tolerance of
+   0.01 s:
+
+   gap if starttime - (prev_endtime + delta) > 0.01 s
+
+4. Count the gaps and accumulate their total duration per channel.
+5. At the end of the run, compute the measurement duration as the end time of
+   the last packet minus the start time of the first, and report the gap count
+   scaled to an hourly rate:
+
+   prefix_ring_gaps_per_hour = 3600 * ngap / duration
+
+## Metric Values Returned
+
+value - gaps per hour (count).
+
+starttime - start time of the first packet seen for the channel (UTC).
+
+endtime - end time of the last packet seen for the channel (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+1 gap per hour.
+
+## Notes
+
+The tolerance of 0.01 s prevents rounding in packet timestamps from being
+reported as a stream of tiny gaps.
+
+A channel that produced no packets at all during the window does not appear in
+the output, and therefore reports nothing rather than reporting a gap. Total
+absence has to be detected from the channel's absence, not from this value.
+
+Because the measurement window is typically only 10 minutes, the per hour
+scaling multiplies each observed gap by roughly six. A single gap in a
+10 minute window therefore reports as approximately 6 gaps per hour, which is
+well above the threshold. This is intentional but is worth keeping in mind when
+interpreting individual measurements as opposed to trends.
+
+The gap detection is sequential and assumes packets arrive in order. Out of
+order packets can therefore be reported as a gap followed by an overlap.
+
+## Change Log
+
+No changes in August 2026.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+prefix_ring_completeness, prefix_ring_completeness_incl_gap_penalty
+
+## Updated
+
+2026-08-28
+# prefix_ring_latency_le_3.5
+
+Percentage of Packets Arriving Within 3.5 Seconds
+
+## Summary
+
+This metric reports the percentage of Tracebuf2 packets carrying a channel's
+data into an Earthworm wave ring that arrived with a latency of 3.5 s or less,
+where latency is the feed latency reported by sniffwave plus half of the
+packet's length. A higher value is better.
+
+## Uses
+
+3.5 s is the working threshold for a packet being useful to ShakeAlert. Where
+average latency describes typical performance and maximum latency describes the
+worst case, this metric describes reliability: what fraction of the data
+actually arrived in time to be used. A station can have an acceptable average
+while failing this metric badly if its latency distribution has a long tail,
+which is exactly the behavior a stalling telemetry link produces.
+
+## Data Analyzed
+
+Traces - one S.C.N.L (Station.Channel.Network.Location) per measurement, as
+reported by Earthworm's sniffwave.
+
+Window - the sniffwave run duration, normally 600 s. The start and end times
+reported are the start time of the first packet and the end time of the last
+packet seen for that channel.
+
+Data Source - an Earthworm wave ring, normally WAVE_RING, on a live server.
+Nothing is read from an archive; this describes the real time data flow as it
+actually arrived.
+
+Prefix - identifies the server the measurement was made on: export (PNSN
+ewserver), scsn (SCSN pine), ucb (UC Berkeley eew-bk-dev1), menlo (USGS Menlo
+Park), eewdev1, eewdev2, ews02.
+
+SEED Channel Types - ?H? and ?N? with components E, N, Z, 1, 2 or 3, matched by
+sniffwave_tally's channel filter.
+
+## Algorithm
+
+1. Run Earthworm's sniffwave against the wave ring for the requested duration
+   and consume its output line by line.
+2. For each line that parses as a valid packet for a seismic channel, compute
+   the packet length and the packet's latency:
+
+   packet_length = endtime - starttime
+   latency       = feed_latency + 0.5 * packet_length
+
+3. Count the packet as late if its latency is strictly greater than 3.5 s.
+   Accumulate the total packet count and the late packet count per channel.
+4. At the end of the run report the percentage that were not late:
+
+   prefix_ring_latency_le_3.5 = 100 * (npackets - nlate) / npackets
+
+## Metric Values Returned
+
+value - percentage of packets with latency of 3.5 s or less.
+
+starttime - start time of the first packet seen for the channel (UTC).
+
+endtime - end time of the last packet seen for the channel (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+90.0 percent.
+
+## Notes
+
+The older name for this measurement, pct_gt_3.5sec_late, is misleading. The
+value has always been the percentage of packets that are NOT late, so
+historical data recorded under the old name should be read exactly the same way
+as data recorded under the current name. No inversion is needed when comparing
+across the rename.
+
+This metric requires sniffwave_tally to be run with the --all flag, which is
+set automatically when --squac is given.
+
+The comparison is strict, so a packet at exactly 3.5 s counts as on time.
+
+Packets whose start time is more than 24 hours away from the current time are
+discarded before any tallying.
+
+## Change Log
+
+No changes in August 2026.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+prefix_ring_latency, prefix_ring_latency_max
+
+## Updated
+
+2026-08-28
+# prefix_ring_latency_max
+
+Maximum Wave Ring Data Latency
+
+## Summary
+
+This metric reports the largest single packet latency observed for a channel in
+an Earthworm wave ring during a measurement window, where latency is the feed
+latency reported by sniffwave, that is the time between the measurement and the
+end of the packet, plus half of that packet's length.
+
+## Uses
+
+This exposes the worst case that an average latency hides. A channel with a
+good average but a large maximum is arriving in bursts, which typically means a
+telemetry link that stalls and then dumps a backlog. Those backlogged packets
+are useless to earthquake early warning even though they eventually arrive, so
+a station can look healthy on average while being unreliable exactly when it
+matters. Watched over time, a maximum that creeps upward is often the earliest
+warning of a degrading radio or cellular link.
+
+## Data Analyzed
+
+Traces - one S.C.N.L (Station.Channel.Network.Location) per measurement, as
+reported by Earthworm's sniffwave.
+
+Window - the sniffwave run duration, normally 600 s. The start and end times
+reported are the start time of the first packet and the end time of the last
+packet seen for that channel.
+
+Data Source - an Earthworm wave ring, normally WAVE_RING, on a live server.
+Nothing is read from an archive; this describes the real time data flow as it
+actually arrived.
+
+Prefix - identifies the server the measurement was made on: export (PNSN
+ewserver), scsn (SCSN pine), ucb (UC Berkeley eew-bk-dev1), menlo (USGS Menlo
+Park), eewdev1, eewdev2, ews02.
+
+SEED Channel Types - ?H? and ?N? with components E, N, Z, 1, 2 or 3, matched by
+sniffwave_tally's channel filter.
+
+## Algorithm
+
+1. Run Earthworm's sniffwave against the wave ring for the requested duration
+   and consume its output line by line.
+2. For each line that parses as a valid packet for a seismic channel, extract
+   the packet start time, end time, and the feed latency that sniffwave
+   reports.
+3. Compute the packet length and the packet's latency:
+
+   packet_length = endtime - starttime
+   latency       = feed_latency + 0.5 * packet_length
+
+4. Keep a running maximum of the latency for each channel, initialised from the
+   first packet seen.
+5. At the end of the run report that maximum:
+
+   prefix_ring_latency_max = max(latency over all packets)
+
+## Metric Values Returned
+
+value - largest packet latency observed (seconds).
+
+starttime - start time of the first packet seen for the channel (UTC).
+
+endtime - end time of the last packet seen for the channel (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+5.0 seconds.
+
+## Notes
+
+This metric requires sniffwave_tally to be run with the --all flag, which is
+set automatically when --squac is given.
+
+Packets whose start time is more than 24 hours away from the current time are
+discarded before any tallying, so a single stale packet cannot set the maximum
+to an absurd value. Within that filter, however, the metric is by construction
+driven by a single packet and is therefore much noisier hour to hour than the
+average latency.
+
+A channel that produced exactly one packet during the window reports that
+packet's latency as both the average and the maximum.
+
+## Change Log
+
+Aug 2026: added to the published metric documentation. The measurement itself
+has been produced by sniffwave_tally for some time.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+prefix_ring_latency, prefix_ring_latency_le_3.5
+
+## Updated
+
+2026-08-28
+# prefix_ring_latency
+
+Average Wave Ring Data Latency
+
+## Summary
+
+This metric reports the average latency of all Tracebuf2 packets carrying a
+channel's data into an Earthworm wave ring during a measurement window. Each
+packet's latency is the feed latency reported by sniffwave, that is the time
+between the measurement and the end of the packet, plus half of that packet's
+length.
+
+## Uses
+
+This is the headline number for whether a station is fast enough to be useful
+for earthquake early warning. ShakeAlert needs data within a few seconds of
+real time, and a station whose average latency sits well above that contributes
+little no matter how clean its waveforms are or how complete its archive
+coverage is. Being an average it hides bursty behavior, so it should always be
+read together with the maximum latency and the percentage of packets under
+3.5 s.
+
+## Data Analyzed
+
+Traces - one S.C.N.L (Station.Channel.Network.Location) per measurement, as
+reported by Earthworm's sniffwave.
+
+Window - the sniffwave run duration, normally 600 s. The start and end times
+reported are the start time of the first packet and the end time of the last
+packet seen for that channel, so the effective window is slightly shorter than
+the requested duration and differs slightly between channels.
+
+Data Source - an Earthworm wave ring, normally WAVE_RING, on a live server.
+Nothing is read from an archive; this describes the real time data flow as it
+actually arrived.
+
+Prefix - identifies the server the measurement was made on: export (PNSN
+ewserver), scsn (SCSN pine), ucb (UC Berkeley eew-bk-dev1), menlo (USGS Menlo
+Park), eewdev1, eewdev2, ews02. Most channels are sniffed at only one
+institution, but a few are sniffed at several; the prefix keeps those
+measurements distinct.
+
+SEED Channel Types - ?H? and ?N? with components E, N, Z, 1, 2 or 3, matched by
+sniffwave_tally's channel filter.
+
+## Algorithm
+
+1. Run Earthworm's sniffwave against the wave ring for the requested duration
+   and consume its output line by line.
+2. For each line that parses as a valid packet for a seismic channel, extract
+   the packet start time, end time, and the feed latency that sniffwave
+   reports.
+3. Compute the packet length and the packet's latency:
+
+   packet_length = endtime - starttime
+   latency       = feed_latency + 0.5 * packet_length
+
+   The half packet length term estimates the age of the middle of the packet
+   rather than its trailing edge.
+4. Accumulate the sum of the latencies and the number of packets for each
+   channel.
+5. At the end of the run report the mean:
+
+   prefix_ring_latency = sum(latency) / npackets
+
+## Metric Values Returned
+
+value - average packet latency (seconds).
+
+starttime - start time of the first packet seen for the channel (UTC).
+
+endtime - end time of the last packet seen for the channel (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+5.0 seconds.
+
+## Notes
+
+This metric requires sniffwave_tally to be run with the --all flag, which is
+set automatically when --squac is given.
+
+Packets whose start time is more than 24 hours away from the current time are
+discarded before any tallying, which protects the average from a stale or
+badly timestamped packet dragging it to an absurd value.
+
+A negative feed latency is possible and is not filtered out. It means the
+packet's end time is in the future relative to the server clock, which
+indicates a clock problem at either the station or the server.
+
+Because the value is a mean over a short window, a channel that stalls and then
+delivers a backlog can show a moderate average while every packet in the
+backlog was individually useless to early warning.
+
+## Change Log
+
+No changes in August 2026.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+prefix_ring_latency_max, prefix_ring_latency_le_3.5, prefix_ring_packet_length
+
+## Updated
+
+2026-08-28
+# prefix_ring_n_oo
+
+Number of Out-of-Order Packets in the Wave Ring
+
+STATUS: PLACEHOLDER. The out-of-order detection logic in sniffwave_tally is
+under review as of August 2026. This metric should not be relied on until that
+work is finished.
+
+## Summary
+
+This metric reports the number of out-of-order Tracebuf2 packets seen for a
+channel in an Earthworm wave ring during a measurement window. sniffwave_tally
+counts a packet as out of order when its end time falls before the start time
+of a packet already seen.
+
+## Uses
+
+Out-of-order arrival means packets are reaching the server by a path that does
+not preserve ordering, or that a retransmission mechanism is refilling earlier
+intervals. For early warning this matters because downstream algorithms
+generally assume ordered data, and a channel delivering out of order can
+produce results that are hard to interpret even when its completeness and
+latency numbers look acceptable.
+
+## Data Analyzed
+
+Traces - one S.C.N.L (Station.Channel.Network.Location) per measurement, as
+reported by Earthworm's sniffwave.
+
+Window - the sniffwave run duration, normally 600 s.
+
+Data Source - an Earthworm wave ring, normally WAVE_RING, on a live server.
+
+Prefix - identifies the server the measurement was made on: export, scsn, ucb,
+menlo, eewdev1, eewdev2, ews02.
+
+## Algorithm
+
+TODO. The current implementation compares each packet's end time against the
+start time of the immediately preceding packet only, which is why the logic is
+under review: it does not detect a packet that arrives out of order relative to
+a packet further back in the stream, and it can interact with the gap and
+overlap detection so that a single out-of-order packet is also reported as a
+gap and an overlap. Document the corrected algorithm here once it is settled.
+
+## Metric Values Returned
+
+value - number of out-of-order packets (count).
+
+starttime - start time of the first packet seen for the channel (UTC).
+
+endtime - end time of the last packet seen for the channel (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+TODO.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+prefix_ring_oo_dur, prefix_ring_gaps_per_hour
+
+## Updated
+
+2026-08-28
+# prefix_ring_oo_dur
+
+Total Duration of Out-of-Order Packets in the Wave Ring
+
+STATUS: PLACEHOLDER. The out-of-order detection logic in sniffwave_tally is
+under review as of August 2026. This metric should not be relied on until that
+work is finished.
+
+## Summary
+
+This metric reports the total duration of the out-of-order Tracebuf2 packets
+seen for a channel in an Earthworm wave ring during a measurement window,
+accumulated as the packet length of every packet counted as out of order.
+
+## Uses
+
+Where the out-of-order packet count says how often ordering was violated, this
+says how much data was involved. A large duration spread over few packets means
+long packets arrived late; a small duration spread over many packets means
+frequent small disruptions. Together they distinguish a single reordering
+episode from a link that is persistently delivering out of sequence.
+
+## Data Analyzed
+
+Traces - one S.C.N.L (Station.Channel.Network.Location) per measurement, as
+reported by Earthworm's sniffwave.
+
+Window - the sniffwave run duration, normally 600 s.
+
+Data Source - an Earthworm wave ring, normally WAVE_RING, on a live server.
+
+Prefix - identifies the server the measurement was made on: export, scsn, ucb,
+menlo, eewdev1, eewdev2, ews02.
+
+## Algorithm
+
+TODO. The duration accumulated is the packet length of each packet counted as
+out of order, so this metric inherits whatever detection logic the out-of-order
+count uses. That logic is under review; document the corrected algorithm here
+once it is settled.
+
+## Metric Values Returned
+
+value - total duration of out-of-order packets (seconds).
+
+starttime - start time of the first packet seen for the channel (UTC).
+
+endtime - end time of the last packet seen for the channel (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+TODO.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+prefix_ring_n_oo, prefix_ring_completeness
+
+## Updated
+
+2026-08-28
+
+================================================================================
+END OF DOCUMENT
+================================================================================
+# prefix_ring_packet_length
+
+Average Tracebuf2 Packet Length
+
+## Summary
+
+This metric reports the average duration in seconds of the Tracebuf2 packets
+carrying a channel's data into an Earthworm wave ring during a measurement
+window, taken as the mean of each packet's end time minus its start time.
+
+## Uses
+
+Packet length trades directly against latency: longer packets are more
+efficient on the wire, but every packet has to be filled before it can be sent,
+so a station configured with long packets cannot be fast no matter how good its
+telemetry is. This metric is therefore the first place to look when a station
+has stubbornly high latency and no obvious link problem, since the fix is a
+digitizer configuration change rather than a field visit. A sudden change in
+the value almost always means someone reconfigured a datalogger.
+
+## Data Analyzed
+
+Traces - one S.C.N.L (Station.Channel.Network.Location) per measurement, as
+reported by Earthworm's sniffwave.
+
+Window - the sniffwave run duration, normally 600 s. The start and end times
+reported are the start time of the first packet and the end time of the last
+packet seen for that channel.
+
+Data Source - an Earthworm wave ring, normally WAVE_RING, on a live server.
+Nothing is read from an archive; this describes the real time data flow as it
+actually arrived.
+
+Prefix - identifies the server the measurement was made on: export (PNSN
+ewserver), scsn (SCSN pine), ucb (UC Berkeley eew-bk-dev1), menlo (USGS Menlo
+Park), eewdev1, eewdev2, ews02.
+
+SEED Channel Types - ?H? and ?N? with components E, N, Z, 1, 2 or 3, matched by
+sniffwave_tally's channel filter.
+
+## Algorithm
+
+1. Run Earthworm's sniffwave against the wave ring for the requested duration
+   and consume its output line by line.
+2. For each line that parses as a valid packet for a seismic channel, compute
+   the packet length as the difference between the packet's end and start
+   times:
+
+   packet_length = endtime - starttime
+
+3. Accumulate the sum of the packet lengths and the number of packets for each
+   channel.
+4. At the end of the run report the mean:
+
+   prefix_ring_packet_length = sum(packet_length) / npackets
+
+## Metric Values Returned
+
+value - average packet length (seconds).
+
+starttime - start time of the first packet seen for the channel (UTC).
+
+endtime - end time of the last packet seen for the channel (UTC).
+
+channel - the channel analyzed.
+
+## Threshold
+
+5.0 seconds.
+
+## Notes
+
+This metric requires sniffwave_tally to be run with the --all flag, which is
+set automatically when --squac is given.
+
+For ShakeAlert channels values are typically well under a second. The threshold
+of 5.0 s is a loose sanity bound rather than a performance target; a channel
+approaching it is badly misconfigured for early warning.
+
+The packet length is measured from the timestamps in the packet itself, so it
+reflects how much data the packet carries rather than how long it took to
+arrive.
+
+Packets whose start time is more than 24 hours away from the current time are
+discarded before any tallying.
+
+## Change Log
+
+No changes in August 2026.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+prefix_ring_latency, prefix_ring_latency_le_3.5
+
+## Updated
+
+2026-08-28
+from obspy import UTCDateTime
+
+def raw_trace_to_ground_motion_filtered_pruned(TraceOrig,T1,T2,AccVelDisp,FullResponse,f1,f2,f3,f4,inv):
+
+#  Input is an ObsPy trace that will get demeaned, converted to ACC/VEL/DISP, and then filtered.
+#  FullResponse = 0: only apply gain correction.  
+#  FullResponse = 1: remove the full response.  Warning: this is slow, about 5sec/hour long trace.
+
+    if ( "cc" in AccVelDisp or "CC" in AccVelDisp ):
+        GM = "ACC"
+    elif ( "V" in AccVelDisp or "v" in AccVelDisp ):
+        GM = "VEL"
+    else:
+        GM = "DISP"
+    trace = TraceOrig.copy()
+    trace.detrend(type='demean')
+    if ( len(inv) == 0 ):
+        print ( "No metadata" )
+    else:
+        #----- correct for gain factor only
+        if ( FullResponse == 0 ):
+            trace.remove_sensitivity(inv)
+            if ( f3 == 0 ):
+                trace.filter("highpass", freq = f2)
+            else:
+                trace.filter("bandpass", freqmin = f2, freqmax = f3)
+            trace = trace.slice(UTCDateTime(T1),UTCDateTime(T2))
+#            trace.detrend(type='polynomial',order=3)  #--- of order 0.08 sec/trace
+#            trace.detrend(type='linear')              #--- of order 0.027 sec/trace
+#            trace.detrend(type='demean')              #--- of order 0.002 sec/trace
+            if ( trace.stats.channel[1:2] == "N" ):
+                GMnative = "ACC"
+            else:
+                GMnative = "VEL"
+            if ( GMnative == GM ):
+                idonothing = 1
+            elif ( GMnative == "ACC" and GM == "VEL" and trace.stats.npts > 2 ):
+                trace.integrate(method='cumtrapz')
+            elif ( GMnative == "ACC" and GM == "DISP" ):
+                trace.integrate(method='cumtrapz')
+                trace.integrate(method='cumtrapz')
+            elif ( GMnative == "VEL" and GM == "ACC" and trace.stats.npts > 2 ):
+                trace.differentiate(method='gradient')
+        #----- remove the full response
+        elif ( FullResponse == 1 ):
+            trace.remove_response(inventory=inv, output=GM, pre_filt=(f1,f2,f3,f4))
+            trace = trace.slice(UTCDateTime(T1),UTCDateTime(T2))
+
+#        trace.detrend(type='polynomial',order=3)
+        trace.detrend(type='demean')              #--- of order 0.002 sec/trace
+
+    return trace
+
+Metrics
+=======
+
+## metrics of completeness
+
+- *pctavailable* Percentage of data returned of data requested.
+- *ngaps* Number of gaps.
+- *segmentshort*  Duration in seconds of the shortest segment.
+- *segmentlong*  Duration in seconds of the longest segment.
+
+## simple first-order metrics
+
+- *rawrange*  Range in counts.
+- *rawmean*  Mean in counts.
+- *rawrms*  RMS in counts.
+- *rawmin*  Minimum amplitude in counts.
+- *rawmax*  Maximum amplitude in counts.
+- *accmax*  Peak absolute amplitude of sensitivity-corrected acceleration trace filtered between 0.075 - 15 Hz.
+
+## metrics of power at different periods
+
+These use the ObsPy PPSD class to calculate the probablistic power spectral densities based on the routines used by <a href="https://docs.obspy.org/citations.html#mcnamara2004">[McNamara 2004]</a>.  This is the same method as used by PQLX and IRIS MUSTANG.
+
+- *pow50sec* Power in db at 50 seconds.
+- *pow30sec* Power in db at 30 seconds.
+- *pow20sec* Power in db at 20 seconds.
+- *pow10sec* Power in db at 10 seconds.
+- *pow5sec* Power in db at 5 seconds.
+- *pow1Hz* Power in db at 1 Hertz.
+- *pow5Hz* Power in db at 5 Hertz.
+- *pow10Hz* Power in db at 10 Hertz.
+- *pow20Hz* Power in db at 20 Hertz.
+- *pow50Hz* Power in db at 50 Hertz.
+
+## noise floor
+
+The 98th percentile of sorted amplitude is used to approximate the noise floor.  After traces have been gain corrected and filtered, the amplitudes are sorted.  The 98th percentile amplitude is a surprisingly good approximation to the median envelope amplitude which is the "noise floor" if you eyeball a trace (see figure below).  The frequency band used is ~~0.3~~ 0.075-15 Hz which is the band primarily used by ShakeAlert and is appropriate for most regional seismic network applications.
+
+- *NoiseFloorVel* The 98th percentile of sorted, filtered, gain corrected velocity amplitudes (cm/s).
+- *NoiseFloorAcc* The 98th percentile of sorted, filtered, gain corrected acceleration amplitudes (cm/s^2).
+
+<img src="https://github.com/pnsn/station_metrics/blob/master/station_metrics/img/Metric_noisefloor.png" width=800 alt="Metric: Noise Floor" />
+
+## RMS noise
+
+This metric was introduced into the ShakeAlert station acceptance document to identify stations that have a very loud noise floor for more than one minute (cumulatively) per hour, on average.  This helps flag stations that are near high levels of intermittent cultural noise, e.g. near a road, train tracks or heavy machinery like a pump.  This metric is applied to gain corrected and filtered (0.075-15 Hz) acceleration traces for both strong motion (native acceleration) and broadband (native velocity) channels.  The proposed ShakeAlert threshold is that the RMS function using a sliding 5 sec window not have a total duration more than 60 second per hour, on average, above 0.07 cm/s^2.  The ShakeAlert threshold is set rather high since SA is tuned for events larger than M4.5.  Lower thresholds are also measured to help identify stations that may not be ideal for certain regional seismic network applications which include monitoring much small earthquakes.  This metric can be used to rank stations across a network. 
+
+All use a 5 sec RMS window and gain corrected acceleration traces filtered 0.075-15 Hz.
+- *RMS0p01cm* Total duration in seconds of RMS function exceeding 0.01 cm/s^2.
+- *RMS0p035cm* Total duration in seconds of RMS function exceeding 0.035 cm/s^2.
+- *RMS0p07cm* Total duration in seconds of RMS function exceeding 0.07 cm/s^2.  (used by ShakeAlert station acceptance)
+- *RMS00p1cm* Total duration in seconds of RMS function exceeding 0.1 cm/s^2.
+- *RMS01cm* Total duration in seconds of RMS function exceeding 1 cm/s^2.
+
+In the figure below, the total duration of the RMS above threshold is about 15 seconds in the time window shown.
+
+<img src="https://github.com/pnsn/station_metrics/blob/master/station_metrics/img/Metric_RMS.png" width=800 alt="Metric: RMS" />
+
+## metrics counting spikes/triggers
+
+These metrics count the hourly averaged number of spikes/potential earthquake triggers by using a short term average to long term average (STA/LTA) function.  ShakeAlert and regional seismic networks use an STA/LTA function to identify potential earthquake triggers.  A minimum absolute amplitude criteria is also imposed in order to ignore very low amplitude features.  This metric can be used to identify stations that might have low noise levels in a power spectrum, but frequent triggers.
+
+The STA/LTA functions are calculated on filtered velocity traces, regardless if the instrument natively records acceleration (strong motion station) or velocity (short period and broadband stations).  Before a peak in the STA/LTA function that exceeds a theshold (e.g. 20) can be counted as a spike, the peak absolute amplitude within a short time window on the corresponding gain corrected filtered acceleration trace must also exceed a threshold (e.g. 0.34 cm/s^2).  The time window used is equal to the length of the LTA window.  When scanning the STA/LTA function for peaks, only those exceeding the threshold and separatd by a minimum distance between peaks ("mpd" in config file; twice the LTA time is reasonable) are considered.  The length of the STA and LTA windows are configurable and defaulted to valaues of 0.05 and 5.0 sec, respectively.  Both the velocity and acceleration traces are filtered using a 0.075-15 Hz Butterworth bandpass filter.  Identifying potential triggers using this processing and these parameters mimics early steps in the EPIC algorithm used by ShakeAlert.  This metric can be used to rank stations across a network.
+
+In the figure below, only one spike is counted since it is the only one that exceeds both the STA/LTA threshold and the absolute amplitude threshold.  If the STA/LTA threshold was lowered to 5, for example, there would be a second spike counted (at around 22:01:45).
+
+<img src="https://github.com/pnsn/station_metrics/blob/master/station_metrics/img/Metric_Nspikes.png" width=800 alt="Metric: Nspikes" />
+
+Note: In ObsPy for hour-long traces, calculating the STA/LTA function (classic_sta_lta) takes around 0.4 sec per trace, while the similar z_detect takes only about 0.1 sec. <a href="https://docs.obspy.org/tutorial/code_snippets/trigger_tutorial.html">[ObsPy trigger tutorial]</a> Triggers are implemented as described in <a href="https://docs.obspy.org/citations.html#withers1998">[Withers 1998]</a>.
+
+What has been calculating and writing to the database for all of 2018.  Uses ObsPy z_detect trigger with 1 sec window.
+- *snr10_0p01cm* Number of spikes with SNR > 10 and amplitude exceeding 0.01 cm/s^2 using acceleration data filtered 0.075-15 Hz.  Good for looking for very good stations.
+- *snr20_0p05cm* Number of spikes with SNR > 20 and amplitude exceeding 0.05 cm/s^2 using acceleration data filtered 0.075-15 Hz.
+- *snr20_0p17cm* Number of spikes with SNR > 20 and amplitude exceeding 0.17 cm/s^2 using acceleration data filtered 0.075-15 Hz.  This was the proposed ShakeAlert threshold, but has since been doubled to 0.34 cm/s^2.
+- *snr20_1cm* Number of spikes with SNR > 20 and amplitude exceeding 1 cm/s^2 using acceleration data filtered 0.075-15 Hz.  Good for looking for bad stations.
+- *snr20_3cm* Number of spikes with SNR > 20 and amplitude exceeding 3 cm/s^2 using acceleration data filtered 0.075-15 Hz.
+- *snr20_5cm* Number of spikes with SNR > 20 and amplitude exceeding 5 cm/s^2 using acceleration data filtered 0.075-15 Hz.  Good for looking for terrible stations.
+
+## FinDer specific metrics
+- *finder_2cm_hp* Number of instances of absolute value of sensitivity-corrected acceleration amplitudes highpass filtered above 0.075 Hz exceeding 2 cm/s^2.  Only instances separated by at least 30 seconds from other instances are counted.
+
+## ElarmS/EPIC specific metrics
+- *NTrigElarmSAlex* My approximation to number of ElarmS3/EPIC triggers using only vertical component data.  All data examined are sensitivity corrected and highpass filtered above 0.075 Hz.  Triggers occur when the STA/LTA exceed 20 on the velocity trace using STA/LTA lengths of 0.05/5.0 sec.  Minimum time between triggers must be at least 10 sec.  Peak amplitude within 4 sec of trigger must greater than 0.0031623 cm/s^2 on the acceleration trace, between 0.000000031623 - 10 m/s on the velocity trace and 0.000000031623 to 31.623 m on the displacement trace.  (A. I. Chung et al., SRL March/April 2019)
+
+# rms_above_.07
+
+Duration of Highpassed Acceleration RMS Above 0.07 cm/s^2
+
+## Summary
+
+This metric reports the total number of seconds during the analysis window that
+a five second sliding window RMS of ground acceleration, highpassed at
+0.075 Hz, stays above 0.07 cm/s^2. 0.07 cm/s^2 is the 2018 ShakeAlert station
+acceptance threshold.
+
+## Uses
+
+This is a duration rather than a count, which makes it the right tool for
+finding stations that are persistently too noisy to be useful for early warning
+as opposed to stations that occasionally spike. A station sitting near a
+compressor or a busy road will accumulate hundreds or thousands of seconds an
+hour here while its peak amplitude metrics look unremarkable. Because it is a
+total, one long noisy stretch and many short bursts produce the same number, so
+it should be read alongside the spike counting metrics when diagnosing the
+cause.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, each segment is processed separately and the resulting
+samples are pooled into one series before the RMS is computed.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. Waveforms are requested with a further
+120 s of padding on each side, which is used during processing and then
+discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Detrend the padded trace with a third-order polynomial, remove the mean, and
+   divide by the channel's overall sensitivity from the metadata.
+3. Convert to acceleration. A channel whose second SEED code letter is N is
+   already an accelerometer; anything else is differentiated from velocity.
+4. Apply a causal Butterworth highpass at 0.075 Hz with 2 corners.
+5. Cut the trace to the analysis window, discarding the padding along with the
+   filter start-up transient, and remove the mean again.
+6. Pool the samples from all segments into one series a, in m/s^2.
+7. Square the series, smooth it with a centerd boxcar 5 s long, and take the
+   square root to give a sliding window RMS at every sample:
+
+   RMS(n) = sqrt( mean( a[n - 2.5s : n + 2.5s]^2 ) )
+
+8. Count the samples of the RMS function above the threshold and convert to
+   seconds by multiplying by the sample interval:
+
+   rms_above_.07 = count( RMS > 0.0007 m/s^2 ) * delta
+
+## Metric Values Returned
+
+value - seconds during the window that the RMS exceeded 0.07 cm/s^2, or -1 if
+the returned trace was shorter than the 5 s RMS window.
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+60.0 seconds.
+
+## Notes
+
+The RMS window is centerd on each sample rather than trailing it, so the
+reported duration is symmetric about the noisy interval and extends
+approximately 2.5 s either side of it.
+
+A value of -1 means the measurement could not be made because the trace was
+shorter than 5 s. It is uploaded rather than withheld, because withholding a
+value would be ambiguous between "no data existed", "the channel was not
+analyzed this hour" and "the trace was too short".
+
+Since the measurement window is 3605.05 s rather than 3600 s, the maximum
+possible value is slightly above 3605 rather than 3600.
+
+Where a channel has gaps, samples from separate segments are concatenated
+before the RMS is computed, so the smoothing window straddles the join. This
+can create a small artificial excursion at each gap.
+
+## Change Log
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before differentiation and filtering, so the filter start-up
+transient fell inside the measured window and could push the RMS above
+threshold in the first seconds of every hour.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+rms_bp_above_.07, hourly_noise_floor_acc, acc_spikes_gt_.34
+
+## Updated
+
+2026-08-28
+# rms_bp_above_.07
+
+Duration of Bandpassed Acceleration RMS Above 0.07 cm/s^2
+
+## Summary
+
+This metric reports the total number of seconds during the analysis window that
+a five second sliding window RMS of ground acceleration, bandpassed between
+0.075 Hz and 15 Hz, stays above 0.07 cm/s^2. 0.07 cm/s^2 is the 2018 ShakeAlert
+station acceptance threshold.
+
+## Uses
+
+This is a duration rather than a count, which makes it the right tool for
+finding stations that are persistently too noisy for early warning rather than
+stations that occasionally spike. Because the 15 Hz upper corner removes high
+frequency energy, comparing this value against the highpassed version separates
+two different problems: a channel scoring high on both is genuinely noisy in
+the band that matters, while a channel scoring high only on the highpassed
+version is noisy above 15 Hz, which usually indicates electronics or digitizer
+trouble rather than site noise.
+
+## Data Analyzed
+
+Traces - one N.S.L.C (Network.Station.Location.Channel) per measurement. Where
+the channel has gaps, each segment is processed separately and the resulting
+samples are pooled into one series before the RMS is computed.
+
+Window - the analysis window, running from 5.05 s before the top of the hour to
+the end of the hour, 3605.05 s in total. Waveforms are requested with a further
+120 s of padding on each side, which is used during processing and then
+discarded.
+
+Data Source - FDSN dataselect from the permanent archive: EarthScope/IRIS DMC
+for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data. Instrument metadata is
+requested at response level from the same archive.
+
+SEED Channel Types - ?H? and ?N? (high gain broadband and accelerometer), as
+listed in the ShakeAlert channel file.
+
+## Algorithm
+
+1. Request the analysis window plus 120 s of padding on each side, for a single
+   N.S.L.C, along with the channel's response level metadata.
+2. Detrend the padded trace with a third-order polynomial, remove the mean, and
+   divide by the channel's overall sensitivity from the metadata.
+3. Convert to acceleration. A channel whose second SEED code letter is N is
+   already an accelerometer; anything else is differentiated from velocity.
+4. Apply a causal Butterworth bandpass from 0.075 Hz to 15 Hz with 2 corners.
+5. Cut the trace to the analysis window, discarding the padding along with the
+   filter start-up transient, and remove the mean again.
+6. Pool the samples from all segments into one series a, in m/s^2.
+7. Square the series, smooth it with a centerd boxcar 5 s long, and take the
+   square root to give a sliding window RMS at every sample:
+
+   RMS(n) = sqrt( mean( a[n - 2.5s : n + 2.5s]^2 ) )
+
+8. Count the samples of the RMS function above the threshold and convert to
+   seconds by multiplying by the sample interval:
+
+   rms_bp_above_.07 = count( RMS > 0.0007 m/s^2 ) * delta
+
+## Metric Values Returned
+
+value - seconds during the window that the RMS exceeded 0.07 cm/s^2, or -1 if
+the returned trace was shorter than the 5 s RMS window.
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the channel analyzed, as N.S.L.C.
+
+## Threshold
+
+60.0 seconds.
+
+## Notes
+
+On channels sampled at or below 30 samples per second the 15 Hz upper corner
+sits at or above the Nyquist frequency. ObsPy warns about this and clamps the
+filter, so on those channels this metric becomes equivalent to the highpassed
+version.
+
+The RMS window is centerd on each sample rather than trailing it, so the
+reported duration extends approximately 2.5 s either side of the noisy
+interval.
+
+A value of -1 means the trace was shorter than 5 s. It is uploaded rather than
+withheld, because withholding would be ambiguous between "no data existed",
+"the channel was not analyzed" and "the trace was too short".
+
+## Change Log
+
+Aug 2026: the SQUAC metric name contained a double underscore and was spelled
+rms__bp_above_.07. It is now rms_bp_above_.07. The underlying metric id, 87, is
+unchanged, so historical data is continuous across the rename.
+
+Aug 2026: the processing order changed. Previously the trace was cut to the
+analysis window before differentiation and filtering, so the filter start-up
+transient fell inside the measured window.
+
+## Contact
+
+squac-help@uw.edu
+
+## See Also
+
+rms_above_.07, hourly_noise_floor_bp_acc, acc_bp_spikes_gt_.34
+
+## Updated
+
+2026-08-28
+# Station quality metrics
+
+All hourly metrics listed below are calculated from data archived at their
+respective permanent archives (EarthScope/IRIS DMC for PNSN data, NCEDC for
+NCSN data, SCEDC for SCSN data) and requested using FDSN web services. The
+metrics of measurement completeness give an indication of how successful the
+collection of the data from those archives was using FDSN dataselect, and may
+not always accurately represent what is stored at the archive.
+
+Metric names link to a standalone detail page under `metrics/`.
+
+## Time windows
+
+Two windows are in play for the hourly metrics and they are not the same
+length.
+
+* **Analysis window** — runs from `starttime - 5.05 s` to `starttime + 3600 s`,
+  i.e. 3605.05 s. The 5.05 s lead-in is the STA (0.05 s) plus LTA (5.0 s) of
+  the trigger function, present so the STA/LTA has converged before the hour
+  begins. Every time-domain metric (amplitudes, noise floors, RMS durations,
+  spike and trigger counts) is measured over this window.
+* **Reporting window** — the clean hour, `starttime` to `starttime + 3600 s`.
+  This is what is written to SQUAC as the measurement start and end time. The
+  four `dcrequest_*` completeness metrics and the five `power_*` PSD metrics
+  are measured over this window only.
+
+Waveforms are requested with a further 120 s of padding either side of the
+analysis window. The padding is never measured; it exists so that integration
+drift and filter start-up transients fall outside the measured window.
+
+## Processing chain
+
+Raw counts to filtered ground motion, in this order:
+
+1. detrend with a third-order polynomial (on the padded trace)
+2. remove the mean
+3. divide out the overall sensitivity from the station metadata (gain only,
+   not the full response)
+4. integrate or differentiate to the requested ground-motion type
+5. filter, causal Butterworth, 2 corners
+6. cut to the analysis window
+7. remove the mean again
+
+Filtering is causal on purpose: ShakeAlert's real-time processing is causal,
+and these metrics are meant to resemble what the production system sees.
+
+## Filter bands
+
+* STA/LTA trigger function: velocity, highpassed at 3 Hz, STA 0.05 s,
+  LTA 5.0 s, threshold 20.
+* Amplitude measurements: acceleration (and velocity and displacement for the
+  EPIC approximation), either highpassed at 0.075 Hz or bandpassed
+  0.075 - 15 Hz. Metrics with `bp` in their name use the bandpass; the rest
+  use the highpass.
+
+## August 2026 changes
+
+* Processing order changed. Slicing to the analysis window now happens after
+  filtering rather than before, so filter and integration transients land in
+  the discarded padding.
+* `dcrequest_pctavailable`, `dcrequest_ngaps`, `dcrequest_segmentshort` and
+  `dcrequest_segmentlong` are now measured over the clean hour rather than the
+  3605.05 s analysis window. `dcrequest_ngaps` is now a real gap count rather
+  than the number of returned segments minus one.
+* `power_*` PSDs are now measured on the clean hour. They were previously
+  measured on the hour starting 5.05 s before the top of the hour.
+* PSD failures no longer reach SQUAC as -1.
+* The ElarmS/EPIC boxcar rejection test now uses the signed range
+  `max(x) - min(x)` rather than `max(|x|) - min(|x|)`.
+* `rms__bp_above_.07` corrected to `rms_bp_above_.07` (single underscore).
+* `prefix_ring_latency_max` added to this document.
+
+## Metrics of measurement completeness at datacenters
+
+| metric name | description | frequency | unit | threshold | old name |
+|-------------|-------------|-----------|------|-----------|----------|
+| [dcrequest_pctavailable](metrics/dcrequest_pctavailable.md) | Percentage of the requested hour of data returned via FDSN webservice. | once an hour | percent | 98.0 | pctavailable |
+| [dcrequest_ngaps](metrics/dcrequest_ngaps.md) | Number of gaps in the hour of data returned via FDSN webservice. | once an hour | count | 1 | ngaps |
+| [dcrequest_segmentshort](metrics/dcrequest_segmentshort.md) | Duration in seconds of the shortest continuous data segment in the hour returned by FDSN webservice. | once an hour | seconds | 1.0 | segmentshort |
+| [dcrequest_segmentlong](metrics/dcrequest_segmentlong.md) | Duration in seconds of the longest continuous data segment in the hour returned by FDSN webservice. | once an hour | seconds | 3600.0 | segmentlong |
+
+## General station quality metrics
+
+| metric name | description | frequency | unit | threshold | old name |
+|-------------|-------------|-----------|------|-----------|----------|
+| [hourly_min](metrics/hourly_min.md) | Minimum raw sample value over the analysis window. | once an hour | counts | -1e9 | rawmin |
+| [hourly_max](metrics/hourly_max.md) | Maximum raw sample value over the analysis window. | once an hour | counts | 1e9 | rawmax |
+| [hourly_range](metrics/hourly_range.md) | Range of raw sample values over the analysis window. | once an hour | counts | 2e9 | rawrange |
+| [hourly_mean](metrics/hourly_mean.md) | Mean raw sample value over the analysis window. | once an hour | counts | 1e8 | rawmean |
+| [hourly_max_acc](metrics/hourly_max_acc.md) | Maximum absolute acceleration, highpassed at 0.075 Hz. | once an hour | cm/s^2 | 2.0 | accmax, accmaxHP |
+| [hourly_max_bp_acc](metrics/hourly_max_bp_acc.md) | Maximum absolute acceleration, bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 2.0 | accmax |
+| [hourly_noise_floor_acc](metrics/hourly_noise_floor_acc.md) | Approximate median envelope amplitude, from the half range of the 2nd to 98th percentile amplitudes. Acceleration highpassed at 0.075 Hz. | once an hour | cm/s^2 | 0.2 | NoiseFloorAccHP |
+| [hourly_noise_floor_bp_acc](metrics/hourly_noise_floor_bp_acc.md) | Approximate median envelope amplitude, from the half range of the 2nd to 98th percentile amplitudes. Acceleration bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 0.2 | NoiseFloorAcc |
+| [power_10Hz](metrics/power_10Hz.md) | Power spectral density at 10 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow10Hz |
+| [power_5Hz](metrics/power_5Hz.md) | Power spectral density at 5 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow5Hz |
+| [power_1Hz](metrics/power_1Hz.md) | Power spectral density at 1 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow1Hz |
+| [power_5sec](metrics/power_5sec.md) | Power spectral density at 0.2 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow5sec |
+| [power_40sec](metrics/power_40sec.md) | Power spectral density at 0.025 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow40sec |
+
+## ShakeAlert station quality metrics
+
+| metric name | description | frequency | unit | threshold | old name |
+|-------------|-------------|-----------|------|-----------|----------|
+| [rms_above_.07](metrics/rms_above_.07.md) | Seconds per hour that a 5 s sliding-window RMS exceeds 0.07 cm/s^2. Acceleration highpassed at 0.075 Hz. | once an hour | seconds | 60.0 | RMS0p07cmHP, RMSduration_0p07cmHP |
+| [rms_bp_above_.07](metrics/rms_bp_above_.07.md) | Seconds per hour that a 5 s sliding-window RMS exceeds 0.07 cm/s^2. Acceleration bandpassed 0.075 - 15 Hz. | once an hour | seconds | 60.0 | RMS0p07cm, RMSduration_0p07cm, rms__bp_above_.07 |
+| [acc_spikes_gt_.34](metrics/acc_spikes_gt_.34.md) | Times per hour that the STA/LTA exceeds 20 and the absolute acceleration exceeds 0.34 cm/s^2. Acceleration highpassed at 0.075 Hz. | once an hour | count | 1 | snr20_0p34cmHP |
+| [acc_bp_spikes_gt_.34](metrics/acc_bp_spikes_gt_.34.md) | Times per hour that the STA/LTA exceeds 20 and the absolute acceleration exceeds 0.34 cm/s^2. Acceleration bandpassed 0.075 - 15 Hz. | once an hour | count | 1 | snr20_0p34cm |
+| [acc_gt_2.0](metrics/acc_gt_2.0.md) | Times per hour that the absolute acceleration exceeds 2 cm/s^2, counted at most once every 30 s. Acceleration highpassed at 0.075 Hz. | once an hour | count | 10 | finder_2cm_hp |
+| [approximate_epic_triggers](metrics/approximate_epic_triggers.md) | Approximate count of ElarmS3/EPIC triggers. Amplitude gates on data highpassed at 0.075 Hz. | once an hour | count | 60 | NTrigElarmSAlex |
+| [approximate_epic_bp_triggers](metrics/approximate_epic_bp_triggers.md) | Approximate count of ElarmS3/EPIC triggers. Amplitude gates on data bandpassed 0.075 - 15 Hz. | once an hour | count | 60 | NTrigElarmSAlexBB, NTrigElarmSAlexBB15 |
+
+## Latency and gap metrics from sniffwave_tally
+
+These metrics come from sniffwave_tally (https://github.com/pnsn/sniffwave_tally)
+run against an Earthworm wave ring at each participating institution. The
+metric name carries a prefix identifying the server it was measured on, so the
+same channel sniffed at two institutions produces two independent, uniquely
+named measurements. Prefixes currently in SQUAC:
+
+| prefix | server |
+|--------|--------|
+| export | PNSN export server (ewserver) |
+| scsn | SCSN server pine |
+| ucb | UC Berkeley server eew-bk-dev1 |
+| menlo | USGS Menlo Park server |
+| eewdev1 | ShakeAlert development server 1 |
+| eewdev2 | ShakeAlert development server 2 |
+| ews02 | ShakeAlert production server ews02 |
+
+All seven require sniffwave_tally to be run with the `--all` flag, which is set
+automatically when `--squac` is given.
+
+| metric name | description | frequency | unit | threshold | old name |
+|-------------|-------------|-----------|------|-----------|----------|
+| [prefix_ring_latency](metrics/prefix_ring_latency.md) | Average data latency, defined as the time between the measurement and the end of the packet, plus half the packet length. | once every 10 minutes | seconds | 5.0 | |
+| [prefix_ring_latency_max](metrics/prefix_ring_latency_max.md) | Largest single-packet latency seen during the measurement window. | once every 10 minutes | seconds | 5.0 | |
+| [prefix_ring_latency_le_3.5](metrics/prefix_ring_latency_le_3.5.md) | Percentage of packets with data latency of 3.5 s or less. | once every 10 minutes | percent | 90.0 | pct_gt_3.5sec_late |
+| [prefix_ring_gaps_per_hour](metrics/prefix_ring_gaps_per_hour.md) | Number of gaps seen in the wave ring during the measurement window, normalized to a per hour rate. | once every 10 minutes | count | 1 | |
+| [prefix_ring_packet_length](metrics/prefix_ring_packet_length.md) | Average length of the Tracebuf2 packets seen. | once every 10 minutes | seconds | 5.0 | |
+| [prefix_ring_completeness](metrics/prefix_ring_completeness.md) | Percentage of the measurement window for which data arrived. | once every 10 minutes | percent | 90.0 | |
+| [prefix_ring_completeness_incl_gap_penalty](metrics/prefix_ring_completeness_incl_gap_penalty.md) | Percentage of the measurement window for which data arrived, subtracting an extra 30 s per gap. | once every 10 minutes | percent | 90.0 | |
+
+## Metrics calculated outside this repository
+
+These metrics exist in SQUAC but are produced by other software. Placeholder
+pages exist for them; the algorithm sections are marked TODO and need to be
+filled in by whoever owns the producing code.
+
+| metric name | description | frequency | unit | threshold |
+|-------------|-------------|-----------|------|-----------|
+| [water_pump_time_per_hour](metrics/water_pump_time_per_hour.md) | Seconds each hour that the water pump is on, as recorded on the VE1/VE2 (SP1/SP2) channels. | once an hour | seconds | 0 |
+| [mass_position](metrics/mass_position.md) | Sensor mass position state of health channel. | TODO | TODO | TODO |
+| [system_temperature](metrics/system_temperature.md) | Datalogger or vault temperature state of health channel. | TODO | TODO | TODO |
+| [epic_candidate_triggers](metrics/epic_candidate_triggers.md) | Number of hourly triggers from EPIC, including those eventually rejected or unassociated. | once an hour | count | TODO |
+| [epic_rejected_triggers](metrics/epic_rejected_triggers.md) | Number of hourly EPIC triggers rejected for any reason. | once an hour | count | TODO |
+| [epic_temporary_3sec_triggers](metrics/epic_temporary_3sec_triggers.md) | Number of hourly EPIC triggers valid for at least 3 s before being rejected. | once an hour | count | TODO |
+| [epic_associated_triggers](metrics/epic_associated_triggers.md) | Hourly number of EPIC triggers associated with an event. | once an hour | count | 60 |
+| [epic_unassociated_triggers](metrics/epic_unassociated_triggers.md) | Hourly number of EPIC triggers not associated with an event. | once an hour | count | 60 |
+| [epic_trigger_latency_median](metrics/epic_trigger_latency_median.md) | Median latency of EPIC triggers. | TODO | seconds | TODO |
+| [epic_trigger_latency_le_3.5](metrics/epic_trigger_latency_le_3.5.md) | Percentage of EPIC triggers with latency of 3.5 s or less. | TODO | percent | TODO |
+| [epic_trigger_latency_max](metrics/epic_trigger_latency_max.md) | Maximum latency of EPIC triggers. | TODO | seconds | TODO |
+| [prefix_ring_n_oo](metrics/prefix_ring_n_oo.md) | Number of out-of-order packets seen in the wave ring. | once every 10 minutes | count | TODO |
+| [prefix_ring_oo_dur](metrics/prefix_ring_oo_dur.md) | Total duration of out-of-order packets seen in the wave ring. | once every 10 minutes | seconds | TODO |
+
+The following metrics also exist in SQUAC and are documented only by the rows
+below. They are produced entirely outside this repository and have no detail
+pages.
+
+| metric name | description | frequency | unit | threshold |
+|-------------|-------------|-----------|------|-----------|
+| daily_ci_finder_triggers | Daily number of FinDer triggers from eew-ci-test1. From https://service.scedc.caltech.edu/station/triggerreport.php. | once a day | count | 240 |
+| daily_ci_l2z | L2Z latency from eew-ci-test1. From https://service.scedc.caltech.edu/station/triggerreport.php. | once a day | seconds | 5.0 |
+| daily_ci_paclen | Packet lengths from eew-ci-test1. From https://service.scedc.caltech.edu/station/triggerreport.php. | once a day | seconds | 5.0 |
+| daily_ci_epic_associated_triggers | Daily number of associated EPIC triggers from eew-ci-test1. | once a day | count | 24 |
+| daily_ci_epic_unassociated_triggers | Daily number of unassociated EPIC triggers from eew-ci-test1. | once a day | count | 1440 |
+| daily_aqms_p_arrivals | Daily number of P arrivals used for events in AQMS at SCSN. | once a day | count | 24 |
+| distance_nearest_shakealert_station | Distance to the nearest other ShakeAlert station. Z channels only. | once a day | km | 100 |
+| distance_second_nearest_shakealert_station | Distance to the second nearest other ShakeAlert station. Z channels only. | once a day | km | 100 |
+| distance_third_nearest_shakealert_station | Distance to the third nearest other ShakeAlert station. Z channels only. | once a day | km | 100 |
+| distance_fourth_nearest_shakealert_station | Distance to the fourth nearest other ShakeAlert station. Z channels only. | once a day | km | 100 |
+| distance_fifth_nearest_shakealert_station | Distance to the fifth nearest other ShakeAlert station. Z channels only. | once a day | km | 100 |
+| broadband_sensor_supply_current | Broadband sensor supply current state of health channel. | TODO | TODO | TODO |
+| Multipath L1 | GNSS L1 multipath. | TODO | TODO | TODO |
+| Multipath L2 | GNSS L2 multipath. | TODO | TODO | TODO |
+
+## Contact
+
+squac-help@uw.edu
+
+# system_temperature
+
+System Temperature
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports a datalogger or vault temperature, read from a state of
+health channel.
+
+## Uses
+
+Temperature drives long period seismic noise, mass position drift, and at
+extremes outright equipment failure. It is tracked both for its own sake, to
+catch vault insulation or ventilation problems, and as an explanation for other
+metrics going bad: a long period noise metric that rises in step with
+temperature points at the vault rather than at the instrument.
+
+## Data Analyzed
+
+Traces - a temperature state of health channel. TODO: confirm the channel codes
+and which seismic channel the measurement is attached to in SQUAC.
+
+Window - TODO.
+
+Data Source - TODO.
+
+## Algorithm
+
+TODO. Document how the raw state of health samples are converted to a
+temperature, including the scaling from counts to degrees, and whether the
+value reported is a mean, a median or an extreme over the window.
+
+## Metric Values Returned
+
+value - temperature. Units TODO, presumably degrees Celsius.
+
+starttime - TODO.
+
+endtime - TODO.
+
+channel - TODO.
+
+## Threshold
+
+TODO.
+
+## Contact
+
+squac-help@uw.edu
+
+## Updated
+
+2026-08-28
+# water_pump_time_per_hour
+
+Water Pump Run Time Per Hour
+
+STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
+repository. The algorithm section needs to be completed by whoever maintains
+the producing code.
+
+## Summary
+
+This metric reports the number of seconds in each hour that a vault's water
+pump was running, as recorded on the VE1 and VE2 state of health channels,
+which are also seen as SP1 and SP2 on some dataloggers.
+
+## Uses
+
+A pump that runs more than briefly means water is entering the vault, which
+threatens both the instrument and the electronics. A pump running continuously
+usually means it has failed to keep up with inflow or is stuck on, either of
+which is a maintenance visit. Because the metric is hourly, a rising trend over
+a wet season is visible well before the water reaches anything expensive.
+
+## Data Analyzed
+
+Traces - the VE1 and VE2 (or SP1 and SP2) state of health channels for a
+station. The resulting measurement is attached to the station's HHZ channel in
+SQUAC rather than to the state of health channel itself.
+
+Window - one hour. TODO: confirm whether this is the clean hour or a padded
+window.
+
+Data Source - TODO.
+
+## Algorithm
+
+TODO. Document how pump-on is detected from the VE1/VE2 sample values, what
+threshold or state encoding is used, and how the on-time is accumulated.
+
+## Metric Values Returned
+
+value - seconds the pump was on during the hour.
+
+starttime - beginning of the reporting hour (UTC).
+
+endtime - end of the reporting hour (UTC).
+
+channel - the station's HHZ channel.
+
+## Threshold
+
+0 seconds.
+
+## Contact
+
+squac-help@uw.edu
+
+## Updated
+
+2026-08-28
