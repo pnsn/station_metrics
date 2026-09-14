@@ -71,7 +71,7 @@ does not depend on sample ordering.
 
 ## Change Log
 
-Aug 2026: no change to the calculation. The processing chain applied to the
+Sep 14 2026: no change to the calculation. The processing chain applied to the
 filtered metrics changed in this release, but this metric has always been taken
 from the untouched raw trace.
 
@@ -85,4 +85,4 @@ hourly_max, hourly_mean, hourly_range
 
 ## Updated
 
-2026-08-28
+2026-09-14

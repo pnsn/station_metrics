@@ -96,7 +96,7 @@ backlog was individually useless to early warning.
 
 ## Change Log
 
-No changes in August 2026.
+No changes in September 2026.
 
 ## Contact
 
@@ -108,4 +108,4 @@ prefix_ring_latency_max, prefix_ring_latency_le_3.5, prefix_ring_packet_length
 
 ## Updated
 
-2026-08-28
+2026-09-14

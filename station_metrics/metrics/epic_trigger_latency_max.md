@@ -55,4 +55,4 @@ epic_trigger_latency_median, epic_trigger_latency_le_3.5
 
 ## Updated
 
-2026-08-28
+2026-09-14

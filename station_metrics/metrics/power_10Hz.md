@@ -93,15 +93,15 @@ PPSD, which would silently produce no value.
 
 ## Change Log
 
-Aug 2026: the PSD was previously computed on the 3605.05 s analysis window.
+Sep 14 2026: the PSD was previously computed on the 3605.05 s analysis window.
 PPSD's one hour segmenting then measured the hour beginning 5.05 s before the
 top of the hour, so the reported start time was wrong by that amount. It now
 runs on the clean hour.
 
-Aug 2026: a failed PPSD calculation used to reach SQUAC as a value of -1. It is
+Sep 14 2026: a failed PPSD calculation used to reach SQUAC as a value of -1. It is
 now discarded.
 
-Aug 2026: previously documented as coming from IRIS MUSTANG. It has always been
+Sep 14 2026: previously documented as coming from IRIS MUSTANG. It has always been
 calculated locally with ObsPy PPSD.
 
 ## Contact
@@ -114,4 +114,4 @@ power_5Hz, power_1Hz, power_5sec, power_40sec, hourly_noise_floor_acc
 
 ## Updated
 
-2026-08-28
+2026-09-14

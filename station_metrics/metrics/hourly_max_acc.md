@@ -53,7 +53,7 @@ listed in the ShakeAlert channel file.
 6. Apply a causal Butterworth highpass at 0.075 Hz with 2 corners. The filter
    is causal because ShakeAlert's real time processing is causal.
 7. Cut the trace to the analysis window, discarding the padding along with the
-   filter start-up transient it absorbed.
+   filter edge effects.
 8. Remove the mean again.
 9. Pool the samples from all segments into one series a, in m/s^2, and report
    the largest absolute value converted to cm/s^2:
@@ -77,7 +77,7 @@ channel - the channel analyzed, as N.S.L.C.
 ## Notes
 
 The order of operations matters and is deliberate. Filtering before cutting
-means the filter's start-up transient lands in the 120 s of padding and is
+means the filter's edge effects lands in the 120 s of padding and is
 thrown away, rather than contaminating the first seconds of the measured
 window. The same is true of the drift introduced when a velocity channel is
 differentiated or an accelerometer is integrated for other metrics.
@@ -92,9 +92,9 @@ with an uncorrected value.
 
 ## Change Log
 
-Aug 2026: the processing order changed. Previously the trace was cut to the
+Sep 14 2026: the processing order changed. Previously the trace was cut to the
 analysis window before integration or differentiation and before filtering, so
-the filter transient fell inside the measured window. Cutting is now the last
+the filter edge effects fell inside the measured window. Cutting is now the last
 step before the final demean.
 
 ## Contact
@@ -107,4 +107,4 @@ hourly_max_bp_acc, hourly_noise_floor_acc, acc_gt_2.0
 
 ## Updated
 
-2026-08-28
+2026-09-14

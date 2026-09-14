@@ -89,15 +89,15 @@ PPSD.
 
 ## Change Log
 
-Aug 2026: the PSD was previously computed on the 3605.05 s analysis window, so
+Sep 14 2026: the PSD was previously computed on the 3605.05 s analysis window, so
 the hour actually measured began 5.05 s before the top of the hour. It now runs
 on the clean hour.
 
-Aug 2026: a failed PPSD calculation used to reach SQUAC as a value of -1. It is
+Sep 14 2026: a failed PPSD calculation used to reach SQUAC as a value of -1. It is
 now discarded. This metric was also used as the validity test for the whole PSD
 group; that test is now applied to all five values together.
 
-Aug 2026: previously documented as coming from IRIS MUSTANG. It has always been
+Sep 14 2026: previously documented as coming from IRIS MUSTANG. It has always been
 calculated locally with ObsPy PPSD.
 
 ## Contact
@@ -110,4 +110,4 @@ power_10Hz, power_5Hz, power_5sec, power_40sec
 
 ## Updated
 
-2026-08-28
+2026-09-14

@@ -48,7 +48,7 @@ listed in the ShakeAlert channel file.
    already an accelerometer; anything else is differentiated from velocity.
 4. Apply a causal Butterworth bandpass from 0.075 Hz to 15 Hz with 2 corners.
 5. Cut the trace to the analysis window, discarding the padding along with the
-   filter start-up transient, and remove the mean again.
+   filter edge effects, and remove the mean again.
 6. Pool the samples from all segments into one series a, in m/s^2.
 7. Square the series, smooth it with a centered boxcar 5 s long, and take the
    square root to give a sliding window RMS at every sample:
@@ -92,13 +92,13 @@ withheld, because withholding would be ambiguous between "no data existed",
 
 ## Change Log
 
-Aug 2026: the SQUAC metric name contained a double underscore and was spelled
+Sep 14 2026: the SQUAC metric name contained a double underscore and was spelled
 rms__bp_above_.07. It is now rms_bp_above_.07. The underlying metric id, 87, is
 unchanged, so historical data is continuous across the rename.
 
-Aug 2026: the processing order changed. Previously the trace was cut to the
-analysis window before differentiation and filtering, so the filter start-up
-transient fell inside the measured window.
+Sep 14 2026: the processing order changed. Previously the trace was cut to the
+analysis window before differentiation and filtering, so the filter edge effects 
+fell inside the measured window.
 
 ## Contact
 
@@ -110,4 +110,4 @@ rms_above_.07, hourly_noise_floor_bp_acc, acc_bp_spikes_gt_.34
 
 ## Updated
 
-2026-08-28
+2026-09-14

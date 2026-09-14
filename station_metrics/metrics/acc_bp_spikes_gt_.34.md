@@ -96,9 +96,9 @@ short".
 
 ## Change Log
 
-Aug 2026: the processing order changed. Previously the trace was cut to the
-analysis window before differentiation and filtering, so the filter start-up
-transient fell inside the measured window.
+Sep 14 2026: the processing order changed. Previously the trace was cut to the
+analysis window before differentiation and filtering, so the filter edge 
+effects fell inside the measured window.
 
 ## Contact
 
@@ -110,4 +110,4 @@ acc_spikes_gt_.34, acc_gt_2.0, approximate_epic_bp_triggers
 
 ## Updated
 
-2026-08-28
+2026-09-14

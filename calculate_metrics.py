@@ -35,7 +35,7 @@ Two windows are in play and they are not the same length.
 
 On top of that, waveforms are requested with 120 s of padding either side of
 the analysis window.  The padding is never measured; it exists so that
-integration drift and filter start-up transients fall outside the window that
+integration drift and filter edge effects fall outside the window that
 is measured.
 
 Filtering
@@ -52,29 +52,29 @@ practice.
 
 Change log
 ----------
-Aug 2026: processing order changed.  It was detrend -> demean -> remove
+Sep 2026: processing order changed.  It was detrend -> demean -> remove
           sensitivity -> slice -> integrate/differentiate -> filter -> demean;
           slicing now happens after the filter, so the 120 s padding absorbs
-          the integration and filter transients.
-Aug 2026: dcrequest_pctavailable numerator was the sample count over the whole
+          the integration and filter edge effects.
+Sep 2026: dcrequest_pctavailable numerator was the sample count over the whole
           3605.05 s analysis window, so it read above 100% on a complete hour.
           It is now the sample count inside the clean hour only.
-Aug 2026: dcrequest_ngaps was the number of returned trace segments minus one,
+Sep 2026: dcrequest_ngaps was the number of returned trace segments minus one,
           counted over the analysis window.  It is now a real gap count inside
           the clean hour, from Stream.get_gaps.
-Aug 2026: dcrequest_segmentshort and dcrequest_segmentlong are measured on
+Sep 2026: dcrequest_segmentshort and dcrequest_segmentlong are measured on
           segments clipped to the clean hour, not the analysis window.
-Aug 2026: PSD was run on the 3605.05 s analysis window, and PPSD's one-hour
+Sep 2026: PSD was run on the 3605.05 s analysis window, and PPSD's one-hour
           segmenting therefore measured the hour starting 5.05 s before the
           top of the hour.  It now runs on the clean hour.
-Aug 2026: PSD failures used to reach SQUAC as -1.  get_power now returns None
+Sep 2026: PSD failures used to reach SQUAC as -1.  get_power now returns None
           on failure, and powers are only uploaded when all five values are
           below -1 dB, which is the range real PSD values occupy (-180 to -50).
-Aug 2026: the ElarmS/EPIC boxcar rejection test now uses the signed range
+Sep 2026: the ElarmS/EPIC boxcar rejection test now uses the signed range
           max(x) - min(x) rather than max(|x|) - min(|x|).
-Aug 2026: start time is a command-line argument rather than a hard-coded date.
-Aug 2026: uploads can be batched over several channels; see --upload-chunksize.
-Aug 2026: unused metric variants (different thresholds, 10/20/25 Hz bandpass
+Sep 2026: start time is a command-line argument rather than a hard-coded date.
+Sep 2026: uploads can be batched over several channels; see --upload-chunksize.
+Sep 2026: unused metric variants (different thresholds, 10/20/25 Hz bandpass
           corners, full-response removal, plotting, trigger-time log files)
           were removed.
 """

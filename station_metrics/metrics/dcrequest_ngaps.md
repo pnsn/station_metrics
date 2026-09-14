@@ -68,7 +68,7 @@ reads zero here; dcrequest_pctavailable is what identifies that case.
 
 ## Change Log
 
-Aug 2026: this was previously the number of returned trace segments minus one,
+Sep 14 2026: this was previously the number of returned trace segments minus one,
 counted over the 3605.05 s analysis window. That count also included overlaps
 and any segment split caused by a change of sample rate or encoding, and it
 counted discontinuities in the 5.05 s of lead-in that falls outside the
@@ -84,4 +84,4 @@ dcrequest_pctavailable, dcrequest_segmentshort, dcrequest_segmentlong
 
 ## Updated
 
-2026-08-28
+2026-09-14

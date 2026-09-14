@@ -54,4 +54,4 @@ squac-help@uw.edu
 
 ## Updated
 
-2026-08-28
+2026-09-14

@@ -91,7 +91,7 @@ order packets can therefore be reported as a gap followed by an overlap.
 
 ## Change Log
 
-No changes in August 2026.
+No changes in September 2026.
 
 ## Contact
 
@@ -103,4 +103,4 @@ prefix_ring_completeness, prefix_ring_completeness_incl_gap_penalty
 
 ## Updated
 
-2026-08-28
+2026-09-14

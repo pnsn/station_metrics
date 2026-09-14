@@ -92,7 +92,7 @@ channel - the channel analyzed, as N.S.L.C.
 
 ## Threshold
 
-60 counts.
+10 counts.
 
 ## Notes
 
@@ -112,15 +112,15 @@ uploaded rather than withheld, because withholding would be ambiguous.
 
 ## Change Log
 
-Aug 2026: the boxcar test was previously applied to rectified data, measuring
+Sep 14 2026: the boxcar test was previously applied to rectified data, measuring
 max(|x|) - min(|x|), and now measures the signed range max(x) - min(x). Counts
 from before and after this change are not directly comparable and should be
 expected to rise.
 
-Aug 2026: the processing order changed. Previously the trace was cut to the
+Sep 14 2026: the processing order changed. Previously the trace was cut to the
 analysis window before integration, differentiation and filtering.
 
-Aug 2026: the previous documentation stated that the STA/LTA trigger trace was
+Sep 14 2026: the previous documentation stated that the STA/LTA trigger trace was
 highpassed at 0.075 Hz. The STA/LTA trigger trace is highpassed at 3 Hz; only
 the amplitude gates use the 0.075 - 15 Hz band.
 
@@ -134,4 +134,4 @@ approximate_epic_triggers, acc_bp_spikes_gt_.34
 
 ## Updated
 
-2026-08-28
+2026-09-14

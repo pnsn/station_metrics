@@ -56,4 +56,4 @@ epic_trigger_latency_median, epic_trigger_latency_max
 
 ## Updated
 
-2026-08-28
+2026-09-14

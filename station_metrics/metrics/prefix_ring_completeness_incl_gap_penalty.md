@@ -89,7 +89,7 @@ the output and reports nothing rather than reporting zero.
 
 ## Change Log
 
-No changes in August 2026.
+No changes in September 2026.
 
 ## Contact
 
@@ -101,4 +101,4 @@ prefix_ring_completeness, prefix_ring_gaps_per_hour
 
 ## Updated
 
-2026-08-28
+2026-09-14

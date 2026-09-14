@@ -75,7 +75,7 @@ measured".
 
 ## Change Log
 
-Aug 2026: previously measured over the 3605.05 s analysis window rather than
+Sep 14 2026: previously measured over the 3605.05 s analysis window rather than
 the reporting hour.
 
 ## Contact
@@ -88,4 +88,4 @@ dcrequest_segmentlong, dcrequest_ngaps, dcrequest_pctavailable
 
 ## Updated
 
-2026-08-28
+2026-09-14

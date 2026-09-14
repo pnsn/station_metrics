@@ -82,7 +82,7 @@ expected from an archive request.
 
 ## Change Log
 
-Aug 2026: the numerator counted samples over the whole 3605.05 s analysis
+Sep 14 2026: the numerator counted samples over the whole 3605.05 s analysis
 window while the denominator used an integer 3605 s, so a complete hour read
 about 100.14 percent. Both are now the clean hour.
 
@@ -96,4 +96,4 @@ dcrequest_ngaps, dcrequest_segmentshort, dcrequest_segmentlong
 
 ## Updated
 
-2026-08-28
+2026-09-14

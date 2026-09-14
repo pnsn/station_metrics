@@ -20,14 +20,14 @@ ambiguous between "no data existed", "channel not analyzed" and "trace short".
 
 Change log
 ----------
-Aug 2026: count_peaks_stalta_new renamed to count_peaks_stalta; the older
+Sep 14 2026: count_peaks_stalta_new renamed to count_peaks_stalta; the older
           count_peaks_stalta and the unused detect_peaks helper were removed.
-Aug 2026: the ElarmS/EPIC boxcar rejection test was measured on rectified data,
+Sep 14 2026: the ElarmS/EPIC boxcar rejection test was measured on rectified data,
           i.e. max(|x|) - min(|x|).  It is now measured on the signed trace,
           max(x) - min(x), which is what a boxcar (DC step) test should be.
           Rectifying collapses a symmetric boxcar toward zero range, so the old
           test rejected more triggers than intended.
-Aug 2026: count_peaks_stalta_Elarms_times folded back into
+Sep 14 2026: count_peaks_stalta_Elarms_times folded back into
           count_peaks_stalta_Elarms; trigger sample indices are no longer
           returned (nothing consumed them).
 """

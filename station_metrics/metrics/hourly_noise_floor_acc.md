@@ -97,9 +97,9 @@ high frequency instrument noise.
 
 ## Change Log
 
-Aug 2026: the processing order changed. Previously the trace was cut to the
+Sep 14 2026: the processing order changed. Previously the trace was cut to the
 analysis window before integration or differentiation and before filtering, so
-the filter transient fell inside the measured window. Cutting is now the last
+the filter edge effects fell inside the measured window. Cutting is now the last
 step before the final demean.
 
 ## Contact
@@ -112,4 +112,4 @@ hourly_noise_floor_bp_acc, hourly_max_acc, power_1Hz
 
 ## Updated
 
-2026-08-28
+2026-09-14

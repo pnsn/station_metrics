@@ -50,7 +50,7 @@ listed in the ShakeAlert channel file.
    velocity sensor and is differentiated.
 6. Apply a causal Butterworth bandpass from 0.075 Hz to 15 Hz with 2 corners.
 7. Cut the trace to the analysis window, discarding the padding along with the
-   filter start-up transient it absorbed.
+   filter edge effects.
 8. Remove the mean again.
 9. Pool the samples from all segments into one series a, in m/s^2, and report
    the largest absolute value converted to cm/s^2:
@@ -87,9 +87,9 @@ with an uncorrected value.
 
 ## Change Log
 
-Aug 2026: the processing order changed. Previously the trace was cut to the
+Sep 14 2026: the processing order changed. Previously the trace was cut to the
 analysis window before integration or differentiation and before filtering, so
-the filter transient fell inside the measured window. Cutting is now the last
+the filter edge effects fell inside the measured window. Cutting is now the last
 step before the final demean.
 
 ## Contact
@@ -102,4 +102,4 @@ hourly_max_acc, hourly_noise_floor_bp_acc
 
 ## Updated
 
-2026-08-28
+2026-09-14

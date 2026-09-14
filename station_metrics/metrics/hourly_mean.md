@@ -71,7 +71,7 @@ SQUAC are the clean hour.
 
 ## Change Log
 
-Aug 2026: no change to the calculation. This metric has always been taken from
+Sep 14 2026: no change to the calculation. This metric has always been taken from
 the untouched raw trace.
 
 ## Contact
@@ -84,4 +84,4 @@ hourly_min, hourly_max, hourly_range
 
 ## Updated
 
-2026-08-28
+2026-09-14

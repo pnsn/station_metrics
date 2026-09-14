@@ -87,7 +87,7 @@ packet's latency as both the average and the maximum.
 
 ## Change Log
 
-Aug 2026: added to the published metric documentation. The measurement itself
+Sep 14 2026: added to the published metric documentation. The measurement itself
 has been produced by sniffwave_tally for some time.
 
 ## Contact
@@ -100,4 +100,4 @@ prefix_ring_latency, prefix_ring_latency_le_3.5
 
 ## Updated
 
-2026-08-28
+2026-09-14

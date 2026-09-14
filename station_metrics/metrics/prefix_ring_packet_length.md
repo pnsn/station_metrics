@@ -86,7 +86,7 @@ discarded before any tallying.
 
 ## Change Log
 
-No changes in August 2026.
+No changes in September 2026.
 
 ## Contact
 
@@ -98,4 +98,4 @@ prefix_ring_latency, prefix_ring_latency_le_3.5
 
 ## Updated
 
-2026-08-28
+2026-09-14

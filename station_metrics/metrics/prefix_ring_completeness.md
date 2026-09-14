@@ -87,7 +87,7 @@ The gap detection is sequential and assumes packets arrive in order.
 
 ## Change Log
 
-No changes in August 2026.
+No changes in September 2026.
 
 ## Contact
 
@@ -99,4 +99,4 @@ prefix_ring_completeness_incl_gap_penalty, prefix_ring_gaps_per_hour
 
 ## Updated
 
-2026-08-28
+2026-09-14

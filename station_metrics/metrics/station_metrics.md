@@ -26,7 +26,7 @@ length.
 
 Waveforms are requested with a further 120 s of padding either side of the
 analysis window. The padding is never measured; it exists so that integration
-drift and filter start-up transients fall outside the measured window.
+drift and filter start-up edge effects fall outside the measured window.
 
 ## Processing chain
 
@@ -53,10 +53,10 @@ and these metrics are meant to resemble what the production system sees.
   0.075 - 15 Hz. Metrics with `bp` in their name use the bandpass; the rest
   use the highpass.
 
-## August 2026 changes
+## September 2026 changes
 
 * Processing order changed. Slicing to the analysis window now happens after
-  filtering rather than before, so filter and integration transients land in
+  filtering rather than before, so filter and integration edge effects land in
   the discarded padding.
 * `dcrequest_pctavailable`, `dcrequest_ngaps`, `dcrequest_segmentshort` and
   `dcrequest_segmentlong` are now measured over the clean hour rather than the

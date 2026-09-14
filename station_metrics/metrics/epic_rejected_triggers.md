@@ -59,4 +59,4 @@ epic_candidate_triggers, epic_temporary_3sec_triggers
 
 ## Updated
 
-2026-08-28
+2026-09-14

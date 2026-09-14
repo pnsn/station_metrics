@@ -70,7 +70,7 @@ reported in that case is 0, which should be read as "not measured".
 
 ## Change Log
 
-Aug 2026: previously measured over the 3605.05 s analysis window, so a healthy
+Sep 14 2026: previously measured over the 3605.05 s analysis window, so a healthy
 channel read about 3605 s rather than 3600 s. Any alerting rule tuned to the
 old value needs revisiting.
 
@@ -84,4 +84,4 @@ dcrequest_segmentshort, dcrequest_ngaps, dcrequest_pctavailable
 
 ## Updated
 
-2026-08-28
+2026-09-14
