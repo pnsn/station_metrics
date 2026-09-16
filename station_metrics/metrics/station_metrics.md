@@ -1,11 +1,13 @@
 # Station quality metrics
 
-All hourly metrics listed below are calculated from data archived at their
-respective permanent archives (EarthScope/IRIS DMC for PNSN data, NCEDC for
-NCSN data, SCEDC for SCSN data) and requested using FDSN web services. The
-metrics of measurement completeness give an indication of how successful the
-collection of the data from those archives was using FDSN dataselect, and may
-not always accurately represent what is stored at the archive.
+All hourly metrics listed below, except the EPIC trigger metrics, are
+calculated from data archived at their respective permanent archives
+(EarthScope/IRIS DMC for PNSN data, NCEDC for NCSN data, SCEDC for SCSN data)
+and requested using FDSN web services. The metrics of measurement completeness
+give an indication of how successful the collection of the data from those
+archives was using FDSN dataselect, and may not always accurately represent
+what is stored at the archive. The EPIC trigger metrics are read from the log
+files of an EPIC instance on eew-uw-rei; see their section below.
 
 Metric names link to a standalone detail page under `metrics/`.
 
@@ -27,6 +29,9 @@ length.
 Waveforms are requested with a further 120 s of padding either side of the
 analysis window. The padding is never measured; it exists so that integration
 drift and filter start-up edge effects fall outside the measured window.
+
+The EPIC trigger metrics use neither window: each trigger is assigned to the
+clean UTC hour containing its trigger time.
 
 ## Processing chain
 
@@ -69,6 +74,8 @@ and these metrics are meant to resemble what the production system sees.
   `max(x) - min(x)` rather than `max(|x|) - min(|x|)`.
 * `rms__bp_above_.07` corrected to `rms_bp_above_.07` (single underscore).
 * `prefix_ring_latency_max` added to this document.
+* The eight `epic_*` trigger metrics now have full detail pages and their own
+  section, documenting that they come from the eew-uw-rei EPIC instance.
 
 ## Metrics of measurement completeness at datacenters
 
@@ -108,6 +115,43 @@ and these metrics are meant to resemble what the production system sees.
 | [acc_gt_2.0](metrics/acc_gt_2.0.md) | Times per hour that the absolute acceleration exceeds 2 cm/s^2, counted at most once every 30 s. Acceleration highpassed at 0.075 Hz. | once an hour | count | 10 | finder_2cm_hp |
 | [approximate_epic_triggers](metrics/approximate_epic_triggers.md) | Approximate count of ElarmS3/EPIC triggers. Amplitude gates on data highpassed at 0.075 Hz. | once an hour | count | 60 | NTrigElarmSAlex |
 | [approximate_epic_bp_triggers](metrics/approximate_epic_bp_triggers.md) | Approximate count of ElarmS3/EPIC triggers. Amplitude gates on data bandpassed 0.075 - 15 Hz. | once an hour | count | 60 | NTrigElarmSAlexBB, NTrigElarmSAlexBB15 |
+
+## EPIC trigger metrics from eew-uw-rei
+
+These metrics are parsed by `count_triggers_cli.py` from the daily log files
+(`epic_YYYYMMDD.log`) of an instance of EPIC that mirrors production but runs
+on eew-uw-rei. ShakeAlert staff use this instance to check the station quality
+of new or upgraded stations for the purposes of station acceptance into
+ShakeAlert, so its channel file is larger than production EPIC's: it also
+includes candidate and suspended stations. Values describe how this instance
+treated a channel and may differ from production EPIC, whose surrounding
+station set is different. They are not calculated from archived waveforms.
+
+Each trigger is assigned to the clean UTC hour containing its trigger (pick)
+time and ends up in exactly one class, decided from its final logged status:
+
+* **rejected** — final status contains LARGE, SMALL or RANGE
+* **late** — not rejected, and more than 120 s passed between the trigger time
+  and EPIC logging it (counted in the candidate total, not uploaded separately)
+* **associated** — not rejected or late, and final status is associated
+* **unassociated** — everything else
+
+So `epic_candidate_triggers` = associated + unassociated + rejected + late.
+The five count metrics are uploaded as 0 for every hour a channel was being
+analyzed (it had an EPIC status line or a trigger) with no triggers of that
+class; the three latency metrics are uploaded only for hours with at least one
+trigger. Only vertical channels with a SQUAC channel id are uploaded.
+
+| metric name | description | frequency | unit | threshold | old name |
+|-------------|-------------|-----------|------|-----------|----------|
+| [epic_candidate_triggers](metrics/epic_candidate_triggers.md) | Number of hourly triggers from EPIC, including those eventually rejected, unassociated or late. | once an hour | count | TODO | |
+| [epic_rejected_triggers](metrics/epic_rejected_triggers.md) | Number of hourly EPIC triggers whose final status contains LARGE, SMALL or RANGE. | once an hour | count | TODO | |
+| [epic_temporary_3sec_triggers](metrics/epic_temporary_3sec_triggers.md) | Number of hourly rejected EPIC triggers that were continuously valid (WAITING, UNASSOC or NO_ZCOMP) for at least 3 s before being rejected. | once an hour | count | TODO | |
+| [epic_associated_triggers](metrics/epic_associated_triggers.md) | Hourly number of on-time EPIC triggers associated with an event. | once an hour | count | 60 | |
+| [epic_unassociated_triggers](metrics/epic_unassociated_triggers.md) | Hourly number of valid, on-time EPIC triggers not associated with an event. | once an hour | count | 60 | |
+| [epic_trigger_latency_median](metrics/epic_trigger_latency_median.md) | Median time between trigger time and EPIC logging the trigger, over all triggers in the hour. | once an hour, hours with triggers only | seconds | TODO | |
+| [epic_trigger_latency_le_3.5](metrics/epic_trigger_latency_le_3.5.md) | Percentage of the hour's EPIC triggers with latency of 3.5 s or less. | once an hour, hours with triggers only | percent | TODO | |
+| [epic_trigger_latency_max](metrics/epic_trigger_latency_max.md) | Maximum time between trigger time and EPIC logging the trigger, over all triggers in the hour. | once an hour, hours with triggers only | seconds | TODO | |
 
 ## Latency and gap metrics from sniffwave_tally
 
@@ -151,14 +195,6 @@ filled in by whoever owns the producing code.
 | [water_pump_time_per_hour](metrics/water_pump_time_per_hour.md) | Seconds each hour that the water pump is on, as recorded on the VE1/VE2 (SP1/SP2) channels. | once an hour | seconds | 0 |
 | [mass_position](metrics/mass_position.md) | Sensor mass position state of health channel. | TODO | TODO | TODO |
 | [system_temperature](metrics/system_temperature.md) | Datalogger or vault temperature state of health channel. | TODO | TODO | TODO |
-| [epic_candidate_triggers](metrics/epic_candidate_triggers.md) | Number of hourly triggers from EPIC, including those eventually rejected or unassociated. | once an hour | count | TODO |
-| [epic_rejected_triggers](metrics/epic_rejected_triggers.md) | Number of hourly EPIC triggers rejected for any reason. | once an hour | count | TODO |
-| [epic_temporary_3sec_triggers](metrics/epic_temporary_3sec_triggers.md) | Number of hourly EPIC triggers valid for at least 3 s before being rejected. | once an hour | count | TODO |
-| [epic_associated_triggers](metrics/epic_associated_triggers.md) | Hourly number of EPIC triggers associated with an event. | once an hour | count | 60 |
-| [epic_unassociated_triggers](metrics/epic_unassociated_triggers.md) | Hourly number of EPIC triggers not associated with an event. | once an hour | count | 60 |
-| [epic_trigger_latency_median](metrics/epic_trigger_latency_median.md) | Median latency of EPIC triggers. | TODO | seconds | TODO |
-| [epic_trigger_latency_le_3.5](metrics/epic_trigger_latency_le_3.5.md) | Percentage of EPIC triggers with latency of 3.5 s or less. | TODO | percent | TODO |
-| [epic_trigger_latency_max](metrics/epic_trigger_latency_max.md) | Maximum latency of EPIC triggers. | TODO | seconds | TODO |
 | [prefix_ring_n_oo](metrics/prefix_ring_n_oo.md) | Number of out-of-order packets seen in the wave ring. | once every 10 minutes | count | TODO |
 | [prefix_ring_oo_dur](metrics/prefix_ring_oo_dur.md) | Total duration of out-of-order packets seen in the wave ring. | once every 10 minutes | seconds | TODO |
 
