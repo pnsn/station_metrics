@@ -2,49 +2,94 @@
 
 Median EPIC Trigger Latency
 
-STATUS: PLACEHOLDER. This metric is produced outside the station_metrics
-repository. The algorithm section needs to be completed by whoever maintains
-the producing code.
-
 ## Summary
 
-This metric reports the median latency of the EPIC triggers produced by a
-channel.
+This metric reports the median latency, over all triggers EPIC declared on a
+channel during the hour, between each trigger's time and the moment EPIC wrote
+the trigger to its log. It is read from the log files of an EPIC instance on
+eew-uw-rei, not calculated from archived waveforms.
 
 ## Uses
 
-Where wave ring latency describes how fast a channel's raw data arrives, this
-describes how fast the resulting triggers become available to the associator,
-which includes the processing time on top of the telemetry time. A median
-rather than a mean is used so that a single very late trigger does not distort
-the picture of typical performance.
+This is the typical delay between ground motion arriving at a station and EPIC
+being able to use it, measured at EPIC itself rather than at a wave ring. A
+station whose median is creeping up is delivering data that is increasingly
+too late for early warning, even if its data arrives complete. Comparing it
+with prefix_ring_latency for the same channel separates telemetry delay from
+delay inside EPIC.
 
 ## Data Analyzed
 
-Traces - one channel per measurement.
+Log lines - the N: (new trigger) lines EPIC writes for one N.S.L.C
+(Network.Station.Location.Channel) per measurement. Each N: line carries the
+trigger (pick) time and is prefixed with the wall clock time it was written.
 
-Window - TODO.
+Window - the clean UTC hour. Each trigger is assigned to the hour that contains
+its trigger time, not the hour in which its N: line was written.
 
-Data Source - EPIC logfiles. TODO: confirm which server and which logfile.
+Data Source - the daily EPIC log files (epic_YYYYMMDD.log) of an EPIC instance
+running on eew-uw-rei. This instance mirrors the production EPIC configuration,
+and is used by ShakeAlert staff to check the station quality of new or upgraded
+stations for the purposes of station acceptance into ShakeAlert. Its channel
+file is therefore larger than production's: it also includes candidate and
+suspended stations. Nothing is read from an archive.
+
+SEED Channel Types - vertical component channels (channel code ending in Z)
+that are in the eew-uw-rei EPIC channel file and have a channel id in the SQUAC
+channel map.
 
 ## Algorithm
 
-TODO. Document how trigger latency is defined, from what reference time it is
-measured, and over what window the median is taken.
+1. Read the daily EPIC log files for the requested days and collect every
+   N: line for the channel. Discard triggers whose trigger time falls before
+   the first requested day.
+2. For each trigger compute its latency:
+
+   latency = (wall clock time the N: line was written) - (trigger time)
+
+   adding 86400 s if the result is negative (the N: line was written after
+   midnight).
+3. Assign each trigger to the UTC hour containing its trigger time. Every
+   trigger is used, whether it was later associated, unassociated, rejected or
+   late.
+4. For every hour with at least one trigger, sort that hour's latencies and
+   report their median. With an even number of triggers the median is the
+   average of the two middle values.
 
 ## Metric Values Returned
 
-value - median trigger latency (seconds).
+value - median trigger latency in the hour (seconds).
 
-starttime - TODO.
+starttime - beginning of the hour (UTC).
 
-endtime - TODO.
+endtime - end of the hour (UTC).
 
-channel - the channel analyzed.
+channel - the channel analyzed, as N.S.L.C.
 
 ## Threshold
 
-5.0 seconds.
+3.5 seconds
+
+## Notes
+
+Latency here is the delay between the trigger time and EPIC writing the
+trigger to its log. It therefore includes telemetry latency, packetization, and
+EPIC's own processing up to the moment the trigger was declared, and is
+usually larger than the wave ring latency of the same channel.
+
+No value is uploaded for an hour with no triggers. Unlike the trigger count
+metrics, there is no zero-fill.
+
+The log wall clock is taken to be UTC and the midnight correction assumes
+latencies below 24 hours.
+
+With few triggers in an hour, the median rests on very few values and can jump
+around from hour to hour.
+
+## Change Log
+
+Sep 16 2026: first full documentation of this metric. The page was previously a
+placeholder.
 
 ## Contact
 
@@ -52,8 +97,9 @@ squac-help@uw.edu
 
 ## See Also
 
-epic_trigger_latency_le_3.5, epic_trigger_latency_max
+epic_trigger_latency_max, epic_trigger_latency_le_3.5, prefix_ring_latency
 
 ## Updated
 
 2026-09-14
+
