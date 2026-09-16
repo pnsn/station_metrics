@@ -144,14 +144,14 @@ trigger. Only vertical channels with a SQUAC channel id are uploaded.
 
 | metric name | description | frequency | unit | threshold | old name |
 |-------------|-------------|-----------|------|-----------|----------|
-| [epic_candidate_triggers](metrics/epic_candidate_triggers.md) | Number of hourly triggers from EPIC, including those eventually rejected, unassociated or late. | once an hour | count | TODO | |
-| [epic_rejected_triggers](metrics/epic_rejected_triggers.md) | Number of hourly EPIC triggers whose final status contains LARGE, SMALL or RANGE. | once an hour | count | TODO | |
-| [epic_temporary_3sec_triggers](metrics/epic_temporary_3sec_triggers.md) | Number of hourly rejected EPIC triggers that were continuously valid (WAITING, UNASSOC or NO_ZCOMP) for at least 3 s before being rejected. | once an hour | count | TODO | |
-| [epic_associated_triggers](metrics/epic_associated_triggers.md) | Hourly number of on-time EPIC triggers associated with an event. | once an hour | count | 60 | |
-| [epic_unassociated_triggers](metrics/epic_unassociated_triggers.md) | Hourly number of valid, on-time EPIC triggers not associated with an event. | once an hour | count | 60 | |
-| [epic_trigger_latency_median](metrics/epic_trigger_latency_median.md) | Median time between trigger time and EPIC logging the trigger, over all triggers in the hour. | once an hour, hours with triggers only | seconds | TODO | |
-| [epic_trigger_latency_le_3.5](metrics/epic_trigger_latency_le_3.5.md) | Percentage of the hour's EPIC triggers with latency of 3.5 s or less. | once an hour, hours with triggers only | percent | TODO | |
-| [epic_trigger_latency_max](metrics/epic_trigger_latency_max.md) | Maximum time between trigger time and EPIC logging the trigger, over all triggers in the hour. | once an hour, hours with triggers only | seconds | TODO | |
+| [epic_candidate_triggers](metrics/epic_candidate_triggers.md) | Number of hourly triggers from EPIC, including those eventually rejected, unassociated or late. | once an hour | count | 10 | |
+| [epic_rejected_triggers](metrics/epic_rejected_triggers.md) | Number of hourly EPIC triggers whose final status contains LARGE, SMALL or RANGE. | once an hour | count | 10 | |
+| [epic_temporary_3sec_triggers](metrics/epic_temporary_3sec_triggers.md) | Number of hourly rejected EPIC triggers that were continuously valid (WAITING, UNASSOC or NO_ZCOMP) for at least 3 s before being rejected. | once an hour | count | 10 | |
+| [epic_associated_triggers](metrics/epic_associated_triggers.md) | Hourly number of on-time EPIC triggers associated with an event. | once an hour | count | 10 | |
+| [epic_unassociated_triggers](metrics/epic_unassociated_triggers.md) | Hourly number of valid, on-time EPIC triggers not associated with an event. | once an hour | count | 10 | |
+| [epic_trigger_latency_median](metrics/epic_trigger_latency_median.md) | Median time between trigger time and EPIC logging the trigger, over all triggers in the hour. | once an hour, hours with triggers only | seconds | 10 | |
+| [epic_trigger_latency_le_3.5](metrics/epic_trigger_latency_le_3.5.md) | Percentage of the hour's EPIC triggers with latency of 3.5 s or less. | once an hour, hours with triggers only | percent | 10 | |
+| [epic_trigger_latency_max](metrics/epic_trigger_latency_max.md) | Maximum time between trigger time and EPIC logging the trigger, over all triggers in the hour. | once an hour, hours with triggers only | seconds | 10 | |
 
 ## Latency and gap metrics from sniffwave_tally
 
