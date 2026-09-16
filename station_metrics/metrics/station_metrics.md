@@ -81,28 +81,28 @@ and these metrics are meant to resemble what the production system sees.
 
 | metric name | description | frequency | unit | threshold | old name |
 |-------------|-------------|-----------|------|-----------|----------|
-| [dcrequest_pctavailable](metrics/dcrequest_pctavailable.md) | Percentage of the requested hour of data returned via FDSN webservice. | once an hour | percent | 98.0 | pctavailable |
-| [dcrequest_ngaps](metrics/dcrequest_ngaps.md) | Number of gaps in the hour of data returned via FDSN webservice. | once an hour | count | 1 | ngaps |
-| [dcrequest_segmentshort](metrics/dcrequest_segmentshort.md) | Duration in seconds of the shortest continuous data segment in the hour returned by FDSN webservice. | once an hour | seconds | 1.0 | segmentshort |
-| [dcrequest_segmentlong](metrics/dcrequest_segmentlong.md) | Duration in seconds of the longest continuous data segment in the hour returned by FDSN webservice. | once an hour | seconds | 3600.0 | segmentlong |
+| [dcrequest_pctavailable](dcrequest_pctavailable.md) | Percentage of the requested hour of data returned via FDSN webservice. | once an hour | percent | 98.0 | pctavailable |
+| [dcrequest_ngaps](dcrequest_ngaps.md) | Number of gaps in the hour of data returned via FDSN webservice. | once an hour | count | 1 | ngaps |
+| [dcrequest_segmentshort](dcrequest_segmentshort.md) | Duration in seconds of the shortest continuous data segment in the hour returned by FDSN webservice. | once an hour | seconds | 1.0 | segmentshort |
+| [dcrequest_segmentlong](dcrequest_segmentlong.md) | Duration in seconds of the longest continuous data segment in the hour returned by FDSN webservice. | once an hour | seconds | 3600.0 | segmentlong |
 
 ## General station quality metrics
 
 | metric name | description | frequency | unit | threshold | old name |
 |-------------|-------------|-----------|------|-----------|----------|
-| [hourly_min](metrics/hourly_min.md) | Minimum raw sample value over the analysis window. | once an hour | counts | -1e9 | rawmin |
-| [hourly_max](metrics/hourly_max.md) | Maximum raw sample value over the analysis window. | once an hour | counts | 1e9 | rawmax |
-| [hourly_range](metrics/hourly_range.md) | Range of raw sample values over the analysis window. | once an hour | counts | 2e9 | rawrange |
-| [hourly_mean](metrics/hourly_mean.md) | Mean raw sample value over the analysis window. | once an hour | counts | 1e8 | rawmean |
-| [hourly_max_acc](metrics/hourly_max_acc.md) | Maximum absolute acceleration, highpassed at 0.075 Hz. | once an hour | cm/s^2 | 2.0 | accmax, accmaxHP |
-| [hourly_max_bp_acc](metrics/hourly_max_bp_acc.md) | Maximum absolute acceleration, bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 2.0 | accmax |
-| [hourly_noise_floor_acc](metrics/hourly_noise_floor_acc.md) | Approximate median envelope amplitude, from the half range of the 2nd to 98th percentile amplitudes. Acceleration highpassed at 0.075 Hz. | once an hour | cm/s^2 | 0.2 | NoiseFloorAccHP |
-| [hourly_noise_floor_bp_acc](metrics/hourly_noise_floor_bp_acc.md) | Approximate median envelope amplitude, from the half range of the 2nd to 98th percentile amplitudes. Acceleration bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 0.2 | NoiseFloorAcc |
-| [power_10Hz](metrics/power_10Hz.md) | Power spectral density at 10 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow10Hz |
-| [power_5Hz](metrics/power_5Hz.md) | Power spectral density at 5 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow5Hz |
-| [power_1Hz](metrics/power_1Hz.md) | Power spectral density at 1 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow1Hz |
-| [power_5sec](metrics/power_5sec.md) | Power spectral density at 0.2 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow5sec |
-| [power_40sec](metrics/power_40sec.md) | Power spectral density at 0.025 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow40sec |
+| [hourly_min](hourly_min.md) | Minimum raw sample value over the analysis window. | once an hour | counts | -1e9 | rawmin |
+| [hourly_max](hourly_max.md) | Maximum raw sample value over the analysis window. | once an hour | counts | 1e9 | rawmax |
+| [hourly_range](hourly_range.md) | Range of raw sample values over the analysis window. | once an hour | counts | 2e9 | rawrange |
+| [hourly_mean](hourly_mean.md) | Mean raw sample value over the analysis window. | once an hour | counts | 1e8 | rawmean |
+| [hourly_max_acc](hourly_max_acc.md) | Maximum absolute acceleration, highpassed at 0.075 Hz. | once an hour | cm/s^2 | 2.0 | accmax, accmaxHP |
+| [hourly_max_bp_acc](hourly_max_bp_acc.md) | Maximum absolute acceleration, bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 2.0 | accmax |
+| [hourly_noise_floor_acc](hourly_noise_floor_acc.md) | Approximate median envelope amplitude, from the half range of the 2nd to 98th percentile amplitudes. Acceleration highpassed at 0.075 Hz. | once an hour | cm/s^2 | 0.2 | NoiseFloorAccHP |
+| [hourly_noise_floor_bp_acc](hourly_noise_floor_bp_acc.md) | Approximate median envelope amplitude, from the half range of the 2nd to 98th percentile amplitudes. Acceleration bandpassed 0.075 - 15 Hz. | once an hour | cm/s^2 | 0.2 | NoiseFloorAcc |
+| [power_10Hz](power_10Hz.md) | Power spectral density at 10 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow10Hz |
+| [power_5Hz](power_5Hz.md) | Power spectral density at 5 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow5Hz |
+| [power_1Hz](power_1Hz.md) | Power spectral density at 1 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow1Hz |
+| [power_5sec](power_5sec.md) | Power spectral density at 0.2 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow5sec |
+| [power_40sec](power_40sec.md) | Power spectral density at 0.025 Hz for the hour. Calculated locally with ObsPy PPSD. | once an hour | dB | 0 | pow40sec |
 
 ## ShakeAlert station quality metrics
 
@@ -112,9 +112,9 @@ and these metrics are meant to resemble what the production system sees.
 | [rms_bp_above_.07](metrics/rms_bp_above_.07.md) | Seconds per hour that a 5 s sliding-window RMS exceeds 0.07 cm/s^2. Acceleration bandpassed 0.075 - 15 Hz. | once an hour | seconds | 60.0 | RMS0p07cm, RMSduration_0p07cm, rms__bp_above_.07 |
 | [acc_spikes_gt_.34](metrics/acc_spikes_gt_.34.md) | Times per hour that the STA/LTA exceeds 20 and the absolute acceleration exceeds 0.34 cm/s^2. Acceleration highpassed at 0.075 Hz. | once an hour | count | 1 | snr20_0p34cmHP |
 | [acc_bp_spikes_gt_.34](metrics/acc_bp_spikes_gt_.34.md) | Times per hour that the STA/LTA exceeds 20 and the absolute acceleration exceeds 0.34 cm/s^2. Acceleration bandpassed 0.075 - 15 Hz. | once an hour | count | 1 | snr20_0p34cm |
-| [acc_gt_2.0](metrics/acc_gt_2.0.md) | Times per hour that the absolute acceleration exceeds 2 cm/s^2, counted at most once every 30 s. Acceleration highpassed at 0.075 Hz. | once an hour | count | 10 | finder_2cm_hp |
-| [approximate_epic_triggers](metrics/approximate_epic_triggers.md) | Approximate count of ElarmS3/EPIC triggers. Amplitude gates on data highpassed at 0.075 Hz. | once an hour | count | 60 | NTrigElarmSAlex |
-| [approximate_epic_bp_triggers](metrics/approximate_epic_bp_triggers.md) | Approximate count of ElarmS3/EPIC triggers. Amplitude gates on data bandpassed 0.075 - 15 Hz. | once an hour | count | 60 | NTrigElarmSAlexBB, NTrigElarmSAlexBB15 |
+| [acc_gt_2.0](acc_gt_2.0.md) | Times per hour that the absolute acceleration exceeds 2 cm/s^2, counted at most once every 30 s. Acceleration highpassed at 0.075 Hz. | once an hour | count | 10 | finder_2cm_hp |
+| [approximate_epic_triggers](approximate_epic_triggers.md) | Approximate count of ElarmS3/EPIC triggers. Amplitude gates on data highpassed at 0.075 Hz. | once an hour | count | 60 | NTrigElarmSAlex |
+| [approximate_epic_bp_triggers](approximate_epic_bp_triggers.md) | Approximate count of ElarmS3/EPIC triggers. Amplitude gates on data bandpassed 0.075 - 15 Hz. | once an hour | count | 60 | NTrigElarmSAlexBB, NTrigElarmSAlexBB15 |
 
 ## EPIC trigger metrics from eew-uw-rei
 
@@ -144,14 +144,14 @@ trigger. Only vertical channels with a SQUAC channel id are uploaded.
 
 | metric name | description | frequency | unit | threshold | old name |
 |-------------|-------------|-----------|------|-----------|----------|
-| [epic_candidate_triggers](metrics/epic_candidate_triggers.md) | Number of hourly triggers from EPIC, including those eventually rejected, unassociated or late. | once an hour | count | 10 | |
-| [epic_rejected_triggers](metrics/epic_rejected_triggers.md) | Number of hourly EPIC triggers whose final status contains LARGE, SMALL or RANGE. | once an hour | count | 10 | |
-| [epic_temporary_3sec_triggers](metrics/epic_temporary_3sec_triggers.md) | Number of hourly rejected EPIC triggers that were continuously valid (WAITING, UNASSOC or NO_ZCOMP) for at least 3 s before being rejected. | once an hour | count | 10 | |
-| [epic_associated_triggers](metrics/epic_associated_triggers.md) | Hourly number of on-time EPIC triggers associated with an event. | once an hour | count | 10 | |
-| [epic_unassociated_triggers](metrics/epic_unassociated_triggers.md) | Hourly number of valid, on-time EPIC triggers not associated with an event. | once an hour | count | 10 | |
-| [epic_trigger_latency_median](metrics/epic_trigger_latency_median.md) | Median time between trigger time and EPIC logging the trigger, over all triggers in the hour. | once an hour, hours with triggers only | seconds | 10 | |
-| [epic_trigger_latency_le_3.5](metrics/epic_trigger_latency_le_3.5.md) | Percentage of the hour's EPIC triggers with latency of 3.5 s or less. | once an hour, hours with triggers only | percent | 10 | |
-| [epic_trigger_latency_max](metrics/epic_trigger_latency_max.md) | Maximum time between trigger time and EPIC logging the trigger, over all triggers in the hour. | once an hour, hours with triggers only | seconds | 10 | |
+| [epic_candidate_triggers](epic_candidate_triggers.md) | Number of hourly triggers from EPIC, including those eventually rejected, unassociated or late. | once an hour | count | 10 | |
+| [epic_rejected_triggers](epic_rejected_triggers.md) | Number of hourly EPIC triggers whose final status contains LARGE, SMALL or RANGE. | once an hour | count | 10 | |
+| [epic_temporary_3sec_triggers](epic_temporary_3sec_triggers.md) | Number of hourly rejected EPIC triggers that were continuously valid (WAITING, UNASSOC or NO_ZCOMP) for at least 3 s before being rejected. | once an hour | count | 10 | |
+| [epic_associated_triggers](epic_associated_triggers.md) | Hourly number of on-time EPIC triggers associated with an event. | once an hour | count | 10 | |
+| [epic_unassociated_triggers](epic_unassociated_triggers.md) | Hourly number of valid, on-time EPIC triggers not associated with an event. | once an hour | count | 10 | |
+| [epic_trigger_latency_median](epic_trigger_latency_median.md) | Median time between trigger time and EPIC logging the trigger, over all triggers in the hour. | once an hour, hours with triggers only | seconds | 10 | |
+| [epic_trigger_latency_le_3.5](epic_trigger_latency_le_3.5.md) | Percentage of the hour's EPIC triggers with latency of 3.5 s or less. | once an hour, hours with triggers only | percent | 10 | |
+| [epic_trigger_latency_max](epic_trigger_latency_max.md) | Maximum time between trigger time and EPIC logging the trigger, over all triggers in the hour. | once an hour, hours with triggers only | seconds | 10 | |
 
 ## Latency and gap metrics from sniffwave_tally
 
@@ -176,13 +176,13 @@ automatically when `--squac` is given.
 
 | metric name | description | frequency | unit | threshold | old name |
 |-------------|-------------|-----------|------|-----------|----------|
-| [prefix_ring_latency](metrics/prefix_ring_latency.md) | Average data latency, defined as the time between the measurement and the end of the packet, plus half the packet length. | once every 10 minutes | seconds | 5.0 | |
-| [prefix_ring_latency_max](metrics/prefix_ring_latency_max.md) | Largest single-packet latency seen during the measurement window. | once every 10 minutes | seconds | 5.0 | |
-| [prefix_ring_latency_le_3.5](metrics/prefix_ring_latency_le_3.5.md) | Percentage of packets with data latency of 3.5 s or less. | once every 10 minutes | percent | 90.0 | pct_gt_3.5sec_late |
-| [prefix_ring_gaps_per_hour](metrics/prefix_ring_gaps_per_hour.md) | Number of gaps seen in the wave ring during the measurement window, normalized to a per hour rate. | once every 10 minutes | count | 1 | |
-| [prefix_ring_packet_length](metrics/prefix_ring_packet_length.md) | Average length of the Tracebuf2 packets seen. | once every 10 minutes | seconds | 5.0 | |
-| [prefix_ring_completeness](metrics/prefix_ring_completeness.md) | Percentage of the measurement window for which data arrived. | once every 10 minutes | percent | 90.0 | |
-| [prefix_ring_completeness_incl_gap_penalty](metrics/prefix_ring_completeness_incl_gap_penalty.md) | Percentage of the measurement window for which data arrived, subtracting an extra 30 s per gap. | once every 10 minutes | percent | 90.0 | |
+| [prefix_ring_latency](prefix_ring_latency.md) | Average data latency, defined as the time between the measurement and the end of the packet, plus half the packet length. | once every 10 minutes | seconds | 5.0 | |
+| [prefix_ring_latency_max](prefix_ring_latency_max.md) | Largest single-packet latency seen during the measurement window. | once every 10 minutes | seconds | 5.0 | |
+| [prefix_ring_latency_le_3.5](prefix_ring_latency_le_3.5.md) | Percentage of packets with data latency of 3.5 s or less. | once every 10 minutes | percent | 90.0 | pct_gt_3.5sec_late |
+| [prefix_ring_gaps_per_hour](prefix_ring_gaps_per_hour.md) | Number of gaps seen in the wave ring during the measurement window, normalized to a per hour rate. | once every 10 minutes | count | 1 | |
+| [prefix_ring_packet_length](prefix_ring_packet_length.md) | Average length of the Tracebuf2 packets seen. | once every 10 minutes | seconds | 5.0 | |
+| [prefix_ring_completeness](prefix_ring_completeness.md) | Percentage of the measurement window for which data arrived. | once every 10 minutes | percent | 90.0 | |
+| [prefix_ring_completeness_incl_gap_penalty](prefix_ring_completeness_incl_gap_penalty.md) | Percentage of the measurement window for which data arrived, subtracting an extra 30 s per gap. | once every 10 minutes | percent | 90.0 | |
 
 ## Metrics calculated outside this repository
 
@@ -192,11 +192,11 @@ filled in by whoever owns the producing code.
 
 | metric name | description | frequency | unit | threshold |
 |-------------|-------------|-----------|------|-----------|
-| [water_pump_time_per_hour](metrics/water_pump_time_per_hour.md) | Seconds each hour that the water pump is on, as recorded on the VE1/VE2 (SP1/SP2) channels. | once an hour | seconds | 0 |
-| [mass_position](metrics/mass_position.md) | Sensor mass position state of health channel. | TODO | TODO | TODO |
-| [system_temperature](metrics/system_temperature.md) | Datalogger or vault temperature state of health channel. | TODO | TODO | TODO |
-| [prefix_ring_n_oo](metrics/prefix_ring_n_oo.md) | Number of out-of-order packets seen in the wave ring. | once every 10 minutes | count | TODO |
-| [prefix_ring_oo_dur](metrics/prefix_ring_oo_dur.md) | Total duration of out-of-order packets seen in the wave ring. | once every 10 minutes | seconds | TODO |
+| [water_pump_time_per_hour](water_pump_time_per_hour.md) | Seconds each hour that the water pump is on, as recorded on the VE1/VE2 (SP1/SP2) channels. | once an hour | seconds | 0 |
+| [mass_position](mass_position.md) | Sensor mass position state of health channel. | TODO | TODO | TODO |
+| [system_temperature](system_temperature.md) | Datalogger or vault temperature state of health channel. | TODO | TODO | TODO |
+| [prefix_ring_n_oo](prefix_ring_n_oo.md) | Number of out-of-order packets seen in the wave ring. | once every 10 minutes | count | TODO |
+| [prefix_ring_oo_dur](prefix_ring_oo_dur.md) | Total duration of out-of-order packets seen in the wave ring. | once every 10 minutes | seconds | TODO |
 
 The following metrics also exist in SQUAC and are documented only by the rows
 below. They are produced entirely outside this repository and have no detail
