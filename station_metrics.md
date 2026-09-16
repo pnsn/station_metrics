@@ -157,7 +157,7 @@ them to other eew rei machines.  Pages are currently placeholders.
 | [epic_associated_triggers](station_metrics/metrics/epic_associated_triggers.md) | Hourly number of EPIC triggers associated with an event. Currently only measured on eew-uw-rei. | once an hour | count | 10 |
 | [epic_unassociated_triggers](station_metrics/metrics/epic_unassociated_triggers.md) | Hourly number of EPIC triggers not associated with an event. Currently only measured on eew-uw-rei. | once an hour | count | 10 |
 | [epic_trigger_latency_median](station_metrics/metrics/epic_trigger_latency_median.md) | Median latency of EPIC triggers. Measured on eew-uw-rei. | once an hour | seconds | 5.0 |
-| [epic_trigger_latency_le_3.5](station_metrics/metrics/epic_trigger_latency_le_3.5.md) | Percentage of EPIC triggers with latency of 3.5 s or less. Currently only measured on eew-uw-rei. | TODO | percent | 90 |
+| [epic_trigger_latency_le_3.5](station_metrics/metrics/epic_trigger_latency_le_3.5.md) | Percentage of EPIC triggers with latency of 3.5 s or less. Currently only measured on eew-uw-rei. | once an hour | percent | 90 |
 | [epic_trigger_latency_max](station_metrics/metrics/epic_trigger_latency_max.md) | Maximum latency of EPIC triggers. Currently only measured on eew-uw-rei. | once an hour | seconds | 5.0 |
 
 
