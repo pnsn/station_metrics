@@ -77,6 +77,16 @@ Sep 2026: uploads can be batched over several channels; see --upload-chunksize.
 Sep 2026: unused metric variants (different thresholds, 10/20/25 Hz bandpass
           corners, full-response removal, plotting, trigger-time log files)
           were removed.
+Sep 2026: the PSD gate required one sample more than obspy's PPSD does
+          (npts - 1) * dt >= duration rather than npts >= sampling_rate *
+          duration, so an hour whose samples are not aligned with the top of
+          the hour was skipped.  The hour is now sliced with 1 s of padding at
+          the end and the gate counts samples.
+Sep 2026: dcrequest_segmentshort no longer reports the 9e6 sentinel when the
+          clean hour contains no data; it reports 0, as pctavailable does.
+Sep 2026: channels the data center returns nothing for are now reported with
+          dcrequest_pctavailable = 0 instead of being omitted from SQUAC.
+          Nothing is reported if the request returned no traces at all.
 """
 
 import argparse
@@ -205,7 +215,7 @@ def parse_arguments():
                         help="File listing the channels to analyze "
                              "(default: chanfile.RSN.5)")
     parser.add_argument("--datacenter", default="IRIS",
-                        help="FDSN data centre name or base URL "
+                        help="FDSN data center name or base URL "
                              "(default: IRIS)")
     parser.add_argument("--duration", type=float, default=3600.0,
                         help="Length of the reporting window in seconds "
@@ -331,7 +341,7 @@ def group_traces_by_sncl(traces):
     """
     Collect a flat list of traces into one stream per channel.
 
-    A channel with gaps comes back from the data centre as several traces; they
+    A channel with gaps comes back from the data center as several traces; they
     all belong to the same measurement and are concatenated later.
 
     :type traces: list
@@ -658,8 +668,8 @@ def main():
     streams = group_traces_by_sncl(traces)
     print("Downloaded data for {} channels".format(len(streams)))
 
-    # Channels the data centre returned nothing for.  Requiring at least one
-    # trace overall guards against a data centre outage, which would otherwise
+    # Channels the data center returned nothing for.  Requiring at least one
+    # trace overall guards against a data center outage, which would otherwise
     # report every channel in the file as dead.
     missing_sncls = []
     if len(traces) > 0:
