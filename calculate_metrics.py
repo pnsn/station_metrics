@@ -92,7 +92,7 @@ from obspy import Stream, UTCDateTime
 from obspy.clients.fdsn import Client
 from obspy.signal.trigger import classic_sta_lta
 
-from get_data_metadata4 import (download_metadata_fdsn,
+from get_data_metadata46 import (download_metadata_fdsn,
                                 download_waveforms_fdsn_bulk,
                                 raw_trace_to_ground_motion,
                                 slice_trace)
@@ -302,6 +302,31 @@ def sncl_string(trace):
                                 loc, trace.stats.channel)
 
 
+def read_chanfile_sncls(chanfile):
+    """
+    NSLC strings for every channel listed in a channel file.
+
+    :type chanfile: str
+    :param chanfile: Path to the channel file.
+    :rtype: list
+    :return: List of NSLC strings, blank location codes written as ``--``.
+    """
+    sncls = []
+    f = open(chanfile)
+    for line in f.readlines():
+        fields = line.split()
+        if len(fields) < 4:
+            continue
+        loc = fields[2]
+        if loc == "":
+            loc = "--"
+        sncls.append("{}.{}.{}.{}".format(fields[0], fields[1], loc,
+                                          fields[3]))
+    f.close()
+
+    return sncls
+
+
 def group_traces_by_sncl(traces):
     """
     Collect a flat list of traces into one stream per channel.
@@ -349,6 +374,20 @@ def calculate_metrics_for_channel(stream, inventory, starttime, endtime,
         there was nothing measurable.
     """
     dt = stream[0].stats.delta
+    # PPSD works on segments of exactly sampling_rate * ppsd_length samples
+    # (obspy PPSD.len), and PPSD.add slices [t, t + ppsd_length - delta], so a
+    # trace needs psd_npts_needed samples, not one more than that.  Multiply
+    # rather than divide: duration / dt gives 359999.99999999994 for a 3600 s
+    # hour at 100 sps, and int() of that is 359999.
+    psd_npts_needed = int(round(stream[0].stats.sampling_rate * duration))
+
+    # Ask for one extra second at the end of the hour when slicing for the PSD.
+    # If the samples are not aligned with the top of the hour, a slice of
+    # exactly [starttime, endtime] can come back one sample short of
+    # psd_npts_needed.  PPSD still measures only the first 3600 s starting at
+    # the first sample, so the reporting window is unchanged.
+    endtime_psd = endtime + datetime.timedelta(0, 1.0)
+
     channel = stream[0].stats.channel
 
     # Concatenated data over the analysis window, one array per filter band.
@@ -422,12 +461,14 @@ def calculate_metrics_for_channel(stream, inventory, starttime, endtime,
         # PSD, on the reporting hour only.  Only a segment spanning the whole
         # hour can produce a PPSD segment, and only the first such segment is
         # used; a channel with a gap in the hour gets no PSD.
-        if powers is None and (trace_hour.stats.npts - 1) * dt >= duration:
-            try:
-                powers = get_power(trace_hour.copy(), inventory, PSD_PERIODS)
-            except Exception as e:
-                print("PSD failed for {}: {}".format(sncl_string(trace), e))
-                powers = None
+        if powers is None:
+            trace_psd = slice_trace(trace, starttime, endtime_psd)
+            if trace_psd.stats.npts >= psd_npts_needed:
+                try:
+                    powers = get_power(trace_psd.copy(), inventory, PSD_PERIODS)
+                except Exception as e:
+                    print("PSD failed for {}: {}".format(sncl_string(trace), e))
+                    powers = None
 
     if len(data_raw) == 0:
         return None
@@ -438,16 +479,15 @@ def calculate_metrics_for_channel(stream, inventory, starttime, endtime,
     pctavailable = 100. * npts_in_hour / (duration / dt)
 
     ngaps = 0
-    segmentshort = 9e6
+    segmentshort = 0
     segmentlong = 0
     if len(stream_hour) > 0:
         for gap in stream_hour.get_gaps():
             if gap[6] > 0:      # positive delta is a gap; negative is overlap
                 ngaps = ngaps + 1
-        for trace_hour in stream_hour:
-            seglen = trace_hour.stats.npts * dt
-            segmentshort = min(segmentshort, seglen)
-            segmentlong = max(segmentlong, seglen)
+        seglengths = [trace_hour.stats.npts * dt for trace_hour in stream_hour]
+        segmentshort = min(seglengths)
+        segmentlong = max(seglengths)
 
     # ---- Raw counts --------------------------------------------------------
     rawmin = float(min(data_raw))
@@ -510,7 +550,9 @@ def calculate_metrics_for_channel(stream, inventory, starttime, endtime,
     # PSD powers are only uploaded when all five look like real measurements.
     # Genuine values run about -180 to -50 dB; anything at or above -1 dB, or a
     # None from get_power, means PPSD did not produce a usable spectrum.
-    if powers is not None and max(powers) < PSD_MAX_VALID:
+    #if powers is not None and max(powers) < PSD_MAX_VALID:
+    if powers is not None and all(p is not None and p < PSD_MAX_VALID
+                                  for p in powers):
         for name, power in zip(PSD_METRICS, powers):
             results[name] = float(power)
 
@@ -616,11 +658,30 @@ def main():
     streams = group_traces_by_sncl(traces)
     print("Downloaded data for {} channels".format(len(streams)))
 
+    # Channels the data centre returned nothing for.  Requiring at least one
+    # trace overall guards against a data centre outage, which would otherwise
+    # report every channel in the file as dead.
+    missing_sncls = []
+    if len(traces) > 0:
+        missing_sncls = [sncl for sncl in read_chanfile_sncls(args.chanfile)
+                         if sncl not in streams]
+        print("{} channels returned no data".format(len(missing_sncls)))
+
     # ---- Loop over channels ------------------------------------------------
     measurements = []
     nchannels_pending = 0
     nchannels_uploaded = 0
     timer_start = timeit.default_timer()
+
+    # These read as counts or times rather than measurements, so they are
+    # printed without the {:.4g} format.
+    integer_metrics = {
+        "dcrequest_ngaps",
+        "dcrequest_segmentshort",
+        "dcrequest_segmentlong",
+        "approximate_epic_triggers",
+        "approximate_epic_bp_triggers",
+    }
 
     for sncl in sorted(streams):
         stream = streams[sncl]
@@ -638,93 +699,27 @@ def main():
             stream, inventory, starttime, endtime, time1, time2, args.duration)
         if results is None:
             continue
-        '''
-        print("{}  pctavail {:.4g}  ngaps {}  accmax_hp {:.4g}  "
-              "epic {} ({} boxcars)  epic_bp {} ({} boxcars)".format(
-                  sncl, results["dcrequest_pctavailable"],
-                  results["dcrequest_ngaps"], results["hourly_max_acc"],
-                  results["approximate_epic_triggers"], results["_boxcars_hp"],
-                  results["approximate_epic_bp_triggers"],
-                  results["_boxcars_bp"]))
 
-
-        print("{}  pctavail {:.4g}  ngaps {}  accmax_hp {:.4g}  "
-              "epic {} ({} boxcars)  epic_bp {} ({} boxcars)  "
-              "hourly_min {:.4g}  hourly_max {:.4g}  hourly_mean {:.4g}  "
-              "hourly_range {:.4g}  acc_gt_2.0 {:.4g}  "
-              "rms_bp_above_.07 {:.4g}  rms_above_.07 {:.4g}  "
-              "acc_bp_spikes_gt_.34 {:.4g}  acc_spikes_gt_.34 {:.4g}  "
-              "hourly_noise_floor_bp_acc {:.4g}  hourly_max_bp_acc {:.4g}  "
-              "segmentshort {} segmentlong {}  "
-              "power_5Hz {:.4g}  power_1Hz {:.4g}  power_5sec {:.4g}  "
-              "hourly_max_acc {:.4g}  hourly_noise_floor_acc {:.4g}  "
-              "power_40sec {:.4g}  power_10Hz {:.4g}".format(
-                  sncl, results["dcrequest_pctavailable"],
-                  results["dcrequest_ngaps"], results["hourly_max_acc"],
-                  results["approximate_epic_triggers"], results["_boxcars_hp"],
-                  results["approximate_epic_bp_triggers"], results["_boxcars_bp"],
-                  results["hourly_min"], results["hourly_max"], results["hourly_mean"],
-                  results["hourly_range"], results["acc_gt_2.0"],
-                  results["rms_bp_above_.07"], results["rms_above_.07"],
-                  results["acc_bp_spikes_gt_.34"], results["acc_spikes_gt_.34"],
-                  results["hourly_noise_floor_bp_acc"], results["hourly_max_bp_acc"],
-                  results["dcrequest_segmentshort"], results["dcrequest_segmentlong"],
-                  results["power_5Hz"], results["power_1Hz"], results["power_5sec"],
-                  results["hourly_max_acc"], results["hourly_noise_floor_acc"],
-                  results["power_40sec"], results["power_10Hz"]))
-        '''
-        print('XXXX ',sncl, results["approximate_epic_triggers"], results["approximate_epic_bp_triggers"], results["hourly_noise_floor_bp_acc"], results["hourly_noise_floor_acc"], results["hourly_mean"], results["power_1Hz"] )
-
-        metric_names = [
-            "hourly_min",
-            "hourly_max",
-            "hourly_mean",
-            "hourly_range",
-            "acc_gt_2.0",
-            "rms_bp_above_.07",
-            "rms_above_.07",
-            "acc_bp_spikes_gt_.34",
-            "acc_spikes_gt_.34",
-            "approximate_epic_triggers",
-            "approximate_epic_bp_triggers",
-            "hourly_noise_floor_bp_acc",
-            "hourly_max_bp_acc",
-            "dcrequest_pctavailable",
-            "dcrequest_ngaps",
-            "dcrequest_segmentshort",
-            "dcrequest_segmentlong",
-            "power_5Hz",
-            "power_1Hz",
-            "power_5sec",
-            "hourly_max_acc",
-            "hourly_noise_floor_acc",
-            "power_40sec",
-            "power_10Hz",
-        ]
-        integer_metrics = {
-            "dcrequest_ngaps",
-            "dcrequest_segmentshort",
-            "dcrequest_segmentlong",
-            "approximate_epic_triggers",
-            "approximate_epic_bp_triggers",
-        }
-
+        # Print in the same order the metrics are uploaded.  PSD metrics are
+        # optional: they are absent whenever PPSD could not produce a spectrum
+        # for this hour, so print "n/a" rather than raising KeyError.
         metric_strings = []
-        for name in metric_names:
-            value = results[name]
-            if name in integer_metrics:
-                metric_strings.append("{} {}".format(name, value))
+        for name in SQUAC_METRIC_IDS:
+            if name not in results:
+                metric_strings.append("{} n/a".format(name))
+            elif name in integer_metrics:
+                metric_strings.append("{} {}".format(name, results[name]))
             else:
-                metric_strings.append("{} {:.4g}".format(name, value))
-
-        if not upload or sncl not in channel_map:
-            continue
+                metric_strings.append("{} {:.4g}".format(name, results[name]))
 
         print("{}  ({} boxcars, {} boxcars_bp)  {}".format(
             sncl,
             results["_boxcars_hp"],
             results["_boxcars_bp"],
             "  ".join(metric_strings)))
+
+        if not upload or sncl not in channel_map:
+            continue
 
         measurements += build_measurements(results, channel_map[sncl],
                                            starttime, endtime)
@@ -740,6 +735,18 @@ def main():
                 nchannels_pending, nchannels_uploaded, errors))
             measurements = []
             nchannels_pending = 0
+
+    # Report 0% available for channels with no data, so they show up as dead
+    # in SQUAC rather than simply not appearing.  These are not chunked; they
+    # all go out in the final post below.
+    for sncl in missing_sncls:
+        print("{}  no data returned, dcrequest_pctavailable 0".format(sncl))
+        if not upload or sncl not in channel_map:
+            continue
+        measurements += build_measurements({"dcrequest_pctavailable": 0.0},
+                                           channel_map[sncl],
+                                           starttime, endtime)
+        nchannels_pending = nchannels_pending + 1
 
     # Post whatever is left over from the last partial chunk.
     if upload and len(measurements) > 0:
