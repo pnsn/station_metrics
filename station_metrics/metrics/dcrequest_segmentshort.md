@@ -69,14 +69,18 @@ underlying archived segment.
 Segments with a single sample or fewer are discarded before this measurement is
 made, so a stray one-sample record does not drive the value to near zero.
 
-A channel with no data at all in the hour produces no segments; the value
-reported in that case is the sentinel 9e6, which should be read as "not
-measured".
+A channel with no data at all in the hour produces no segments and is reported
+as 0. If the data center returned nothing for the channel, this metric is not
+reported at all; only dcrequest_pctavailable is, as 0.
 
 ## Change Log
 
 Sep 14 2026: previously measured over the 3605.05 s analysis window rather than
 the reporting hour.
+
+Sep 17 2026: an hour with no segments used to report 9e6, which sat
+above the 1.0 s threshold and so passed. It now reports 0, which breaches the
+threshold. Alerting rules that relied on the old behavior need revisiting.
 
 ## Contact
 
@@ -88,4 +92,5 @@ dcrequest_segmentlong, dcrequest_ngaps, dcrequest_pctavailable
 
 ## Updated
 
-2026-09-14
+2026-09-17
+

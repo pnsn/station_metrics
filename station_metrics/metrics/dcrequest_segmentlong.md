@@ -62,11 +62,13 @@ channel - the channel analyzed, as N.S.L.C.
 
 Segments are clipped to the reporting hour before being measured, so this value
 cannot exceed roughly 3600 s no matter how long the underlying archived segment
-is. Because the cut is inclusive of both endpoints and takes one extra sample,
-a complete hour reads a fraction of a sample interval above 3600.
+is. Duration is reported as npts * delta, which is one sample interval longer
+than the span the samples actually cover, so a complete hour reads up to one
+sample interval above 3600 (3600.01 s on a 100 sps channel).
 
-A channel with no data at all in the hour produces no segments; the value
-reported in that case is 0, which should be read as "not measured".
+A channel with no data at all in the hour produces no segments and is reported
+as 0. If the data center returned nothing for the channel, this metric is not
+reported at all; only dcrequest_pctavailable is, as 0.
 
 ## Change Log
 
@@ -84,4 +86,4 @@ dcrequest_segmentshort, dcrequest_ngaps, dcrequest_pctavailable
 
 ## Updated
 
-2026-09-14
+2026-09-17
